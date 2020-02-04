@@ -53,11 +53,11 @@ class NodeManager (object):
 	def center(self):
 		return self.__array[self.__array.size//2]
 
-	def convert_path_to_nodes(self, path=None):
+	def convert_path_to_nodes(self, true_x, true_y, path=None,):
 		converted_x = np.empty(path.shape)
 		converted_y = np.empty(path.shape)
 		for i in range(path.shape[0]):
 			for j in range(path.shape[1]):
-				converted_x[i][j] = self.__array[int(path[i][j])].get_position()[0]
-				converted_y[i][j] = self.__array[int(path[i][j])].get_position()[1]
+				converted_x[i][j] = true_x[int(path[i][j])]
+				converted_y[i][j] = true_y[int(path[i][j])]
 		return converted_x, converted_y
