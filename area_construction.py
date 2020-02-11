@@ -68,7 +68,6 @@ class LineArea (object):
 		enviro = vc.LineArea()
 		enviro.create_environment(self.__x,true_paths[0],self.__y,true_paths[1], self.__true_exit_node_value)
 
-	
 	def __select_algorithm(self):
 		self.__algorithm_selection[0] = 0
 		if self.__number_of_bots < 3:
