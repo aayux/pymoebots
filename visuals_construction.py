@@ -130,8 +130,7 @@ class LineArea (object):
 
         # self.__fig.append_trace(line,None,None)
         # self.__fig.append_trace(line, None, None)
-        self.__fig.write_html('./file.html')
-        # self.__fig.show()
+        self.__fig.write_html('./file3.html', include_plotlyjs='cdn')
         # print(line)
         #
 
