@@ -9,6 +9,8 @@ class Bot:
         self.__choices = ['right', 'bottom right', 'bottom left', 'left', 'top left', 'top right']
         self.__path = []
 
+
+
     def __move(self, value=None):
         """
         Moves bot
