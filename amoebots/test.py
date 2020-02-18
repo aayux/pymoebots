@@ -1,15 +1,15 @@
 import node_construction as nc
 import visual_construction as vc
-import datetime as dt
+import time
 
 if __name__ == '__main__':
-    time = dt.datetime.now().time()
+    t1 = time.process_time()
     n = nc.NodeManager()
-    x = 100
+    x = 1000
     n.create_cluster(x=x)
     v = vc.GridVisualClass()
     v.create_grid(n.plot())
     v.show_fig()
-    time2 = dt.datetime.now().time()
     print('success')
-    print(f'it took {dt.datetime.combine(dt.date.today(), time2)-dt.datetime.combine(dt.date.today(), time)} to create {n.get_number_of_nodes()}')
+    t2 = time.process_time()
+    print(f'it took {t2-t1} to create {n.get_number_of_nodes()}')
