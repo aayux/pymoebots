@@ -11,7 +11,7 @@ class Node(object):
         self.__top_left = None
         self.__top_right = None
         self.__position = None
-        self.__bots = None
+        self.__occupied = None
 
     def get_node(self, value):
         """
@@ -80,6 +80,10 @@ class Node(object):
         :return:
         """
         pass
+
+    def get_occupied(self):
+        return self.__occupied
+
 
 
 class NodeManager(object):
