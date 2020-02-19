@@ -27,3 +27,6 @@ class Bot:
 class BotManager:
     def __init__(self):
         self.__bots = []
+
+    def add_bots(self, position = None):
+        pass
