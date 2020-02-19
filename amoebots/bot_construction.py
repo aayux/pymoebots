@@ -10,7 +10,7 @@ class Bot:
         # This section deals with ports
         self.__choices = ['right', 'bottom right', 'bottom left', 'left', 'top left', 'top right']
         self.__scan_order = []
-        self.__port_scan_results = [[],[],[]]
+        self.__port_scan_results = [None, None, None]
 
         # This section deals with the bots traveling
         self.__path = []
@@ -54,9 +54,30 @@ class Bot:
 
         :return:
         """
-        pass
+        flag = 0
+        port = 0
+        agents = 0
+        spaces = []
 
-    def toogle_debug(self):
+        while True:
+            if not self.__head.get_node(self.__scan_order[port%6]).get_occupied():
+                if not flag and self.__head.get_node(self.__scan_order[port-1%6]).get_occupied():
+                    space = [self.__scan_order[(port-1)%6]]
+                    flag = 1
+                port += 1
+            elif self.__head.get_node(self.__scan_order[port%6]).get_occupied():
+                if flag:
+                    space.append(self.__scan_order[port%6])
+                    flag = 0
+                    agents += 1
+                    spaces.append(space)
+                port += 1
+            if port > 5 and not flag:
+                break
+        if self.__debug:
+            return [agents, spaces]
+
+    def toggle_debug(self):
         """
         Toogles debug mode for bots. This will most likely be offloaded to a class on it's own so that it can be added
         only when it is necessary.
@@ -64,6 +85,7 @@ class Bot:
         :return:
         """
         self.__debug = not self.__debug
+        print("This bot is now in debug mode")
 
     def get_scan_order(self):
         """
@@ -75,6 +97,19 @@ class Bot:
             return self.__scan_order
         else:
             print("Unable to return scan order. This bot is not in debug mode")
+
+    def set_head_node(self, value):
+        """
+        Debug option to set head manually.
+
+        :param value:
+        :return:
+        """
+        if self.__debug:
+            self.__head = value
+
+    def get_head(self):
+        return self.__head
 
 
 class BotManager:
