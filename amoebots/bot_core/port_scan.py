@@ -24,17 +24,17 @@ class Bot:
         # Predefined occupied/unoccupied nodes for now
         # Actual value is result of this.node.check(keyword)
         occupied = {
-            "right":    1,
+            "right":    0,
             "bottright":1,
             "bottleft": 0,
-            "left":     0,
+            "left":     1,
             "topleft":  1,
-            "topright": 0
+            "topright": 1
         }
         print(occupied)
         port_structure = {
-            "successors": ["", "", ""],
-            "predecessors": ["", "", ""],
+            "successors": [],
+            "predecessors": [],
             "right":    {
                 "region_origin":"",
                 "empty_region":0,
@@ -73,7 +73,7 @@ class Bot:
             }
         }
         # Check round all ports twice.
-        # First pass
+        # First pass clockwise to id successors
         region_origin = ""
         region_end = ""
         empty_region = 0
@@ -90,7 +90,7 @@ class Bot:
 
                 if empty_region > 0:
                     print("empty region 0")
-                    port_structure["successors"][agents] = self.__port_labels[i]
+                    port_structure["successors"].append(self.__port_labels[i])
                     agents += 1
                     empty_region = 0
 
@@ -104,6 +104,35 @@ class Bot:
 
         agents = 0
         empty_region = 0
+
+        # Second pass counterclockwise to ID predecessors
+        clockWiseTmp = [i for i in reversed(self.__port_labels)]
+        print(clockWiseTmp)
+        for j in range(len(self.__port_labels) + 1):
+            i = j % len(self.__port_labels)
+            if occupied[clockWiseTmp[i]] == 1:
+                port_structure[clockWiseTmp[i]]["occupied"] = 1
+
+                port_structure[clockWiseTmp[i]]["region_origin"] = clockWiseTmp[i]
+                region_origin = clockWiseTmp[i]
+
+                port_structure[clockWiseTmp[i]]["empty_region"] = 0
+
+                if empty_region > 0:
+                    print("empty region 0")
+                    port_structure["predecessors"].append(clockWiseTmp[i])
+                    agents += 1
+                    empty_region = 0
+
+            else:
+                port_structure[clockWiseTmp[i]]["occupied"] = 0
+
+                port_structure[clockWiseTmp[i]]["region_origin"] = region_origin
+
+                empty_region += 1
+                port_structure[clockWiseTmp[i]]["empty_region"] = empty_region
+
+        port_structure["predecessors"] = [i for i in reversed(port_structure["predecessors"])]
 
         self.__port_structure = port_structure
         return
