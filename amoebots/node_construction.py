@@ -11,7 +11,10 @@ class Node(object):
         self.__top_left = None
         self.__top_right = None
         self.__position = None
-        self.__bots = None
+        self.__occupied = False
+        self.__bot = None
+
+        self.__debug = False
 
     def get_node(self, value):
         """
@@ -80,6 +83,21 @@ class Node(object):
         :return:
         """
         pass
+
+    def get_occupied(self):
+        return self.__occupied
+
+    def toggle_debug(self):
+        self.__debug = not self.__debug
+        print("This Node is in debug mode")
+
+    def toggle_occupied(self):
+        if self.__debug:
+            self.__occupied = not self.__occupied
+        else:
+            print("Unable to toggle occupied settings. Bot not in debug mode")
+
+
 
 
 class NodeManager(object):
