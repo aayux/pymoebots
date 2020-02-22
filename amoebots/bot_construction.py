@@ -1,4 +1,6 @@
 import random as rd
+import concurrent.futures as cf
+import time
 
 
 class Bot:
@@ -29,8 +31,9 @@ class Bot:
         """
         if not self.__head_path_x:
             self.__orientate()
-        for _ in range(turns):
-            self.__move()
+        else:
+            for _ in range(turns):
+                self.__move()
 
     def configure(self, node=None, id=None):
         """
@@ -85,8 +88,9 @@ class Bot:
         :return:
         """
         if self.__head is not self.__tail:
-            self.__tail.departure()
+            temp = self.__tail
             self.__tail = self.__head
+            temp.departure()
 
         elif value is None:
             while True:
@@ -115,6 +119,7 @@ class Bot:
 
         :return:
         """
+        self.__head.arrival(bot=self)
         choice = rd.choice(self.__choices)
         choice_index = self.__choices.index(choice)
         for _ in range(len(self.__choices)):
@@ -125,7 +130,6 @@ class Bot:
                 self.__scan_order.append(self.__choices[choice_index%6])
                 choice_index += 1
         self.__collect_path()
-        self.__head.arrival(bot=self)
         
     def scan_for_spaces(self):
         """
@@ -251,6 +255,33 @@ class BotManager:
         for _ in range(rounds):
             for bot in self.__bots:
                 bot.engine(turns=turns)
+
+    def bot_threads(self, rounds=None, turns=None):
+        # pool = cf.ThreadPoolExecutor(1)
+        for i in range(rounds):
+
+            # if i == 0:
+            #     for bot in self.__bots:
+            #         self.__activate_bot(bot=bot)
+            # else:
+            #     with cf.ThreadPoolExecutor() as executor:
+            #         executor.map(self.__activate_bot, self.__bots)
+
+            # futures = []
+            # for bot in self.__bots:
+            #     futures.append(pool.submit(self.__activate_bot, bot))
+            # cf.wait(futures)
+            with cf.ThreadPoolExecutor() as executor:
+                futures = [executor.map(self.__activate_bot, self.__bots)]
+
+
+
+        # for bot in self.__bots:
+        #     with cf.ThreadPoolExecutor(max_workers=1) as executor:
+        #         future = executor.submit(self.__activate_bot, bot, rounds)
+
+    def __activate_bot(self, bot, turns=1):
+        bot.engine(turns=turns)
 
     # def add_bots(self, node=None, id=None):
     #     bot = Bot()

@@ -1,0 +1,22 @@
+Done:
+Creating Nodes
+Creating grid
+Connecting grid to nodes
+Adding bots to grid
+Random Movement of bots
+Random Movement of bots without overlap
+Multi-Threaded bot movement
+
+NTBD:
+Comments on current code
+Agent creation
+Agent to agent communication using link
+Multi-Threaded Agent communication (may need async functions)
+Token Creation
+Passing tokens along proper communication pipeline
+Leader Selection Algorithm
+
+LTBD:
+Auto documentation using sphinx
+Django framework up and running
+integrating projects into url handling
