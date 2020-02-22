@@ -82,7 +82,15 @@ class Node(object):
         :param Bot bot:
         :return:
         """
-        pass
+        self.__occupied = True
+        self.__bot = bot
+
+    def departure(self):
+        """
+        :return:
+        """
+        self.__occupied = False
+        self.__bot = None
 
     def get_occupied(self):
         return self.__occupied
@@ -97,6 +105,55 @@ class Node(object):
         else:
             print("Unable to toggle occupied settings. Bot not in debug mode")
 
+    def create_node(self, node=None, choice=None):
+        new_node = Node()
+        if choice == 'right':
+
+            position = (node.get_position()[0], node.get_position()[1]+2)
+            new_node.set_position(position)
+            self.link_nodes(choice=choice, node_1=node, node_2=new_node)
+        elif choice == 'bottom right':
+            position = (node.get_position()[0]-1, node.get_position()[1] + 1)
+            new_node.set_position(position)
+            self.link_nodes(choice=choice, node_1=node, node_2=new_node)
+        elif choice == 'bottom left':
+            position = (node.get_position()[0]-1, node.get_position()[1] - 1)
+            new_node.set_position(position)
+            self.link_nodes(choice=choice, node_1=node, node_2=new_node)
+        elif choice == 'left':
+            position = (node.get_position()[0], node.get_position()[1] - 2)
+            new_node.set_position(position)
+            self.link_nodes(choice=choice, node_1=node, node_2=new_node)
+        elif choice == 'top left':
+            position = (node.get_position()[0]+1, node.get_position()[1] - 1)
+            new_node.set_position(position)
+            self.link_nodes(choice=choice, node_1=node, node_2=new_node)
+        elif choice == 'top right':
+            position = (node.get_position()[0]+1, node.get_position()[1] + 1)
+            new_node.set_position(position)
+            self.link_nodes(choice=choice, node_1=node, node_2=new_node)
+
+    def link_nodes(self, choice=None, node_1=None, node_2=None):
+        if choice == 'right':
+            node_1.set_node(value=choice, node=node_2)
+            node_2.set_node(value="left", node=node_1)
+        elif choice == 'bottom right':
+            node_1.set_node(value=choice, node=node_2)
+            node_2.set_node(value="top left", node=node_1)
+        elif choice == 'bottom left':
+            node_1.set_node(value=choice, node=node_2)
+            node_2.set_node(value="top right", node=node_1)
+        elif choice == 'left':
+            node_1.set_node(value=choice, node=node_2)
+            node_2.set_node(value="right", node=node_1)
+        elif choice == 'top left':
+            node_1.set_node(value=choice, node=node_2)
+            node_2.set_node(value="bottom right", node=node_1)
+        elif choice == 'top right':
+            node_1.set_node(value=choice, node=node_2)
+            node_2.set_node(value="bottom leftt", node=node_1)
+
+
 
 
 
@@ -110,6 +167,8 @@ class NodeManager(object):
     def __init__(self):
         self.__head = None
         self.__tail = self.__head
+        self.__node_array = []
+        self.__point_array = []
         self.__number_of_nodes = 0
         self.__cluster_info = None
 
@@ -241,6 +300,8 @@ class NodeManager(object):
                         # assigns node it's position
                         current_position[0] -= 2
                         self.__tail.set_position(current_position)
+                self.__point_array.append(self.__tail.get_position())
+                self.__node_array.append(self.__tail)
                 self.__number_of_nodes += 1
 
     def plot(self):
@@ -311,6 +372,12 @@ class NodeManager(object):
                         plot_y2.append(i + 1)
 
         return [plot_x, plot_y, plot_x2, plot_y2]
+
+    def get_node_array(self):
+        return self.__node_array
+
+    def get_points(self):
+        return self.__point_array
 
     def get_number_of_nodes(self):
         """
