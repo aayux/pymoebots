@@ -257,7 +257,7 @@ class Bot:
         #         break
         # if self.__debug:
         #     return [agents, spaces]
-        
+
 
     def get_path(self):
         """
@@ -370,16 +370,51 @@ class Bot:
 
 
 class BotManager:
+    """
+    Manages:
+        bot creation,
+        activation time,
+        Agents,
+        Links.
+        (Tokens?)
+    Has access to the particle system as a whole,
+    but only used for user functionality as it
+    does not interfere with the algorithms themselves.
+
+    """
     def __init__(self):
         self.__bots = []
         self.__paths = []
 
-    def activate(self, rounds=None, turns=None):
+    def activate(self, rounds=1, turns=1):
+        """
+        Main engine for Bot Manager.
+        Lets each bot have their share of the activation time,
+        for as many rounds as necessary to complete the algorithm.
+        TODO: Infinite/Until Termination should be 0.
+        Is turns necessary? What is it used for?
+
+        :param rounds: Number of full passes to make.
+        :type rounds: int
+        :param turns: Not sure.
+        :type turns: int
+        :return: None
+        """
         for _ in range(rounds):
             for bot in self.__bots:
                 bot.engine(turns=turns)
 
-    def bot_threads(self, rounds=None, turns=None):
+    def bot_threads(self, rounds=1, turns=1):
+        """
+        Allocates a ThreadPoolExecutor each round
+        which activates bots.
+
+        :param rounds: Number of passes on each bot, defaults to 1.
+        :type rounds: int
+        :param turns: defaults to 1
+        :type turns: int
+        :return: None
+        """
         # pool = cf.ThreadPoolExecutor(1)
         for i in range(rounds):
 
@@ -404,6 +439,14 @@ class BotManager:
         #         future = executor.submit(self.__activate_bot, bot, rounds)
 
     def __activate_bot(self, bot, turns=1):
+        """
+        Function to activate bot and give it its time
+        in the algorithm. Called by bot_threads().
+
+        :param bot: Reference to which bot to be activated.
+        :type bot: Bot
+        :return: None
+        """
         bot.engine(turns=turns)
 
     # def add_bots(self, node=None, id=None):
@@ -415,11 +458,30 @@ class BotManager:
         # self.__bots[-1].set_id(value=id)
 
     def __add_bots(self, node=None, id=None):
+        """
+        TODO: change name to add_bot?
+        Adds a new bot to the grid, given a head node and private ID.
+        Adds reference to bot to self.__bots
+
+        :param node: Reference to Bot's head node.
+        :type node: node_construction.Node
+        :param id: Private bot ID.
+        :type id: int
+        :return: None
+        """
         bot = Bot()
         bot.configure(node=node, id=id)
         self.__bots.append(bot)
 
     def mass_add_bots(self, number_of_bots=None, nodes=None):
+        """
+        Add multiple bots to the grid, one for each node provided.
+
+        :param number_of_bots: How many Bots to add, defaults to value None.
+        :type number_of_bots: int
+        :param nodes: List of node references for each new Bot's head to go, defaults to None.
+        :type nodes: List of node_construction.Node
+        """
         if number_of_bots and nodes:
             for i in range(number_of_bots):
                 self.__add_bots(node=nodes[i], id=i)
@@ -433,9 +495,21 @@ class BotManager:
 
 
     def get_bots(self):
+        """
+        Returns a list of bots managed by this class.
+
+        :return: List of bot_construction.Bot
+        """
         return self.__bots
 
     def get_positions(self):
+        """
+        Returns list of lists of x and y points
+        for head and tail of a bot.
+
+        :return: Nested lists of x,y head and tail positions.
+        """
+
         return [bot.get_position() for bot in self.__bots]
 
     def get_paths(self):
