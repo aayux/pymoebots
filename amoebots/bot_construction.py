@@ -609,4 +609,31 @@ if __name__ == '__main__':
         bot.toogle_debug()
         print(f" This is the scan order {bot.get_scan_order()}")
 
-    test_path_collect()
+    def test_port_structure():
+        import node_construction as nc
+
+        nodeman = nc.NodeManager()
+        nodeman.create_cluster(x=8, y=4)
+
+        occupied = [
+            [3, 1], #center
+            [2, 2], #top left
+            [1, 1], #left
+            [2, 0], #bottom left
+            [4, 2], #top right
+            [5, 1], #right
+            [4, 0]  #bottom right
+        ]
+        botList = [Bot() for _ in range(len(occupied))]
+        for i in range(len(botList)):
+            botList[i].toggle_debug()
+            botList[i].set_head_node(list(filter(lambda node: node.get_position() == occupied[i], nodeman.get_node_array()))[0])
+            #botList[i].set_head_node(nodeList[i*2])
+            botList[i].orientate()
+
+        botList[0].scan_for_spaces()
+        print(botList[0].port_status("predecessors", "successors"))
+
+
+    #test_path_collect()
+    test_port_structure()
