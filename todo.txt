@@ -6,6 +6,8 @@ Adding bots to grid
 Random Movement of bots
 Random Movement of bots without overlap
 Multi-Threaded bot movement
+Docstrings on amoebots/bot_construction
+Test scan_ports on real nodes.
 
 NTBD:
 Comments on current code
@@ -17,6 +19,7 @@ Passing tokens along proper communication pipeline
 Leader Selection Algorithm
 
 LTBD:
+Use object/dict system {x:int, y:int} for bot positions? (easier to use in JS and clearer)
 Auto documentation using sphinx
 Django framework up and running
 integrating projects into url handling
