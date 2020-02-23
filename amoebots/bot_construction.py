@@ -14,6 +14,9 @@ class Bot:
         self.__choices = ['right', 'bottom right', 'bottom left', 'left', 'top left', 'top right']
         self.__scan_order = []
         self.__port_scan_results = [None, None, None]
+        # Replace above with more descriptive structure below
+        # generated from self.__scan_for_open_ports()
+        self.__port_structure = {}
 
         # This section deals with the bots traveling
         self.__head_path_x = []
@@ -23,11 +26,12 @@ class Bot:
 
         self.__debug = False
 
-    def engine(self, turns=None):
+    def engine(self, turns=1):
         """
         This method is intended to run the bot's algorithm
-        :param turns:
-        :return:
+        :param turns: Number of turns a bot may take before shutting down, defaults to 1.
+        :type turns: int
+        :return: None
         """
         if not self.__head_path_x:
             self.__orientate()
@@ -39,9 +43,11 @@ class Bot:
         """
         The method configures the bots position and id.
 
-        :param node:
-        :param id:
-        :return:
+        :param node: Node object as head/tail for start position.
+        :type node: node_construction.Node
+        :param id: Bot unique private ID
+        :type id: int
+        :return: None
         """
         if node:
             self.__set_position(value=node)
@@ -63,15 +69,19 @@ class Bot:
         """
         Method sets the bot's position.
 
-        :param value:
-        :return:
+        :param value: New position.
+        :type value: node_construction.Node
+        :return: None
         """
         self.__head = value
         self.__tail = self.__head
-        
+
     def __collect_path(self):
         """
-        Records the current position of the head and tail
+        Records the current position of the head and tail to the bot's
+        inner head path and tail path x and y arrays.
+
+        :return: None
         """
         self.__head_path_x.append(self.__head.get_position()[0])
         self.__head_path_y.append(self.__head.get_position()[1])
@@ -80,18 +90,22 @@ class Bot:
 
     def __move(self, value=None):
         """
-        Moves bot
+        Moves bot.
 
-        If no value is given, the bot will move randomly.
+        If value None is given, the bot will move randomly.
 
-        :param str value:
-        :return:
+        :param value: Direction keyword, defaults to None.
+        :type value: str
+        :return: None.
         """
+        # Bot is extended, must move tail in.
         if self.__head is not self.__tail:
             temp = self.__tail
             self.__tail = self.__head
             temp.departure()
 
+        # Pick a random direction keyword from the list of
+        # current open ports in its scan order.
         elif value is None:
             while True:
                 available_ports = self.__scan_for_open_ports()
@@ -106,6 +120,11 @@ class Bot:
         self.__collect_path()
 
     def __scan_for_open_ports(self):
+        """
+        Create a map of open ports around bot.
+
+        :return: Array of open port keywords for bot to move to.
+        """
         available_choice = []
         for port in self.__scan_order:
             node = self.__head.get_node(port)
@@ -115,10 +134,13 @@ class Bot:
 
     def __orientate(self):
         """
-        Orientates bot on grid. Currently, randomly gives bot random orientation.
+        Creates internal list self.__scan_order.
+        Orientates bot on grid.
+        Currently, randomly gives bot random orientation.
 
-        :return:
+        :return: None
         """
+        # Set node under this bot to be occupied by this bot.
         self.__head.arrival(bot=self)
         choice = rd.choice(self.__choices)
         choice_index = self.__choices.index(choice)
@@ -130,60 +152,150 @@ class Bot:
                 self.__scan_order.append(self.__choices[choice_index%6])
                 choice_index += 1
         self.__collect_path()
-        
+
     def scan_for_spaces(self):
         """
+        Non-moving, pre-algorithm method.
+        The intent is to scan for predecessors and successors to identify the
+        directed acyclic graph of leader election, and system boundaries overall.
+
+        Create internal dict self.__port_structure.
         Scan for spaces and spawn threads (agents) when found.
+        Checks all port around it in a clockwise and counterclockwise way.
+        Clockwise pass identifies successors in DAG,
+        CCW pass id's predecessors.
+        List of predecessors and successors is 1:1.
 
-        :return:
+        :return: None
         """
-        flag = 0
-        port = 0
-        agents = 0
-        spaces = []
+        # Check round all ports twice.
+        # First pass clockwise to id successors
+        region_origin = ""
+        region_end = ""
+        # How many empty nodes between occupied ones?
+        empty_region = 0
 
-        while True:
-            if not self.__head.get_node(self.__scan_order[port%6]).get_occupied():
-                if not flag and self.__head.get_node(self.__scan_order[port-1%6]).get_occupied():
-                    space = [self.__scan_order[(port-1)%6]]
-                    flag = 1
-                port += 1
-            elif self.__head.get_node(self.__scan_order[port%6]).get_occupied():
-                if flag:
-                    space.append(self.__scan_order[port%6])
-                    flag = 0
-                    agents += 1
-                    spaces.append(space)
-                port += 1
-            if port > 5 and not flag:
-                break
-        if self.__debug:
-            return [agents, spaces]
+        for j in range(len(self.__scan_order) + 1):
+            i = j % len(self.__scan_order)
+            if self.__head.get_node(self.__scan_order[i]).get_occupied():
+
+                port_structure[self.__scan_order[i]]["occupied"] = 1
+
+                port_structure[self.__scan_order[i]]["region_origin"] = self.__scan_order[i]
+                region_origin = self.__scan_order[i]
+
+                port_structure[self.__scan_order[i]]["empty_region"] = 0
+
+                if empty_region > 0:
+                    print("empty region 0")
+                    port_structure["successors"].append(self.__scan_order[i])
+                    # Can spawn thread here.
+                    empty_region = 0
+
+            else:
+                port_structure[self.__scan_order[i]]["occupied"] = 0
+
+                port_structure[self.__scan_order[i]]["region_origin"] = region_origin
+
+                empty_region += 1
+                port_structure[self.__scan_order[i]]["empty_region"] = empty_region
+
+        empty_region = 0
+
+        # Second pass counterclockwise to ID predecessors
+        clockWiseTmp = [i for i in reversed(self.__scan_order)]
+        print(clockWiseTmp)
+        for j in range(len(self.__scan_order) + 1):
+            i = j % len(self.__scan_order)
+            if self.__head.get_node(self.__scan_order[i]).get_occupied():
+                port_structure[clockWiseTmp[i]]["occupied"] = 1
+
+                port_structure[clockWiseTmp[i]]["region_origin"] = clockWiseTmp[i]
+                region_origin = clockWiseTmp[i]
+
+                port_structure[clockWiseTmp[i]]["empty_region"] = 0
+
+                if empty_region > 0:
+                    print("empty region 0")
+                    port_structure["predecessors"].append(clockWiseTmp[i])
+                    empty_region = 0
+
+            else:
+                port_structure[clockWiseTmp[i]]["occupied"] = 0
+
+                port_structure[clockWiseTmp[i]]["region_origin"] = region_origin
+
+                empty_region += 1
+                port_structure[clockWiseTmp[i]]["empty_region"] = empty_region
+
+        port_structure["predecessors"] = [i for i in reversed(port_structure["predecessors"])]
+
+        self.__port_structure = port_structure
+
+
+        # flag = 0
+        # port = 0
+        # agents = 0
+        # spaces = []
+        #
+        # while True:
+        #     # Get current node in scan order, in relation to head
+        #     if not self.__head.get_node(self.__scan_order[port%6]).get_occupied():
+        #         # Not "flag" but space is occupied.
+        #         if not flag and self.__head.get_node(self.__scan_order[port-1%6]).get_occupied():
+        #             space = [self.__scan_order[(port-1)%6]]
+        #             flag = 1
+        #         port += 1
+        #     elif self.__head.get_node(self.__scan_order[port%6]).get_occupied():
+        #         if flag:
+        #             space.append(self.__scan_order[port%6])
+        #             flag = 0
+        #             agents += 1
+        #             spaces.append(space)
+        #         port += 1
+        #     if port > 5 and not flag:
+        #         break
+        # if self.__debug:
+        #     return [agents, spaces]
+        
 
     def get_path(self):
+        """
+        Retrieve 4 lists movement history of bots.
+
+        :return: List of lists [head_path_x, head_path_y, tail_path_x, tail_path_y]
+        """
         return [self.__head_path_x, self.__head_path_y, self.__tail_path_x, self.__tail_path_y]
 
-    # def set_id(self, value):
-    #     self.__bot_id = value
-
     def __set_id(self, value):
-        self.__bot_id = value
+        """
+        Set a unique private ID if there is not one assigned.
+
+        :param value: Bot ID
+        :type value: int
+        :return: None
+        """
+        if not self.__bot_id:
+            self.__bot_id = value
 
     def toggle_debug(self):
         """
-        Toogles debug mode for bots. This will most likely be offloaded to a class on it's own so that it can be added
+        Toogles debug mode for bots.
+        This will most likely be offloaded to a class
+        on it's own so that it can be added
         only when it is necessary.
 
-        :return:
+        :return: None
         """
         self.__debug = not self.__debug
         print("This bot is now in debug mode")
 
     def get_scan_order(self):
         """
+        Debug only.
         Gets current bots scan order.
 
-        :return: list self.__scan_order
+        :return: List self.__scan_order
         """
         if self.__debug:
             return self.__scan_order
@@ -194,17 +306,28 @@ class Bot:
         """
         Debug option to set head manually.
 
-        :param value:
-        :return:
+        :param value: Set head node and position manually.
+        :type value: node_construction.Node
+        :return: None
         """
         if self.__debug:
             self.__head = value
         print("Cannot run set_head_node method. Bot is not in debug mode")
 
     def get_head(self):
+        """
+        Get Node reference to this bot's head.
+
+        :return: node_construction.Node
+        """
         return self.__head
 
     def get_position(self):
+        """
+        Get position of this bot's head and tail.
+
+        :return: Nested tuple of ((head_x, head_y), (tail_x, tail_y))
+        """
         return self.__head.get_position(), self.__tail.get_position()
 
     def create_on_the_move(self, value=None):
