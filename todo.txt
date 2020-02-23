@@ -10,7 +10,8 @@ Docstrings on amoebots/bot_construction
 Test scan_ports on real nodes.
 
 NTBD:
-Comments on current code
+Comments on current code (nc, vc)
+Agent, Link and Token functionality as bot_extensions
 Agent creation
 Agent to agent communication using link
 Multi-Threaded Agent communication (may need async functions)
