@@ -151,7 +151,7 @@ class Bot:
             else:
                 self.__scan_order.append(self.__choices[choice_index%6])
                 choice_index += 1
-        self.__collect_path()
+        #self.__collect_path()
 
     def scan_for_spaces(self):
         """
@@ -174,6 +174,46 @@ class Bot:
         region_end = ""
         # How many empty nodes between occupied ones?
         empty_region = 0
+        port_structure = {
+            "successors": [],
+            "predecessors": [],
+            "right":    {
+                "region_origin":"",
+                "empty_region":0,
+                "occupied":0,
+                "region_end":""
+            },
+            "bottom right":{
+                "region_origin":"",
+                "empty_region":0,
+                "occupied":0,
+                "region_end":""
+            },
+            "bottom left": {
+                "region_origin":"",
+                "empty_region":0,
+                "occupied":0,
+                "region_end":""
+            },
+            "left":     {
+                "region_origin":"",
+                "empty_region":0,
+                "occupied":0,
+                "region_end":""
+            },
+            "top left":  {
+                "region_origin":"",
+                "empty_region":0,
+                "occupied":0,
+                "region_end":""
+            },
+            "top right": {
+                "region_origin":"",
+                "empty_region":0,
+                "occupied":0,
+                "region_end":""
+            }
+        }
 
         for j in range(len(self.__scan_order) + 1):
             i = j % len(self.__scan_order)
@@ -187,7 +227,6 @@ class Bot:
                 port_structure[self.__scan_order[i]]["empty_region"] = 0
 
                 if empty_region > 0:
-                    print("empty region 0")
                     port_structure["successors"].append(self.__scan_order[i])
                     # Can spawn thread here.
                     empty_region = 0
@@ -201,22 +240,21 @@ class Bot:
                 port_structure[self.__scan_order[i]]["empty_region"] = empty_region
 
         empty_region = 0
+        region_origin=""
 
         # Second pass counterclockwise to ID predecessors
         clockWiseTmp = [i for i in reversed(self.__scan_order)]
-        print(clockWiseTmp)
         for j in range(len(self.__scan_order) + 1):
-            i = j % len(self.__scan_order)
-            if self.__head.get_node(self.__scan_order[i]).get_occupied():
+            i = j % len(clockWiseTmp)
+            if self.__head.get_node(clockWiseTmp[i]).get_occupied():
                 port_structure[clockWiseTmp[i]]["occupied"] = 1
 
-                port_structure[clockWiseTmp[i]]["region_origin"] = clockWiseTmp[i]
                 region_origin = clockWiseTmp[i]
+                port_structure[clockWiseTmp[i]]["region_origin"] = clockWiseTmp[i]
 
                 port_structure[clockWiseTmp[i]]["empty_region"] = 0
 
                 if empty_region > 0:
-                    print("empty region 0")
                     port_structure["predecessors"].append(clockWiseTmp[i])
                     empty_region = 0
 
@@ -312,7 +350,8 @@ class Bot:
         """
         if self.__debug:
             self.__head = value
-        print("Cannot run set_head_node method. Bot is not in debug mode")
+        else:
+            print("Cannot run set_head_node method. Bot is not in debug mode")
 
     def get_head(self):
         """
@@ -361,6 +400,28 @@ class Bot:
             self.__orientate()
         else:
             print("Cannot use method orientate. Bot not in debug mode")
+
+    def port_status(self, *args):
+        """
+        Returns data about a specific port,
+        or list of predecessors or successors.
+
+        :param *args: Any port keyword string | "predecessors" | "successors"
+        :type *args: str
+        :return: Either full port structure or pieces.
+        """
+
+        if self.__debug:
+            if len(args) > 0:
+                packet = {}
+                for elem in args:
+                    if self.__port_structure[elem]:
+                        packet[elem] = self.__port_structure[elem]
+                return packet
+            else:
+                return self.__port_structure
+        else:
+            print("Cannot use method port_status. Bot not in debug mode.")
 
     def __str__(self):
         return str(self.__bot_id)
@@ -513,6 +574,11 @@ class BotManager:
         return [bot.get_position() for bot in self.__bots]
 
     def get_paths(self):
+        """
+        Returns a nested list of paths for every bot.
+
+        :return: nested List of paths for each bot.
+        """
         for bot in self.__bots:
             self.__paths.append(bot.get_path())
         return self.__paths
