@@ -151,7 +151,7 @@ class Bot:
             else:
                 self.__scan_order.append(self.__choices[choice_index%6])
                 choice_index += 1
-        #self.__collect_path()
+        self.__collect_path()
 
     def scan_for_spaces(self):
         """
@@ -478,20 +478,9 @@ class BotManager:
         """
         # pool = cf.ThreadPoolExecutor(1)
         for i in range(rounds):
-
-            # if i == 0:
-            #     for bot in self.__bots:
-            #         self.__activate_bot(bot=bot)
-            # else:
-            #     with cf.ThreadPoolExecutor() as executor:
-            #         executor.map(self.__activate_bot, self.__bots)
-
-            # futures = []
-            # for bot in self.__bots:
-            #     futures.append(pool.submit(self.__activate_bot, bot))
-            # cf.wait(futures)
             with cf.ThreadPoolExecutor() as executor:
-                futures = [executor.map(self.__activate_bot, self.__bots)]
+                executor.map(self.__activate_bot, self.__bots)
+                # futures = [executor.map(self.__activate_bot, self.__bots)]
 
 
 
