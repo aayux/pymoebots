@@ -160,7 +160,7 @@ if __name__ == '__main__':
     # create_grid_test()
     # scan_for_spaces_test()
     # create_grid_with_random_bots_test()
-    # create_grid_with_random_bots_and_movement_test()
+    create_grid_with_random_bots_and_movement_test()
     # MT_create_grid_with_random_bots_and_movement_test()
     pass
 
