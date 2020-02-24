@@ -316,6 +316,9 @@ class Bot:
         if not self.__bot_id:
             self.__bot_id = value
 
+    ## Methods from here down should be 
+    ## debug only methods.
+
     def toggle_debug(self):
         """
         Toogles debug mode for bots.
@@ -370,6 +373,16 @@ class Bot:
         return self.__head.get_position(), self.__tail.get_position()
 
     def create_on_the_move(self, value=None):
+        """
+        Bots can create nodes on the grid as they move.
+        This allows nodes to be created dynamically
+        as a bot gets to them for the first time saving
+        processing power and space.
+
+        :param value: Direction keyword for bot to travel, defaults to None
+        :type value: str
+        :return: None
+        """
         if self.__debug:
             if self.__head is not self.__tail:
                 self.__tail = self.__head
