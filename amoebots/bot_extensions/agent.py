@@ -57,7 +57,7 @@ class Agent:
         """
         return
 
-    def wait():
+    def wait(self):
         """
         Nothing possible to do this timestep (waiting on acknowledgement etc.)
         """

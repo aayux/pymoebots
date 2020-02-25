@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+import os
 
 
 class GridVisualClass(object):
@@ -128,4 +129,7 @@ class GridVisualClass(object):
 
     def show_fig(self):
         self.__fig.show()
-        self.__fig.write_html('./Amoebot Movement Demo.html', include_plotlyjs='cdn')
+        if os.name == 'nt':
+            pass
+        else:
+            self.__fig.write_html('./Amoebot Movement Demo.html', include_plotlyjs='cdn')
