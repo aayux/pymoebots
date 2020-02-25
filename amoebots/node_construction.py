@@ -20,8 +20,9 @@ class Node(object):
         """
         Gets node based on it's relative position:
 
-        :param str value: a value that actc as the trigger to a condition to return the right node.
-        :return: node object
+        :param value: a direction keyword that acts as the trigger to a condition to return the right node.
+        :type value: str
+        :return: node_construction.Node
         """
         if value == 'right':
             return self.__right
@@ -39,9 +40,10 @@ class Node(object):
     def set_position(self, value):
         """
         sets the position of the node
-
-        :param value:
-        :return:
+        TODO: change this to {x:int, y:int} structure
+        :param value: (x, y)
+        :type value: list or tuple
+        :return: None
         """
         self.__position = value
 
@@ -49,9 +51,11 @@ class Node(object):
         """
         sets the node associated with value relative to this node.
 
-        :param value:
-        :param node:
-        :return:
+        :param value: Direction keyword
+        :type value: str
+        :param node: Node reference to set as relative to this node.
+        :type node: node_construction.Node
+        :return: None
         """
 
         if value == 'right':
@@ -70,32 +74,46 @@ class Node(object):
     def get_position(self):
         """
         gets position of node.
+        TODO: change this to {x:int, y:int} structure
 
-        :return:
+        :return: (x, y) tuple
         """
 
         return self.__position
 
     def arrival(self, bot):
         """
-        Add the bot that arrives on this n
-        :param Bot bot:
-        :return:
+        Add the bot that arrives on this node
+
+        :param bot: reference to bot on this space
+        :type bot: bot_construction.Bot
+        :return: None
         """
         self.__occupied = True
         self.__bot = bot
 
     def departure(self):
         """
-        :return:
+        Removes bot and unoccupies node after bot leaves.
+
+        :return: Node
         """
         self.__occupied = False
         self.__bot = None
 
     def get_occupied(self):
+        """
+        Is node occupied?
+        :return: bool
+        """
         return self.__occupied
 
     def toggle_debug(self):
+        """
+        Toggle debug mode on this node.
+
+        :return: None
+        """
         self.__debug = not self.__debug
         print("This Node is in debug mode")
 
