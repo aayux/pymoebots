@@ -1,11 +1,9 @@
 import amoebots.node_construction as nc
 import amoebots.visual_construction as vc
 import amoebots.bot_construction as bc
-import math
+import math, time, os, psutil
 import random as rd
-import time
-import os
-import psutil
+
 
 
 def create_grid_test():
@@ -130,7 +128,7 @@ def create_grid_with_random_bots_and_movement_test():
     print("success")
 
 def create_grid_with_random_bots_test():
-    t1 = time.process_time()
+    t1 = time.perf_counter()
     n = nc.NodeManager()
     x = 15
     y = 13
@@ -145,7 +143,7 @@ def create_grid_with_random_bots_test():
     v.create_bots(positions)
     plot = n.plot()
     points = n.get_points()
-    t2 = time.process_time()
+    t2 = time.perf_counter()
     this_process = psutil.Process(os.getpid())
     print(f"This is the time it takes to produce data {t2 - t1}, using this much memory {this_process.memory_info().rss} bytes")
     v.create_grid(plot)
@@ -160,7 +158,7 @@ if __name__ == '__main__':
     # create_grid_test()
     # scan_for_spaces_test()
     # create_grid_with_random_bots_test()
-    create_grid_with_random_bots_and_movement_test()
+    # create_grid_with_random_bots_and_movement_test()
     # MT_create_grid_with_random_bots_and_movement_test()
     pass
 
