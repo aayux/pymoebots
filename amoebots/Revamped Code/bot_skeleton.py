@@ -7,7 +7,6 @@ import concurrent.futures as cf
 
 @dataclass
 class Bot:
-
     # general information
     bot_id: int = field(default=None)
     port_structure: np.ndarray = field(default=None)
@@ -19,14 +18,16 @@ class Bot:
     number_of_agents: np.uint8 = field(default=np.uint8(0))
     space: np.ndarray = field(default=None)
     spaces: np.ndarray = field(default=None)
+    temp_space: str = field(default=None)
     port_count: np.uint8 = field(default=np.uint8(0))
     scan_flag: np.uint8 = field(default=np.uint8(0))
+    scan_flag_2: np.uint8 = field(default=np.uint8(0))
     agents: np.ndarray = field(default=None)
     leader_election_status: np.ndarray = field(default=None)
     publishing: np.ndarray = field(default=None)
     leader: np.uint8 = field(default=np.uint8(0))
     active: np.uint8 = field(default=np.uint8(1))
-    
+
     orientate_status: np.uint8 = field(default=np.uint8(0))
     scan_for_spaces_status: np.uint8 = field(default=np.uint8(0))
 
@@ -36,10 +37,7 @@ class Bot:
                 self.orientate_status = self.orientate()
                 return np.int8(0)
             elif not self.scan_for_spaces_status:
-                ran_0 = np.uint8(0)
-                ran_1 = np.uint8(0)
-                ran_2 = np.uint8(0)
-                with cf.ThreadPoolExecutor(max_workers=3) as ex:
+                with cf.ThreadPoolExecutor(max_workers=4) as ex:
                     result_0 = ex.submit(self.scan_for_spaces)
                     if self.number_of_agents > 0 and not self.leader_election_status[0]:
                         ex.submit(self.run_agent, 1, self.spaces[0][0], self.spaces[0][1], self.head)
@@ -51,11 +49,12 @@ class Bot:
                 return np.int8(0)
             elif self.number_of_agents == 0:
                 self.active = np.uint8(0)
+                return np.int8(0)
             elif not np.all(self.leader_election_status):
                 if self.number_of_agents == 1:
                     self.leader_election_status[1] = np.int8(1)
                     self.leader_election_status[2] = np.int8(1)
-                else:
+                elif self.number_of_agents == 2:
                     self.leader_election_status[2] = np.int8(1)
                 with cf.ThreadPoolExecutor(max_workers=3) as ex:
                     if self.number_of_agents > 0 and not self.leader_election_status[0]:
@@ -64,7 +63,12 @@ class Bot:
                         ex.submit(self.run_agent, 2, self.spaces[1][0], self.spaces[1][1], self.head)
                     if self.number_of_agents > 2 and not self.leader_election_status[2]:
                         ex.submit(self.run_agent, 3, self.spaces[2][0], self.spaces[2][1], self.head)
-        return np.int8(1)
+                # print(f"i'm not resolved {self.bot_id}")
+                return np.int8(0)
+            else:
+                return np.int8(1)
+        else:
+            return np.int8(1)
 
     def get_head(self):
         return self.head
@@ -89,7 +93,7 @@ class Bot:
         for _ in range(np.uint8(choices.size)):
             self.port_structure = np.append(self.port_structure, choices[choice_index[0] % np.uint8(6)])
             choice_index += np.uint8(1)
-        self.agents = np.array([ag.Agent(),ag.Agent(),ag.Agent()])
+        self.agents = np.array([ag.Agent(), ag.Agent(), ag.Agent()])
         self.publishing = np.empty(3, dtype='object')
         self.leader_election_status = np.zeros(3, dtype='uint8')
         return np.uint8(1)
@@ -99,55 +103,67 @@ class Bot:
 
     def scan_for_spaces(self):
         if self.space is None:
-            self.space = np.empty([2,1], "<U12")
-            
+            self.space = np.empty([2], "<U12")
+
         if self.spaces is None:
-            self.spaces = np.empty([3,2,1], dtype="<U12")
-            
-        occupied_status = self.head.check_neighbor(port=self.port_structure[self.port_count%6]).get_occupied()
-            
-        if occupied_status and self.scan_flag:
-            self.space[1] = self.port_structure[self.port_count%6]
-            
-        elif occupied_status and not self.scan_flag:
-            self.space[0] = self.port_structure[self.port_count%6]
-            
-        elif not occupied_status and self.scan_flag:
-            pass
-            
-        elif not occupied_status and not self.scan_flag:
+            self.spaces = np.empty([3, 2], dtype="<U12")
+
+        occupied_status = self.head.check_neighbor(port=self.port_structure[self.port_count % 6]).get_occupied()
+
+        if not occupied_status:
             self.scan_flag = np.uint8(1)
 
-        if self.space[0] and self.space[1]:
-            self.spaces[self.number_of_agents] = self.space
-            self.space = np.empty([2,1], "<U12")
-            self.number_of_agents += np.uint8(1)
-            self.space[0] = self.port_structure[self.port_count%6]
+        elif occupied_status and self.scan_flag:
+            if not self.space[0]:
+                if self.port_count % 6:
+                    self.space[0] = self.port_structure[self.port_count % 6]
+                    self.temp_space = self.port_structure[self.port_count % 6]
+                else:
+                    self.space[0] = self.port_structure[self.port_count % 6]
+            else:
+                self.space[1] = self.port_structure[self.port_count % 6]
             self.scan_flag = np.uint8(0)
-        
-        if (self.port_count > 5 and not self.scan_flag) or self.port_count>11:
+
+        elif occupied_status and not self.scan_flag:
+            self.space[0] = self.port_structure[self.port_count % 6]
+
+        if self.space[0] and self.space[1]:
+            if self.space not in self.spaces:
+                self.spaces[self.number_of_agents] = self.space
+                self.space = np.empty(2, "<U12")
+                self.number_of_agents += np.uint8(1)
+                self.space[0] = self.port_structure[self.port_count % 6]
+
+        if self.port_count > 5:
+            if self.temp_space:
+                self.space[1] = self.temp_space
+                self.spaces[self.number_of_agents] = self.space
+                self.number_of_agents += np.uint8(1)
             return np.uint8(1)
-            
+
         self.port_count += np.uint8(1)
         return np.uint8(0)
 
     def run_agent(self, agent=None, predecessor=None, successor=None, current_node=None):
         if agent == 1:
             if not self.agents[0].is_initialized():
-                self.agents[0].initialize(predecessor=predecessor, successor=successor, current_node=current_node, bot=self, agent=0)
+                self.agents[0].initialize(predecessor=predecessor, successor=successor, current_node=current_node,
+                                          bot=self, agent=0)
             if not self.leader_election_status[0]:
                 self.leader_election_status[0] = self.agents[0].leader_election()
         elif agent == 2:
             if not self.agents[1].is_initialized():
-                self.agents[1].initialize(predecessor=predecessor, successor=successor, current_node=current_node, bot=self, agent=1)
+                self.agents[1].initialize(predecessor=predecessor, successor=successor, current_node=current_node,
+                                          bot=self, agent=1)
             if not self.leader_election_status[1]:
                 self.leader_election_status[1] = self.agents[1].leader_election()
         elif agent == 3:
             if not self.agents[2].is_initialized():
-                self.agents[2].initialize(predecessor=predecessor, successor=successor, current_node=current_node, bot=self, agent=2)
+                self.agents[2].initialize(predecessor=predecessor, successor=successor, current_node=current_node,
+                                          bot=self, agent=2)
             if not self.leader_election_status[2]:
                 self.leader_election_status[2] = self.agents[2].leader_election()
-        
+
 
 if __name__ == "__main__":
     def test_single_repr():
@@ -156,12 +172,14 @@ if __name__ == "__main__":
         a = np.append(a, bot)
         print(f"{a}")
 
+
     def test_multiple_repr():
         a = np.empty(0, dtype="object")
         for i in range(np.uint8(10)):
             bot = Bot(bot_id=np.uint8(i))
             a = np.append(a, bot)
         print(f"{a}")
+
 
     def test_node_assignment_to_head():
         import node_manager as nm
@@ -170,6 +188,7 @@ if __name__ == "__main__":
         node = node_manager.get_node(np.uint8(0))
         bot = Bot(head=node)
         print(bot.get_head())
+
 
     def test_orientate():
         import node_manager as nm
