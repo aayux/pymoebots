@@ -31,6 +31,9 @@ class Bot:
     orientate_status: np.uint8 = field(default=np.uint8(0))
     scan_for_spaces_status: np.uint8 = field(default=np.uint8(0))
 
+    def clean_publishing_slot(self, slot=None):
+        self.publishing[slot] = None
+
     def engine(self):
         if self.active:
             if not self.orientate_status:
@@ -63,7 +66,7 @@ class Bot:
                         ex.submit(self.run_agent, 2, self.spaces[1][0], self.spaces[1][1], self.head)
                     if self.number_of_agents > 2 and not self.leader_election_status[2]:
                         ex.submit(self.run_agent, 3, self.spaces[2][0], self.spaces[2][1], self.head)
-                # print(f"i'm not resolved {self.bot_id}")
+                print(f"i'm not resolved {self.bot_id}")
                 return np.int8(0)
             else:
                 return np.int8(1)
@@ -72,6 +75,9 @@ class Bot:
 
     def get_head(self):
         return self.head
+
+    def get_id(self):
+        return self.bot_id
 
     def get_published(self):
         return self.publishing

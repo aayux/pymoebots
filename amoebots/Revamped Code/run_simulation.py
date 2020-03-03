@@ -5,7 +5,7 @@ import time
 
 if __name__ == "__main__":
     t1 = time.perf_counter()
-    grid = pt.Grid(4,4)
+    grid = pt.Grid(8,8)
     grid.create_triangular_grid()
     node_manager = nm.NodeManager(plotted_points=grid.get_grid())
     node_manager.create_node_structure()
