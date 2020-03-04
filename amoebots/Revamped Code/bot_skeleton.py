@@ -42,12 +42,15 @@ class Bot:
             elif not self.scan_for_spaces_status:
                 with cf.ThreadPoolExecutor(max_workers=4) as ex:
                     result_0 = ex.submit(self.scan_for_spaces)
-                    if self.number_of_agents > 0 and not self.leader_election_status[0]:
-                        ex.submit(self.run_agent, 1, self.spaces[0][0], self.spaces[0][1], self.head)
-                    if self.number_of_agents > 1 and not self.leader_election_status[1]:
-                        ex.submit(self.run_agent, 2, self.spaces[1][0], self.spaces[1][1], self.head)
-                    if self.number_of_agents > 2 and not self.leader_election_status[2]:
-                        ex.submit(self.run_agent, 3, self.spaces[2][0], self.spaces[2][1], self.head)
+                    for i in range(self.number_of_agents):
+                        ex.submit(self.run_agent, i + 1, self.spaces[i][0], self.spaces[i][1], self.head)
+                    # if self.number_of_agents > 0 and not self.leader_election_status[0]:
+                    #     ex.submit(self.run_agent, 1, self.spaces[0][0], self.spaces[0][1], self.head)
+                    # if self.number_of_agents > 1 and not self.leader_election_status[1]:
+                    #     ex.submit(self.run_agent, 2, self.spaces[1][0], self.spaces[1][1], self.head)
+                    # if self.number_of_agents > 2 and not self.leader_election_status[2]:
+                    #     ex.submit(self.run_agent, 3, self.spaces[2][0], self.spaces[2][1], self.head)
+                    ex.shutdown(wait=True)
                 self.scan_for_spaces_status = result_0.result()
                 return np.int8(0)
             elif self.number_of_agents == 0:
@@ -60,13 +63,16 @@ class Bot:
                 elif self.number_of_agents == 2:
                     self.leader_election_status[2] = np.int8(1)
                 with cf.ThreadPoolExecutor(max_workers=3) as ex:
-                    if self.number_of_agents > 0 and not self.leader_election_status[0]:
-                        ex.submit(self.run_agent, 1, self.spaces[0][0], self.spaces[0][1], self.head)
-                    if self.number_of_agents > 1 and not self.leader_election_status[1]:
-                        ex.submit(self.run_agent, 2, self.spaces[1][0], self.spaces[1][1], self.head)
-                    if self.number_of_agents > 2 and not self.leader_election_status[2]:
-                        ex.submit(self.run_agent, 3, self.spaces[2][0], self.spaces[2][1], self.head)
-                print(f"i'm not resolved {self.bot_id}")
+                    for i in range(self.number_of_agents):
+                        ex.submit(self.run_agent, i + 1, self.spaces[i][0], self.spaces[i][1], self.head)
+                    # if self.number_of_agents > 0 and not self.leader_election_status[0]:
+                    #     ex.submit(self.run_agent, 1, self.spaces[0][0], self.spaces[0][1], self.head)
+                    # if self.number_of_agents > 1 and not self.leader_election_status[1]:
+                    #     ex.submit(self.run_agent, 2, self.spaces[1][0], self.spaces[1][1], self.head)
+                    # if self.number_of_agents > 2 and not self.leader_election_status[2]:
+                    #     ex.submit(self.run_agent, 3, self.spaces[2][0], self.spaces[2][1], self.head)
+                    ex.shutdown(wait=True)
+                # print(f"i'm not resolved {self.bot_id}")
                 return np.int8(0)
             else:
                 return np.int8(1)
@@ -151,6 +157,7 @@ class Bot:
         return np.uint8(0)
 
     def run_agent(self, agent=None, predecessor=None, successor=None, current_node=None):
+        # print(f"I'm running {self.bot_id}")
         if agent == 1:
             if not self.agents[0].is_initialized():
                 self.agents[0].initialize(predecessor=predecessor, successor=successor, current_node=current_node,
