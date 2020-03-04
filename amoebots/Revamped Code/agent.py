@@ -42,7 +42,7 @@ class Agent:
         elif self.successor_link is None:
             published = self.successor_bot.get_published()
             for i in range(3):
-                if published[i].authorize(bot=self.bot):
+                if published[i] is not None and published[i].authorize(bot=self.bot):
                     self.successor_link = published[i].get_link()
         elif not self.links_established:
             if not self.links_tested:
@@ -51,7 +51,7 @@ class Agent:
                 self.links_tested = np.uint8(1)
             elif self.link.get_test() == 2 and self.successor_link.get_test() == 2:
                 self.links_established = np.uint8(1)
-                # self.clean_publishing_slot(slot=self.agent_id)
+                self.clean_publishing_slot(slot=self.agent_id)
 
     def clean_publishing_slot(self, slot=None):
         self.bot.clean_publishing_slot(slot=slot)
