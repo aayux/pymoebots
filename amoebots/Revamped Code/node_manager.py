@@ -26,7 +26,7 @@ class NodeManager:
 
     def get_node(self, node_id=None):
         """
-        gets specific node from node lise.
+        gets specific node from node list.
         """
         return self.node_list[node_id]
 
@@ -70,9 +70,11 @@ class NodeManager:
             prev_row[i % row] = node
 
     def get_number_nodes(self):
+        """Returns total number of nodes in graph"""
         return len(self.node_list)
 
     def get_node_list(self):
+        """Returns all nodes from node list"""
         return self.node_list
 
 

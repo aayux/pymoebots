@@ -17,6 +17,7 @@ class Node:
     bot: object = field(default=None)
 
     def arrival(self, bot):
+        """bot arrival on this node sets occupied state to 1, meaning occupied"""
         self.occupied = np.uint8(1)
         self.bot = bot
 
@@ -28,6 +29,7 @@ class Node:
         return self.neighbors[port]
 
     def departure(self):
+        """bot departure from this node sets occupied state to 0, meaning unoccupied"""
         self.occupied = np.uint8(0)
         self.bot = None
 

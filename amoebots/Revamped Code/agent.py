@@ -7,6 +7,7 @@ import numpy as np
 
 @dataclass
 class Agent:
+    """This class is responsible for an agent's attributes and functions"""
     initialized: np.uint8 = field(default=np.uint8(0))
     predecessor: str = field(default=None)
     successor: str = field(default=None)
@@ -91,5 +92,6 @@ class Agent:
         return np.uint8(1)
 
     def segment_setup(self):
+        """This method determines if the agent is a candidate by randomly selecting zero or one. One makes the agent a candidate, zero makes the agent a non-candidate."""
         self.candidate_coin_flip_result = np.random.choice(np.array([0, 1], dtype='uint8'))
         self.candidate_coin_flipped = np.uint8(1)

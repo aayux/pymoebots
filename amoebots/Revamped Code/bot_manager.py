@@ -29,7 +29,7 @@ class BotManager:
 
     def add_bot(self, node=None):
         """
-        Adds individual nodes to node list
+        Adds individual bot to bot list
         """
         if not self.bot_list:
             self.bot_list = {}
@@ -42,6 +42,7 @@ class BotManager:
             self.next_index += np.uint32(1)
 
     def random_bot_placement(self, number_of_bots=None, node_list=None):
+        """Places bots in graph randomly"""
         converted_list = np.array(list(node_list.values()))
         np.random.shuffle(converted_list)
         for i in range(number_of_bots):
