@@ -10,9 +10,7 @@ Welcome to Programmable Particles's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: bot_manager.BotManager
-   :members:
-
+   agent
 
 
 Indices and tables
