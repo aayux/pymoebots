@@ -23,7 +23,8 @@
     
   <link rel="index" title="Index" href="genindex.html" />
   <link rel="search" title="Search" href="search.html" />
-  <link rel="prev" title="Welcome to Programmable Particles’s documentation!" href="index.html" /> 
+  <link rel="next" title="Detailed Changelog" href="verlog.html" />
+  <link rel="prev" title="Bot Classes" href="bots.html" /> 
   </head>
 
   <body>
@@ -73,6 +74,24 @@
       </p>
       <ul class="current">
         
+          <li class="toctree-l1 "><a href="project-summary.html" class="reference internal ">Project Summary and Notes</a>
+
+            
+          </li>
+
+        
+          <li class="toctree-l1 "><a href="faq.html" class="reference internal ">Questions</a>
+
+            
+          </li>
+
+        
+          <li class="toctree-l1 "><a href="bots.html" class="reference internal ">Bot Classes</a>
+
+            
+          </li>
+
+        
           <li class="toctree-l1 current"><a href="#" class="reference internal current">Agent Class</a>
 
             
@@ -81,6 +100,18 @@
                   <li class="toctree-l2"><a href="#class-definition" class="reference internal">Class Definition</a></li>
                 
               </ul>
+            
+          </li>
+
+        
+          <li class="toctree-l1 "><a href="verlog.html" class="reference internal ">Detailed Changelog</a>
+
+            
+          </li>
+
+        
+          <li class="toctree-l1 "><a href="references.html" class="reference internal ">References and Bibliography</a>
+
             
           </li>
 
@@ -103,8 +134,12 @@
 
   <ul class="page-nav">
   <li class="prev">
-    <a href="index.html"
-       title="previous chapter">← Welcome to Programmable Particles’s documentation!</a>
+    <a href="bots.html"
+       title="previous chapter">← Bot Classes</a>
+  </li>
+  <li class="next">
+    <a href="verlog.html"
+       title="next chapter">Detailed Changelog →</a>
   </li>
 </ul>
   
@@ -121,12 +156,12 @@ them are on the same boundary. No data is shared between these agents while
 inside a bot.</p>
 <p>An example is shown below regarding how bots initialize these agents based on
 how many boundaries of the system they are on.</p>
-<p>TODO: diagram of bots.</p>
+<p>TODO: diagram of bots</p>
 <div class="section" id="class-definition">
 <h2>Class Definition<a class="headerlink" href="#class-definition" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="agent.Agent">
-<em class="property">class </em><code class="sig-prename descclassname">agent.</code><code class="sig-name descname">Agent</code><span class="sig-paren">(</span><em class="sig-param">initialized: numpy.uint8 = 0</em>, <em class="sig-param">predecessor: str = None</em>, <em class="sig-param">successor: str = None</em>, <em class="sig-param">current_node: object = None</em>, <em class="sig-param">bot: object = None</em>, <em class="sig-param">agent_id: numpy.uint8 = None</em>, <em class="sig-param">successor_node: object = None</em>, <em class="sig-param">predecessor_node: object = None</em>, <em class="sig-param">successor_bot: object = None</em>, <em class="sig-param">predecessor_bot: object = None</em>, <em class="sig-param">link: object = None</em>, <em class="sig-param">link_published: numpy.uint8 = 0</em>, <em class="sig-param">links_tested: numpy.uint8 = 0</em>, <em class="sig-param">links_established: numpy.uint8 = 0</em>, <em class="sig-param">successor_link: object = None</em>, <em class="sig-param">candidate_coin_flipped: numpy.uint8 = 0</em>, <em class="sig-param">candidate_coin_flip_result: numpy.uint8 = 0</em>, <em class="sig-param">identifier: numpy.uint8 = None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.Agent" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">agent.</code><code class="sig-name descname">Agent</code><span class="sig-paren">(</span><em class="sig-param">initialized: numpy.uint8 = 0</em>, <em class="sig-param">predecessor: str = None</em>, <em class="sig-param">successor: str = None</em>, <em class="sig-param">current_node: object = None</em>, <em class="sig-param">bot: object = None</em>, <em class="sig-param">agent_id: numpy.uint8 = None</em>, <em class="sig-param">successor_node: object = None</em>, <em class="sig-param">predecessor_node: object = None</em>, <em class="sig-param">successor_bot: object = None</em>, <em class="sig-param">predecessor_bot: object = None</em>, <em class="sig-param">link: object = None</em>, <em class="sig-param">link_published: numpy.uint8 = 0</em>, <em class="sig-param">links_tested: numpy.uint8 = 0</em>, <em class="sig-param">links_established: numpy.uint8 = 0</em>, <em class="sig-param">successor_link: object = None</em>, <em class="sig-param">segment_setup_status: numpy.uint8 = 0</em>, <em class="sig-param">candidate: numpy.uint8 = 0</em>, <em class="sig-param">identifier_token: object = None</em>, <em class="sig-param">delimiter: object = None</em>, <em class="sig-param">delimiter_passed: object = None</em>, <em class="sig-param">identifier_setup_status: numpy.uint8 = 0</em>, <em class="sig-param">wait_time: numpy.uint8 = None</em>, <em class="sig-param">wait: numpy.uint8 = None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.Agent" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class is responsible for an
 agent’s attributes and functions.
 Since most vars are established in or for certain phases,
@@ -141,16 +176,24 @@ BI: Boundary Identification</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>initialized</strong> (<em>int 0|1</em>) – Has this agent called self.initialize()? Defaults to 0</p></li>
+<li><p><strong>initialized</strong> (<em>uint8 0|1</em>) – Has this agent called self.initialize()? Defaults to 0</p></li>
 <li><p><strong>predecessor</strong> (<a class="reference internal" href="#agent.Agent" title="agent.Agent"><em>agent.Agent</em></a>) – Agent which precedes this one in the DAG. Defaults to None</p></li>
 <li><p><strong>successor</strong> (<a class="reference internal" href="#agent.Agent" title="agent.Agent"><em>agent.Agent</em></a>) – Agent which succeeds this one in the DAG. Defaults to None</p></li>
 <li><p><strong>current_node</strong> (<em>node_skeleton.Node</em>) – Node which this agent’s host bot is on.</p></li>
-<li><p><strong>bot</strong> (<em>bot_skeleton.Bot</em>) – Host bot of this agent.</p></li>
-<li><p><strong>agent_id</strong> (<em>int</em>) – This agent’s ID number Defaults to None.</p></li>
+<li><p><strong>bot</strong> (<a class="reference internal" href="bots.html#bot_skeleton.Bot" title="bot_skeleton.Bot"><em>bot_skeleton.Bot</em></a>) – Host bot of this agent.</p></li>
+<li><p><strong>agent_id</strong> (<em>uint</em>) – This agent’s ID number. Defaults to None.</p></li>
 <li><p><strong>successor_node</strong> (<em>node_skeleton.Node</em>) – Reference to the succeeding Agent’s node.</p></li>
 <li><p><strong>predecessor_node</strong> (<em>node_skeleton.Node</em>) – Reference to the preceding Agent’s node.</p></li>
-<li><p><strong>successor_bot</strong> (<em>bot_skeleton.Bot</em>) – Reference to the succeeding Agent’s host bot.</p></li>
-<li><p><strong>predecessor_bot</strong> (<em>bot_skeleton.Bot</em>) – Reference to the preceding Agent’s bot.</p></li>
+<li><p><strong>successor_bot</strong> (<a class="reference internal" href="bots.html#bot_skeleton.Bot" title="bot_skeleton.Bot"><em>bot_skeleton.Bot</em></a>) – Reference to the succeeding Agent’s host bot.</p></li>
+<li><p><strong>predecessor_bot</strong> (<a class="reference internal" href="bots.html#bot_skeleton.Bot" title="bot_skeleton.Bot"><em>bot_skeleton.Bot</em></a>) – Reference to the preceding Agent’s bot.</p></li>
+<li><p><strong>link</strong> (<em>link.Link</em>) – BS. Shared memory space between two neighbors. Defaults to None.</p></li>
+<li><p><strong>link_published</strong> (<em>uint8 0|1</em>) – BS. Once this agent’s Link has been initialized, this becomes 1. Defaults to 0.</p></li>
+<li><p><strong>links_tested</strong> (<em>uint8 0|1</em>) – BS. The agents has tested its connection to the Link. Defaults to 0.</p></li>
+<li><p><strong>links_established</strong> (<em>uint8 0|1</em>) – BS. The agent has established connection with its neighbor at the end of the link. Default to 0.</p></li>
+<li><p><strong>successor_link</strong> (<em>link.Link</em>) – BS. Reference to the link of the successor agent in the DAG. Defaults to None.</p></li>
+<li><p><strong>candidate_coin_flipped</strong> (<em>uint8 1|0</em>) – SS. Has this agent flipped a coin yet to determine candidacy? Defaults to 0.</p></li>
+<li><p><strong>candidate_coin_flip_result</strong> (<em>uint8 1|0</em>) – SS. Is this agent a candidate as a result of the coin flip? Defaults to 0.</p></li>
+<li><p><strong>identifier</strong> (<em>uint8 1|0</em>) – IS. The digit of the reverse identifier in the sequence. Separate from the original coin flip.</p></li>
 </ul>
 </dd>
 </dl>
@@ -232,7 +275,7 @@ different agents.</p>
 <li><p><strong>predecessor</strong> (<a class="reference internal" href="#agent.Agent" title="agent.Agent"><em>agent.Agent</em></a>) – Agent which precedes this one in the DAG. Defaults to None</p></li>
 <li><p><strong>successor</strong> (<a class="reference internal" href="#agent.Agent" title="agent.Agent"><em>agent.Agent</em></a>) – Agent which succeeds this one in the DAG. Defaults to None</p></li>
 <li><p><strong>current_node</strong> (<em>node_skeleton.Node</em>) – Node which this agent’s host bot is on.</p></li>
-<li><p><strong>bot</strong> (<em>bot_skeleton.Bot</em>) – Host bot of this agent.</p></li>
+<li><p><strong>bot</strong> (<a class="reference internal" href="bots.html#bot_skeleton.Bot" title="bot_skeleton.Bot"><em>bot_skeleton.Bot</em></a>) – Host bot of this agent.</p></li>
 <li><p><strong>agent</strong> (<em>int</em><em>(</em><em>?</em><em>)</em>) – This agent’s ID number(?) Defaults to None.</p></li>
 </ul>
 </dd>
@@ -288,8 +331,12 @@ zero makes the agent a non-candidate.</p>
           <div class="page-nav">
             <div class="inner"><ul class="page-nav">
   <li class="prev">
-    <a href="index.html"
-       title="previous chapter">← Welcome to Programmable Particles’s documentation!</a>
+    <a href="bots.html"
+       title="previous chapter">← Bot Classes</a>
+  </li>
+  <li class="next">
+    <a href="verlog.html"
+       title="next chapter">Detailed Changelog →</a>
   </li>
 </ul><div class="footer" role="contentinfo">
       &#169; Copyright 2020, Jesse Thomas, Joshua Barnett, Christopher Till, Aayush Yadav, Sunil Shende, David Bushta.

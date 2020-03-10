@@ -7,10 +7,16 @@ Welcome to Programmable Particles's documentation!
 ==================================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
+   project-summary
+   faq
+   bots
    agent
+   verlog
+   references
+
 
 
 Indices and tables
