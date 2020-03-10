@@ -7,7 +7,65 @@ import concurrent.futures as cf
 
 @dataclass
 class Bot:
-    """ This class is responsible for a bot's general attributes and functions"""
+    """
+    This class is responsible for a bot's
+    general attributes and functions.
+    Bot functionality will be extended by using other modules.
+
+    :param bot_id: Bot's unique ID. Only used for debugging/non-algorithm operations.
+    :type bot_id: uint
+
+    :param port_structure: A record of a bot's neighbors, built from its self.orientate method.
+    :type port_structure: Array of directional keyword strings.
+
+    :param head:
+    :type head:
+
+    :param tail:
+    :type tail:
+
+    :param number_of_agents:
+    :type number_of_agents:
+
+    :param space:
+    :type space:
+
+    :param spaces:
+    :type spaces:
+
+    :param temp_space:
+    :type temp_space:
+
+    :param port_count:
+    :type port_count:
+
+    :param scan_flag:
+    :type scan_flag:
+
+    :param scan_flag_2:
+    :type scan_flag_2:
+
+    :param agents:
+    :type agents:
+
+    :param leader_election_status:
+    :type leader_election_status:
+
+    :param publishing:
+    :type publishing:
+
+    :param leader:
+    :type leader:
+
+    :param active:
+    :type active:
+
+    :param orientate_status:
+    :type orientate_status:
+
+    :param active:
+    :type active:
+    """
     # general information
     bot_id: int = field(default=None)
     port_structure: np.ndarray = field(default=None)
@@ -91,7 +149,7 @@ class Bot:
 
     def orientate(self):
         """
-        Creates internal list self.__scan_order.
+        Creates internal list self.port_structure.
         Orientates bot on grid.
         Currently, randomly gives bot random orientation.
 
@@ -220,4 +278,3 @@ if __name__ == "__main__":
     # test_node_assignment_to_head()
     # test_orientate()
     pass
-
