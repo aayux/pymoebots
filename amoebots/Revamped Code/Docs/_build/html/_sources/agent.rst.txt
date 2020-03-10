@@ -1,4 +1,4 @@
-.. note that headings have to have the exact number of
+.. NOTE: that headings have to have the exact number of
    underlines as the length of their preceding line
 
 Agent Class
@@ -13,7 +13,7 @@ inside a bot.
 An example is shown below regarding how bots initialize these agents based on
 how many boundaries of the system they are on.
 
-TODO: diagram of bots.
+TODO: diagram of bots
 
 Class Definition
 ----------------
