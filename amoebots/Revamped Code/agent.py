@@ -1,4 +1,6 @@
 from dataclasses import dataclass, field
+from package import Token
+from numpy import uint8
 
 import link as lk
 import package as pk
@@ -72,7 +74,7 @@ class Agent:
     :param candidate_coin_flip_result: SS. Is this agent a candidate as a result of the coin flip? Defaults to 0.
     :type candidate_coin_flip_result: uint8 1|0
 
-    :param identifier: IS. The digit of the reverse identifier in the sequence. Separate from the original coin flip. 
+    :param identifier: IS. The digit of the reverse identifier in the sequence. Separate from the original coin flip.
     :type identifier: uint8 1|0
     """
     initialized: np.uint8 = field(default=np.uint8(0))
@@ -94,11 +96,14 @@ class Agent:
     successor_link: object = field(default=None)
 
     # segment_setup
-    candidate_coin_flipped: np.uint8 = field(default=np.uint8(0))
-    candidate_coin_flip_result: np.uint8 = field(default=np.uint8(0))
+    segment_setup_status: np.uint8 = field(default=np.uint8(0))
+    candidate: np.uint8 = field(default=np.uint8(0))
 
     # identifier_setup
-    identifier: np.uint8 = field(default=None)
+    identifier_token: object = field(default=None)
+    delimiter: object = field(default=None)
+    delimiter_passed: object = field(default=None)
+    identifier_setup_status: np.uint8 = field(default=np.uint8(0))
 
     def boundary_setup(self):
         """
@@ -114,7 +119,7 @@ class Agent:
         if not self.link_published:
             self.link = lk.Link(link_id=self.bot.get_id())
             package = pk.Package()
-            package.store_link(access=self.predecessor_bot,link=self.link)
+            package.store_link(access=self.predecessor_bot, link=self.link)
             self.bot.publish(agent_id=self.agent_id, item=package)
             self.link_published = np.uint8(1)
         elif self.successor_link is None:
@@ -127,6 +132,8 @@ class Agent:
                 self.link.test_signal()
                 self.successor_link.test_signal()
                 self.links_tested = np.uint8(1)
+                self.link.successor_agent = self
+                self.successor_link.predecessor_agent = self
             elif self.link.get_test() == 2 and self.successor_link.get_test() == 2:
                 self.links_established = np.uint8(1)
                 self.clean_publishing_slot(slot=self.agent_id)
@@ -173,11 +180,35 @@ class Agent:
 
         :return: None
         """
-        if self.candidate_coin_flip_result:
-            if self.identifier is not None:
-                self.identifier = np.random.choice(np.array([0, 1], dtype='uint8'))
+        next_status = self.successor_link.successor_agent.segment_setup_status
+        next_is_candidate = self.successor_link.successor_agent.candidate
+
+        if next_status and not next_is_candidate:
+            if self.candidate:
+                if self.delimiter_passed is None:
+                    self.identifier_token = Token(token_id=np.random.bytes(2),
+                                                  identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
+                    self.delimiter = Token(delimiter=uint8(1))
+                    self.successor_link.load_delimiter(delimiter=self.delimiter)
+                    self.delimiter_passed = uint8(1)
+                    self.identifier_setup_status = uint8(1)
             else:
-                pass
+                if self.link.get_delimiter() is not None:
+                    self.identifier_token = Token(token_id=np.random.bytes(2),
+                                                  identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
+                    self.successor_link.load_delimiter(delimiter=self.link.get_delimiter())
+                    self.link.remove_delimiter()
+                    self.identifier_setup_status = uint8(1)
+        elif next_status and next_is_candidate:
+            if self.candidate:
+                self.identifier_token = Token(token_id=np.random.bytes(2),
+                                              identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
+                self.delimiter = Token(delimiter=uint8(1))
+                self.identifier_setup_status = uint8(1)
+            else:
+                self.identifier_token = Token(token_id=np.random.bytes(2),
+                                              identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
+                self.identifier_setup_status = uint8(1)
 
     def initialize(self, predecessor=None, successor=None, current_node=None, bot=None, agent=None):
         """
@@ -231,9 +262,12 @@ class Agent:
         if not self.links_established:
             self.boundary_setup()
             return np.uint8(0)
-        # elif not self.candidate_coin_flipped:
-        #     self.segment_setup()
-        #     return np.uint8(0)
+        elif not self.segment_setup_status:
+            self.segment_setup()
+            return np.uint8(0)
+        elif not self.identifier_setup_status:
+            self.identifier_setup()
+            return np.uint8(0)
         return np.uint8(1)
 
     def segment_setup(self):
@@ -245,5 +279,5 @@ class Agent:
 
         :return: None
         """
-        self.candidate_coin_flip_result = np.random.choice(np.array([0, 1], dtype='uint8'))
-        self.candidate_coin_flipped = np.uint8(1)
+        self.candidate = np.random.choice(np.array([0, 1], dtype='uint8'))
+        self.segment_setup_status = np.uint8(1)
