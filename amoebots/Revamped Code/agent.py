@@ -104,6 +104,8 @@ class Agent:
     delimiter: object = field(default=None)
     delimiter_passed: object = field(default=None)
     identifier_setup_status: np.uint8 = field(default=np.uint8(0))
+    wait_time: np.uint8 = field(default=None)
+    wait: np.uint8 = field(default=None)
 
     def boundary_setup(self):
         """
@@ -209,6 +211,9 @@ class Agent:
                 self.identifier_token = Token(token_id=np.random.bytes(2),
                                               identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
                 self.identifier_setup_status = uint8(1)
+        self.wait += 1
+        if self.wait_time == self.wait:
+            self.segment_setup_status = uint8(0)
 
     def initialize(self, predecessor=None, successor=None, current_node=None, bot=None, agent=None):
         """
@@ -281,3 +286,5 @@ class Agent:
         """
         self.candidate = np.random.choice(np.array([0, 1], dtype='uint8'))
         self.segment_setup_status = np.uint8(1)
+        self.wait_time = uint8(50)
+        self.wait = uint8(0)
