@@ -1,0 +1,5 @@
+
+References and Bibliography
+===========================
+
+Below is a list of papers containing algorithms included in the showcase.

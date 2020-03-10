@@ -1,0 +1,31 @@
+
+Project Summary and Notes:
+==========================
+
+
+
+Contents:
+---------
+
+What is an amoebot and what is a leader election.
+What defines an amoebot, and what are the steps in the leader election algorithm.
+What are some problems, and solution ideas.
+Plans for later.
+
+What is an amoebot?:
+--------------------
+
+What is the Leader Election Algorithm?:
+---------------------------------------
+
+
+Problems that occurred
+----------------------
+
+
+
+Solutions/ideas
+---------------
+
+Plans
+-----
