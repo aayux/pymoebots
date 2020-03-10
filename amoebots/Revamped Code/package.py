@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from numpy import uint8, bytes_
 
 import numpy as np
 
@@ -20,3 +21,12 @@ class Package:
     def store_link(self, access=None, link=None):
         self.access = access
         self.link = link
+
+@dataclass
+class Token:
+    delimiter: uint8 = field(default=None)
+    identifer: uint8 = field(default=None)
+    token_id: bytes_ = field(default=np.random.bytes(2))
+
+    def is_delimiter(self):
+        return self.delimiter
