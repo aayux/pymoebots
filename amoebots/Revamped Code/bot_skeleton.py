@@ -7,7 +7,9 @@ import concurrent.futures as cf
 
 @dataclass
 class Bot:
-    """ This class is responsible for a bot's general attributes and functions"""
+    """
+    This class is responsible for a bot's general attributes and functions
+    """
     # general information
     bot_id: int = field(default=None)
     port_structure: np.ndarray = field(default=None)
@@ -112,7 +114,9 @@ class Bot:
         return np.uint8(1)
 
     def publish(self, agent_id=None, item=None):
-        """This method writes information (ex tokens)to the selected agent"""
+        """
+        This method writes information (ex tokens)to the selected agent
+        """
         self.publishing[agent_id] = item
 
     def scan_for_spaces(self):
