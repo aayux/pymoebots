@@ -1,5 +1,8 @@
 /.sync/
 Icon
+.idea
+.DS_store
+__pycache__
 
 /venvubuntu/
 /venvkali/

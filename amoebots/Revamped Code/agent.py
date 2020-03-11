@@ -111,6 +111,8 @@ class Agent:
 
     # identifier_setup_phase_2
     identifier_setup_phase_2_status: np.uint8 = field(default=np.uint8(0))
+    reversed_identifier: uint8 = field(default=None)
+    activated: uint8 = field(default=None)
 
     def binary_choice(self):
         return np.random.choice(np.array([0, 1], dtype='uint8'))
@@ -205,8 +207,8 @@ class Agent:
                     identifier = self.binary_choice()
                     self.identifier_token = Token(token_id=token_id, identifer=identifier)
 
-                    self.delimiter = Token(delimiter=uint8(1))
-                    self.successor_link.load_delimiter(delimiter=self.delimiter)
+                    delimiter = Token(delimiter=uint8(1), identifer=identifier)
+                    self.successor_link.load_delimiter(delimiter=delimiter)
                     self.delimiter_passed = uint8(1)
                     self.identifier_setup_status = self.done
 
@@ -228,7 +230,7 @@ class Agent:
                 identifier = self.binary_choice()
                 self.identifier_token = Token(token_id=token_id, identifer=identifier)
 
-                self.delimiter = Token(delimiter=uint8(1))
+                self.delimiter = Token(delimiter=uint8(1), identifer=identifier)
                 self.identifier_setup_status = self.done
 
             else:
@@ -236,6 +238,7 @@ class Agent:
                 identifier = self.binary_choice()
                 self.identifier_token = Token(token_id=token_id, identifer=identifier)
 
+                self.delimiter = self.link.get_delimiter()
                 self.identifier_setup_status = self.done
 
         self.wait += uint8(1)
@@ -244,7 +247,15 @@ class Agent:
             self.segment_setup_status = self.unfinished
 
     def identifier_setup_phase_2(self):
-        pass
+        predecessor_candidacy = self.link.get_predecessor_candidacy()
+        if predecessor_candidacy:
+            if self.candidate:
+                self.reversed_identifier = self.delimiter
+                self.identifier_setup_phase_2_status = self.done
+            else:
+                pass
+        if self.delimiter:
+            pass
 
     def initialize(self, predecessor=None, successor=None, current_node=None, bot=None, agent=None):
         """
@@ -279,7 +290,7 @@ class Agent:
         self.successor_bot = self.successor_node.get_bot()
         self.bot = bot
         self.agent_id = agent
-        self.initialized = np.uint8(1)
+        self.initialized = self.done
 
     def is_initialized(self):
         """

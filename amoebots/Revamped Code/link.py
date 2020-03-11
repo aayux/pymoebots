@@ -35,6 +35,9 @@ class Link:
     def get_delimiter(self):
         return self.delimiter
 
+    def get_predecessor_candidacy(self):
+        return self.predecessor_agent.candidate
+
     def get_test(self):
         return self.test
 
