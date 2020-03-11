@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from numpy import uint8
+from numpy import uint8, array, ndarray, random
 import numpy as np
 
 
@@ -9,7 +9,8 @@ class Link:
     This class is responsible for communication between the agents of bots next to each other
     """
     test: uint8 = field(default=uint8(0))
-    link_id: uint8 = field(default=None)
+    # link_id: uint8 = field(default=None)
+    link_id: ndarray = field(default=None)
     token: object = field(default=None)
     delimiter: object = field(default=None)
     package: object = field(default=None)
