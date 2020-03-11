@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from package import Token
-from numpy import uint8
+from numpy import uint8, array, random
 
 import link as lk
 import package as pk
@@ -87,6 +87,8 @@ class Agent:
     predecessor_node: object = field(default=None)
     successor_bot: object = field(default=None)
     predecessor_bot: object = field(default=None)
+    done: uint8 = field(default=uint8(1))
+    unfinished: uint8 = field(default=uint8(0))
 
     # boundary_setup
     link: object = field(default=None)
@@ -104,8 +106,14 @@ class Agent:
     delimiter: object = field(default=None)
     delimiter_passed: object = field(default=None)
     identifier_setup_status: np.uint8 = field(default=np.uint8(0))
-    wait_time: np.uint8 = field(default=None)
-    wait: np.uint8 = field(default=None)
+    wait_time: uint8 = field(default=uint8(50))
+    wait: uint8 = field(default=uint8(0))
+
+    # identifier_setup_phase_2
+    identifier_setup_phase_2_status: np.uint8 = field(default=np.uint8(0))
+
+    def binary_choice(self):
+        return np.random.choice(np.array([0, 1], dtype='uint8'))
 
     def boundary_setup(self):
         """
@@ -119,11 +127,11 @@ class Agent:
         :return: None
         """
         if not self.link_published:
-            self.link = lk.Link(link_id=self.bot.get_id())
-            package = pk.Package()
+            self.link = lk.Link(link_id=self.create_uid())
+            package = pk.Package(package_id=self.create_uid())
             package.store_link(access=self.predecessor_bot, link=self.link)
             self.bot.publish(agent_id=self.agent_id, item=package)
-            self.link_published = np.uint8(1)
+            self.link_published = self.done
         elif self.successor_link is None:
             published = self.successor_bot.get_published()
             for i in range(3):
@@ -152,6 +160,9 @@ class Agent:
         :return: None
         """
         self.bot.clean_publishing_slot(slot=slot)
+
+    def create_uid(self):
+        return array([random.randint(256, dtype='uint8'), random.randint(256, dtype='uint8')])
 
     def get_published(self):
         """
@@ -186,34 +197,54 @@ class Agent:
         next_is_candidate = self.successor_link.successor_agent.candidate
 
         if next_status and not next_is_candidate:
+
             if self.candidate:
+
                 if self.delimiter_passed is None:
-                    self.identifier_token = Token(token_id=np.random.bytes(2),
-                                                  identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
+                    token_id = self.create_uid()
+                    identifier = self.binary_choice()
+                    self.identifier_token = Token(token_id=token_id, identifer=identifier)
+
                     self.delimiter = Token(delimiter=uint8(1))
                     self.successor_link.load_delimiter(delimiter=self.delimiter)
                     self.delimiter_passed = uint8(1)
-                    self.identifier_setup_status = uint8(1)
+                    self.identifier_setup_status = self.done
+
             else:
+
                 if self.link.get_delimiter() is not None:
-                    self.identifier_token = Token(token_id=np.random.bytes(2),
-                                                  identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
+                    token_id = self.create_uid()
+                    identifier = self.binary_choice()
+                    self.identifier_token = Token(token_id=token_id, identifer=identifier)
+
                     self.successor_link.load_delimiter(delimiter=self.link.get_delimiter())
                     self.link.remove_delimiter()
-                    self.identifier_setup_status = uint8(1)
+                    self.identifier_setup_status = self.done
+
         elif next_status and next_is_candidate:
+
             if self.candidate:
-                self.identifier_token = Token(token_id=np.random.bytes(2),
-                                              identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
+                token_id = self.create_uid()
+                identifier = self.binary_choice()
+                self.identifier_token = Token(token_id=token_id, identifer=identifier)
+
                 self.delimiter = Token(delimiter=uint8(1))
-                self.identifier_setup_status = uint8(1)
+                self.identifier_setup_status = self.done
+
             else:
-                self.identifier_token = Token(token_id=np.random.bytes(2),
-                                              identifer=np.random.choice(np.array([0, 1], dtype='uint8')))
-                self.identifier_setup_status = uint8(1)
-        self.wait += 1
+                token_id = self.create_uid()
+                identifier = self.binary_choice()
+                self.identifier_token = Token(token_id=token_id, identifer=identifier)
+
+                self.identifier_setup_status = self.done
+
+        self.wait += uint8(1)
+
         if self.wait_time == self.wait:
-            self.segment_setup_status = uint8(0)
+            self.segment_setup_status = self.unfinished
+
+    def identifier_setup_phase_2(self):
+        pass
 
     def initialize(self, predecessor=None, successor=None, current_node=None, bot=None, agent=None):
         """
@@ -266,14 +297,17 @@ class Agent:
         """
         if not self.links_established:
             self.boundary_setup()
-            return np.uint8(0)
+            return self.unfinished
         elif not self.segment_setup_status:
             self.segment_setup()
-            return np.uint8(0)
+            return self.unfinished
         elif not self.identifier_setup_status:
             self.identifier_setup()
-            return np.uint8(0)
-        return np.uint8(1)
+            return self.unfinished
+        # elif not self.identifier_setup_phase_2_status:
+        #     self.identifier_setup_phase_2()
+        #     return np.uint8(0)
+        return self.done
 
     def segment_setup(self):
         """
@@ -284,7 +318,6 @@ class Agent:
 
         :return: None
         """
-        self.candidate = np.random.choice(np.array([0, 1], dtype='uint8'))
-        self.segment_setup_status = np.uint8(1)
-        self.wait_time = uint8(50)
+        self.candidate = self.binary_choice()
+        self.segment_setup_status = self.done
         self.wait = uint8(0)

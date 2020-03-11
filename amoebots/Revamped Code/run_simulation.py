@@ -3,10 +3,16 @@ import bot_manager as bm
 import plot as pt
 import time
 
+
+
+
 if __name__ == "__main__":
+    grid_size_x = 128
+    grid_size_y = 128
+
     t1 = time.perf_counter()
     for _ in range(1):
-        grid = pt.Grid(128,128)
+        grid = pt.Grid(grid_size_x, grid_size_y)
         grid.create_triangular_grid()
         node_manager = nm.NodeManager(plotted_points=grid.get_grid())
         node_manager.create_node_structure()

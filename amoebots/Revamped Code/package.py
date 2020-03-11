@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from numpy import uint8, bytes_
+from numpy import uint8, ndarray, array, random
 
 import numpy as np
 
@@ -9,6 +9,7 @@ class Package:
     access: object = field(default=None)
     link: object = field(default=None)
     objects: np.ndarray = field(default=None)
+    package_id: ndarray = field(default=None)
 
     def authorize(self, bot=None):
         if self.access is bot:
@@ -26,7 +27,7 @@ class Package:
 class Token:
     delimiter: uint8 = field(default=None)
     identifer: uint8 = field(default=None)
-    token_id: bytes_ = field(default=np.random.bytes(2))
+    token_id: ndarray = field(default=None)
 
     def is_delimiter(self):
         return self.delimiter
