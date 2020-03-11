@@ -25,3 +25,27 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Intro
+=====
+
+
+Getting Started
+===============
+
+
+Types of algorithms
+===================
+
+
+Number of robots
+----------------
+
+
+Size of the area
+-----------------
+
+
+
+Showcases
+=========
