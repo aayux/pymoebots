@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from numpy import ndarray, array, arange, linspace
+from reuseables import int_limits, uint_limits
 
 
 @dataclass
@@ -65,12 +66,20 @@ class Grid:
         # Checks if the start x component is negative
         if start_point_x < 0:
 
+            # Creating variables for upper and lower limits for signed ints
+            lower_8 = int_limits[8][0]
+            upper_8 = int_limits[8][1]
+            lower_16 = int_limits[16][0]
+            upper_16 = int_limits[16][1]
+            lower_32 = int_limits[32][0]
+            upper_32 = int_limits[32][1]
+
             # assigns appropriate x component grid based on size needs
-            if start_point_x > -129 and end_point_x < 127:
+            if start_point_x >= lower_8 and end_point_x <= upper_8:
                 grid_x = array([arange(start_point_x, end_point_x, 2, dtype='int8') for _ in range(y)])
-            elif start_point_x > -32769 and end_point_x < 32767:
+            elif start_point_x >= lower_16 and end_point_x <= upper_16:
                 grid_x = array([arange(start_point_x, end_point_x, 2, dtype='int16') for _ in range(y)])
-            elif start_point_x > -2147483649 and end_point_x < 2147483647:
+            elif start_point_x >= lower_32 and end_point_x <= upper_32:
                 grid_x = array([arange(start_point_x, end_point_x, 2, dtype='int32') for _ in range(y)])
             else:
                 grid_x = array([arange(start_point_x, end_point_x, 2, dtype='int64') for _ in range(y)])
@@ -78,12 +87,17 @@ class Grid:
         # Start x component is positive.
         else:
 
+            # Creating variables for upper limits for unsigned ints
+            upper_8 = uint_limits[8][1]
+            upper_16 = uint_limits[16][1]
+            upper_32 = uint_limits[32][1]
+
             # assigns appropriate x component grid based on size needs
-            if start_point_x < 256 and end_point_x < 256:
+            if start_point_x <= upper_8 and end_point_x <= upper_8:
                 grid_x = array([arange(start_point_x, end_point_x, 2, dtype='uint8') for _ in range(y)])
-            elif start_point_x < 65536 and end_point_x < 65536:
+            elif start_point_x <= upper_16 and end_point_x <= upper_16:
                 grid_x = array([arange(start_point_x, end_point_x, 2, dtype='uint16') for _ in range(y)])
-            elif start_point_x < 4294967296 and end_point_x < 4294967296:
+            elif start_point_x <= upper_32 and end_point_x <= upper_32:
                 grid_x = array([arange(start_point_x, end_point_x, 2, dtype='uint32') for _ in range(y)])
             else:
                 grid_x = array([arange(start_point_x, end_point_x, 2, dtype='uint64') for _ in range(y)])
@@ -91,12 +105,20 @@ class Grid:
         # Checks if the start y component is negative
         if start_point_y < 0:
 
+            # Creating variables for upper and lower limits for signed ints
+            lower_8 = int_limits[8][0]
+            upper_8 = int_limits[8][1]
+            lower_16 = int_limits[16][0]
+            upper_16 = int_limits[16][1]
+            lower_32 = int_limits[32][0]
+            upper_32 = int_limits[32][1]
+
             # Assigns appropriate y component grid based on size needs
-            if start_point_y > -129 and end_point_y < 127:
+            if start_point_y >= lower_8 and end_point_y <= upper_8:
                 grid_y = array([linspace(start_point_y + i, start_point_y + i, x, dtype='int8') for i in range(y)])
-            elif start_point_y > -32769 and end_point_y < 32767:
+            elif start_point_y >= lower_16 and end_point_y <= upper_16:
                 grid_y = array([linspace(start_point_y + i, start_point_y + i, x, dtype='int16') for i in range(y)])
-            elif start_point_y > -2147483649 and end_point_y < 2147483647:
+            elif start_point_y >= lower_32 and end_point_y <= upper_32:
                 grid_y = array([linspace(start_point_y + i, start_point_y + i, x, dtype='int32') for i in range(y)])
             else:
                 grid_y = array([linspace(start_point_y + i, start_point_y + i, x, dtype='int32') for i in range(y)])
@@ -104,15 +126,32 @@ class Grid:
         # Start y component is positive.
         else:
 
+            # Creating variables for upper limits for unsigned ints
+            upper_8 = uint_limits[8][1]
+            upper_16 = uint_limits[16][1]
+            upper_32 = uint_limits[32][1]
+
             # Assigns appropriate y component grid based on size needs
-            if start_point_y < 256 and end_point_y < 256:
+            if start_point_y <= upper_8 and end_point_y <= upper_8:
                 grid_y = array([linspace(start_point_y + i, start_point_y + i, x, dtype='uint8') for i in range(y)])
-            elif start_point_y < 65536 and end_point_y < 65536:
+            elif start_point_y <= upper_16 and end_point_y <= upper_16:
                 grid_y = array([linspace(start_point_y + i, start_point_y + i, x, dtype='uint16') for i in range(y)])
-            elif start_point_y < 4294967296 and end_point_y < 4294967296:
+            elif start_point_y <= upper_32 and end_point_y <= upper_32:
                 grid_y = array([linspace(start_point_y + i, start_point_y + i, x, dtype='uint32') for i in range(y)])
             else:
                 grid_y = array([linspace(start_point_y + i, start_point_y + i, x, dtype='uint64') for i in range(y)])
+
+        # loop through rows to offset odd rows by one
+        for row in range(y):
+
+            # Creates variable to store result of modulus operation
+            odd = row%2
+
+            # checks if row is odd
+            if odd:
+
+                # Assign corresponding row itself plus 1
+                grid_x[row] += 1
 
         # Zip x and y components together into grid points
         grid = array([array([array([grid_x[i][j], grid_y[i][j]]) for j in range(y)]) for i in range(y)])
