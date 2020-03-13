@@ -101,42 +101,100 @@ class NodeManager:
         self.node_dict = {}
 
     def link_nodes(self, row=None):
-        # parameter 'row' to mod against index to determine the end of a row.
+        # Parameter 'row' the total number of rows associated with the current grid is used to mod against index to
+        # determine the end of a row. If index % row == 0 that means we have arrived at a new row.
 
-        # assigns class variables to method variable
+        # Assigns class variables to method variable
         node_dict = self.node_dict
         index_range = len(self.node_dict)
-        prev_row = {}
-        row_count = -1
 
+        # Initializes method specific variables. Prev_row keeps a dictionary of nodes that belong to the previous row.
+        # Row flag keeps track of even or odd rows, True means odd, False otherwise
+        prev_row = {}
+        row_flag = True
+
+        # Loops through all points associated with the current grid
         for index in range(index_range):
+
+            # Pulls node from current index in our node dictionary
             node = node_dict[index]
+
+            # Checks of there is an entry for the next index position in our node dictionary and makes sure that it is
+            # not a new row.
             if index + 1 in node_dict and (index + 1) % row:
-                new_node = node_dict[index + 1]
-                node.set_neighbor(port='right', node=new_node)
-                new_node.set_neighbor(port='left', node=node)
+
+                # Pulls next node from dictionary
+                next_node = node_dict[index + 1]
+
+                # Sets current nodes right neighbor to next node
+                node.set_neighbor(port='right', node=next_node)
+
+                # Sets next nodes left neighbor to current node
+                next_node.set_neighbor(port='left', node=node)
+
+            # Checks if the current index modded by row is 0
             if not index % row:
-                row_count += 1
-            if row_count % 2:
+
+                # If it is, then switch row flag
+                row_flag = not row_flag
+
+            # If row flag is True it means we are on an odd row
+            if row_flag:
+
+                # Checks if the result of the current index modded by the row is in the previous row dictionary.
                 if index % row in prev_row:
-                    new_node = prev_row[index % row]
-                    node.set_neighbor(port='bottom left', node=new_node)
-                    new_node.set_neighbor(port='top right', node=node)
+
+                    # If it is, then pull next node to work with from previous node dictionary
+                    next_node = prev_row[index % row]
+
+                    # Sets current nodes bottom left neighbor as the next node
+                    node.set_neighbor(port='bottom left', node=next_node)
+
+                    # Sets the next nodes top right neighbor as the cuurent node
+                    next_node.set_neighbor(port='top right', node=node)
+
+                # Checks if the result of the current index modded by the row plus 1 is in the previous row dictionary.
                 if (index % row) + 1 in prev_row:
-                    new_node = prev_row[(index % row) + 1]
-                    node.set_neighbor(port='bottom right', node=new_node)
-                    new_node.set_neighbor(port='top left', node=node)
+                    next_node = prev_row[(index % row) + 1]
+
+                    # Sets current nodes bottom right neighbor as the next node
+                    node.set_neighbor(port='bottom right', node=next_node)
+
+                    # Sets the next nodes top left neighbor as the cuurent node
+                    next_node.set_neighbor(port='top left', node=node)
+
+            # Current row is even
             else:
+
+                # Checks if the result of the current index modded by the row is in the previous row dictionary.
                 if index % row in prev_row:
-                    new_node = prev_row[index % row]
-                    node.set_neighbor(port='bottom right', node=new_node)
-                    new_node.set_neighbor(port='top left', node=node)
-                    new_node = new_node.get_neighbor(port='left')
-                    if new_node:
-                        node.set_neighbor(port='bottom left', node=new_node)
-                        new_node.set_neighbor(port='top right', node=node)
+
+                    # If it is, then pull next node to work with from previous node dictionary
+                    next_node = prev_row[index % row]
+
+                    # Sets current nodes bottom right neighbor as the next node
+                    node.set_neighbor(port='bottom right', node=next_node)
+
+                    # Sets the next nodes top left neighbor as the cuurent node
+                    next_node.set_neighbor(port='top left', node=node)
+
+                    # Sets next node variable to whatever node that is to the left of the current next node
+                    next_node = next_node.get_neighbor(port='left')
+
+                    # Checks if there is a next node
+                    if next_node:
+
+                        # Sets current nodes bottom left neighbor as the next node
+                        node.set_neighbor(port='bottom left', node=next_node)
+
+                        # Sets the next nodes top right neighbor as the cuurent node
+                        next_node.set_neighbor(port='top right', node=node)
+
+            # Puts current node into the previous row dictionary at the index mode row
             prev_row[index % row] = node
 
+        # Makes sure to put the results of the methods version of node dictionary into the class version (may be
+        # unnecessary.
         self.node_dict = node_dict
 
     def set_plotted_points(self, plotted_points):
