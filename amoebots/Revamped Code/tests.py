@@ -6,16 +6,19 @@ def adding_to_array():
     print(f'{a}')
 
 # Grid Class Tests ####################################################################################################
+
 from plot import Grid
 
 
 def test_grid_initialization():
+
     # initializes grid as Grid Class
     grid = Grid(x=2)
     print(grid)
 
 
 def test_grid_create_triangular_grid():
+
     # initializes grid as Grid Class
     grid = Grid(x=2)
 
@@ -25,6 +28,7 @@ def test_grid_create_triangular_grid():
 
 
 def test_grid_create_triangular_grid_larger_numbers():
+
     # initializes grid as Grid Class
     grid = Grid(x=1000)
 
@@ -36,11 +40,11 @@ def test_grid_create_triangular_grid_larger_numbers():
 
 # NodeManager Class Tests #############################################################################################
 
-
 from node_manager import NodeManager
 
 
 def test_nodemanager_initialization():
+
     # initializes node_manager as NodeManager Class
     node_manager = NodeManager()
     print(node_manager)
@@ -51,6 +55,7 @@ def test_nodemanager_initialization():
 
 
 def test_nodemanager_check_duplicates():
+
     # initializes node_manager_a as NodeManager Class
     node_manager_a = NodeManager()
 
@@ -96,6 +101,7 @@ def test_nodemanager_check_duplicates():
     print(f"Node dictionary points are the same: {same}")
 
 def test_nodemanager_add_node():
+
     # initializes node_manager as NodeManager Class
     node_manager = NodeManager()
 
@@ -111,6 +117,7 @@ def test_nodemanager_add_node():
 
 
 def test_nodemanager_add_node_multiple():
+
     # initializes node_manager as NodeManager Class
     node_manager = NodeManager()
 
@@ -137,6 +144,7 @@ def test_nodemanager_add_node_multiple():
     print(node_manager)
 
 def test_nodemanager_add_node_multiple_with_Grid():
+
     # initializes node_manager as NodeManager Class
     node_manager = NodeManager()
 
@@ -173,6 +181,7 @@ def test_nodemanager_add_node_multiple_with_Grid():
     print(node_manager)
 
 def test_nodemanager_create_node_structure():
+
     # initializes node_manager as NodeManager Class
     node_manager = NodeManager()
 
@@ -180,7 +189,7 @@ def test_nodemanager_create_node_structure():
     node_manager.initialize()
 
     # initializes grid as Grid Class
-    grid = Grid(x=3)
+    grid = Grid(x=2, y=3)
 
     # calls method to create triangular grid
     grid.create_triangular_grid()
@@ -195,8 +204,6 @@ def test_nodemanager_create_node_structure():
     node_manager.create_node_structure()
 
     return
-
-
 
 # End of NodeManager Class Tests ######################################################################################
 
