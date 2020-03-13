@@ -207,6 +207,12 @@ def test_nodemanager_create_node_structure():
 
 # End of NodeManager Class Tests ######################################################################################
 
+# Node Class Tests ####################################################################################################
+
+from node_skeleton import Node
+
+# End of Node Class Tests #############################################################################################
+
 
 if __name__ == "__main__":
     # adding_to_array()
@@ -221,6 +227,8 @@ if __name__ == "__main__":
     # test_nodemanager_add_node()
     # test_nodemanager_add_node_multiple()
     # test_nodemanager_add_node_multiple_with_Grid()
-    test_nodemanager_create_node_structure()
+    #test_nodemanager_create_node_structure()
 # End of NodeManager Class Tests ######################################################################################
+# Node Class Tests ####################################################################################################
+# End of Node Class Tests #############################################################################################
     pass

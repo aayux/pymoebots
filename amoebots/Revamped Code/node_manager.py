@@ -73,7 +73,6 @@ class NodeManager:
         # Calls function to link all the created nodes together
         link_nodes(row=columns)
 
-
     def get_node(self, node_id=None):
         """
         gets specific node from node lise.
