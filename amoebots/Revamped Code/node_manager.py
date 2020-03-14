@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from numpy import uint8, uint16, uint32, uint64, ndarray
 from node_skeleton import Node
-from reuseables import uint_limits
+from reuseables import increase_index
 
 
 @dataclass
@@ -21,27 +21,17 @@ class NodeManager:
         """
         # Assigns Class variable to method variable
         index = self.next_index
+        node_dict = self.node_dict
 
         # creates node and assigns it a spot in the node dictionary
-        self.node_dict[index] = Node(position=position, node_id=index)
+        node_dict[index] = Node(position=position, node_id=index)
 
-        # Creating variables for upper limits for unsigned ints
-        upper_8 = uint_limits[8][1]
-        upper_16 = uint_limits[16][1]
-        upper_32 = uint_limits[32][1]
-
-        # Increments index by appropriate amount and type
-        if index < upper_8:
-            index += uint8(1)
-        elif index < upper_16:
-            index += uint16(1)
-        elif index < upper_32:
-            index += uint32(1)
-        else:
-            index += uint64(1)
+        # Increase index by one
+        index = increase_index(index)
 
         # Assigns method variables back to Class variables
         self.next_index = index
+        self.node_dict = node_dict
 
     def create_node_structure(self):
         points = self.plotted_points

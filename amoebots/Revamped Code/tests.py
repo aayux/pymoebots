@@ -213,6 +213,23 @@ from node_skeleton import Node
 
 # End of Node Class Tests #############################################################################################
 
+# BotManager Class Tests ##############################################################################################
+
+from bot_manager import BotManager
+
+def test_bot_manager_initialization():
+
+    # initializes bot_manager as BotManager Class
+    bot_manager = BotManager()
+
+    # Uses BotManager Class's initialize method to set default values
+    bot_manager.initialize()
+
+    return
+
+
+# End of BotManager Class Tests #######################################################################################
+
 
 if __name__ == "__main__":
     # adding_to_array()
@@ -231,4 +248,7 @@ if __name__ == "__main__":
 # End of NodeManager Class Tests ######################################################################################
 # Node Class Tests ####################################################################################################
 # End of Node Class Tests #############################################################################################
+# BotManager Class Tests ##############################################################################################
+    #test_bot_manager_initialization()
+# End of BotManager Class Tests #######################################################################################
     pass
