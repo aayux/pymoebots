@@ -29,12 +29,14 @@ if __name__ == "__main__":
         while True:
             #Next to review and optimize below #
             status = bot_manager.activate_mf()
-            #status = bot_manager.activate_si()
+            # status = bot_manager.activate_si()
             if status:
                 break
             round += 1
             if not round%10:
                 print(f"Round {round} completed")
+            # if round > 15:
+            #     break
     t2 = perf_counter()
     print(f"it took {t2-t1} seconds and {round} rounds to run this program ")
     print("success")

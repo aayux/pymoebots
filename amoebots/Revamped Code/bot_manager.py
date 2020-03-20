@@ -142,7 +142,13 @@ class BotManager:
         bot_dict = self.bot_dict
 
         # creates bot and assigns it a spot in the bot dictionary
-        bot_dict[index] = Bot(head=node, bot_id=index)
+        bot = Bot(head=node, bot_id=index)
+
+        # Initializes bot with default values
+        bot.initialize()
+
+        # Assigns bot to a spot in the bot dictionary
+        bot_dict[index] = bot
 
         # Increase index by one
         index = increase_index(index)
@@ -187,7 +193,3 @@ class BotManager:
 
             # Adds bot to bot dictionary with the node
             add_bot(node=list_to_ndarray[index])
-
-
-if __name__ == "__main__":
-    pass
