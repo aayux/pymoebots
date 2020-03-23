@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-from package import Token
+from link import Link
+from package import Package, Token
 from numpy import uint8, array, random
 
 import link as lk
@@ -77,45 +78,74 @@ class Agent:
     :param identifier: IS. The digit of the reverse identifier in the sequence. Separate from the original coin flip.
     :type identifier: uint8 1|0
     """
-    initialized: np.uint8 = field(default=np.uint8(0))
+
+    # Part of initialize sequence #####################################################################################
+    # Hold whether the agent has been initialized or not
+    initialized: uint8 = field(default=None)
+
+    # agents predecessor
     predecessor: str = field(default=None)
+
+    # agent's successor
     successor: str = field(default=None)
+
+    # The current node the agent is on
     current_node: object = field(default=None)
+
+    # The bot this agent is assigned to
     bot: object = field(default=None)
-    agent_id: np.uint8 = field(default=None)
+
+    # The agents id: range from 0-2
+    agent_id: uint8 = field(default=None)
+
+    # The reference to the node of the successor
     successor_node: object = field(default=None)
+
+    # The reference to the node of the predecessor
     predecessor_node: object = field(default=None)
+
+    # The reference to the successor bot
     successor_bot: object = field(default=None)
+
+    # The reference to the predecessor bot
     predecessor_bot: object = field(default=None)
-    done: uint8 = field(default=uint8(1))
-    unfinished: uint8 = field(default=uint8(0))
 
-    # boundary_setup
-    link: object = field(default=None)
-    link_published: np.uint8 = field(default=np.uint8(0))
-    links_tested: np.uint8 = field(default=np.uint8(0))
-    links_established: np.uint8 = field(default=np.uint8(0))
-    successor_link: object = field(default=None)
-
-    # segment_setup
-    segment_setup_status: np.uint8 = field(default=np.uint8(0))
-    candidate: np.uint8 = field(default=np.uint8(0))
-
-    # identifier_setup
-    identifier_token: object = field(default=None)
-    delimiter: object = field(default=None)
-    delimiter_passed: object = field(default=None)
-    identifier_setup_status: np.uint8 = field(default=np.uint8(0))
+    # Constants #######################################################################################################
+    DONE: uint8 = field(default=None)
+    NOT_DONE: uint8 = field(default= None)
     wait_time: uint8 = field(default=uint8(50))
     wait: uint8 = field(default=uint8(0))
 
-    # identifier_setup_phase_2
-    identifier_setup_phase_2_status: np.uint8 = field(default=np.uint8(0))
+    done: uint8 = field(default=uint8(1))
+    unfinished: uint8 = field(default=uint8(0))
+
+    # boundary_setup ##################################################################################################
+    link: object = field(default=None)
+    link_published: uint8 = field(default=None)
+    links_tested: uint8 = field(default=None)
+    links_established: uint8 = field(default=None)
+    successor_link: object = field(default=None)
+    boundary_setup_status: uint8 = field(default=None)
+
+    # segment_setup ###################################################################################################
+    segment_setup_status: uint8 = field(default=None)
+    candidate: uint8 = field(default=None)
+
+    # identifier_setup ################################################################################################
+    identifier_token: object = field(default=None)
+    delimiter: object = field(default=None)
+    delimiter_passed: object = field(default=None)
+    identifier_setup_status: np.uint8 = field(default=None)
+
+
+    # identifier_setup_phase_2 ########################################################################################
+    identifier_setup_phase_2_status: uint8 = field(default=None)
     reversed_identifier: uint8 = field(default=None)
     activated: uint8 = field(default=None)
 
+
     def binary_choice(self):
-        return np.random.choice(np.array([0, 1], dtype='uint8'))
+        return random.choice(np.array([0, 1], dtype='uint8'))
 
     def boundary_setup(self):
         """
@@ -128,27 +158,41 @@ class Agent:
 
         :return: None
         """
-        if not self.link_published:
-            self.link = lk.Link(link_id=self.create_uid())
-            package = pk.Package(package_id=self.create_uid())
-            package.store_link(access=self.predecessor_bot, link=self.link)
-            self.bot.publish(agent_id=self.agent_id, item=package)
-            self.link_published = self.done
-        elif self.successor_link is None:
-            published = self.successor_bot.get_published()
-            for i in range(3):
-                if published[i] is not None and published[i].authorize(bot=self.bot):
-                    self.successor_link = published[i].get_link()
-        elif not self.links_established:
-            if not self.links_tested:
-                self.link.test_signal()
-                self.successor_link.test_signal()
-                self.links_tested = np.uint8(1)
-                self.link.successor_agent = self
-                self.successor_link.predecessor_agent = self
-            elif self.link.get_test() == 2 and self.successor_link.get_test() == 2:
-                self.links_established = np.uint8(1)
-                self.clean_publishing_slot(slot=self.agent_id)
+
+        # Move class variable to method variables
+        established = self.links_established
+        link_published = self.link_published
+        successor_link = self.successor_link
+
+        # Move class functions to method functions
+        establish_link = self.establish_link
+        get_successor_link = self.get_successor_link
+        publish_link = self.publish_link
+
+        # Checks if link has been published by this agent
+        if not link_published:
+
+            # Publishes link
+            publish_link()
+
+        # Checks if successor link has been retrieved
+        elif successor_link is None:
+
+            # Retrieves successor's link
+            get_successor_link()
+
+        # Checks if link has been established
+        elif not established:
+
+            # Establishes link
+            establish_link()
+
+        else:
+
+            # Marks boundary setup as finished.
+            self.boundary_setup_status = uint8(1)
+
+        return
 
     def clean_publishing_slot(self, slot=None):
         """
@@ -161,10 +205,61 @@ class Agent:
 
         :return: None
         """
-        self.bot.clean_publishing_slot(slot=slot)
+
+        # Moves class variables to local variables
+        clean = self.bot.clean_publishing_slot
+
+        # cleans associated agent slot within bot.
+        clean(slot=slot)
+
+        return
 
     def create_uid(self):
         return array([random.randint(256, dtype='uint8'), random.randint(256, dtype='uint8')])
+
+    def establish_link(self):
+
+        # Store test results
+        tested = self.links_tested
+        link_test = self.link.get_test()
+        successor_link_test = self.successor_link.get_test()
+        links_established = self.links_established
+
+        # Moves class function to method variable
+        test_link = self.test_link
+        established = self.established
+
+        # Checks if collected links have been tested
+        if not tested:
+
+            # Test links
+            test_link()
+
+        # Checks if links have been tested successfully
+        elif link_test == 2 and successor_link_test == 2:
+
+            # Confirms that links have been successfully tested and a connection has been established.
+            established()
+
+        elif links_established:
+
+            self.boundary_setup_status = uint8(1)
+
+        return
+
+    def established(self):
+
+        # Moves class variables and funtions to local variables
+        clean_slot = self.clean_publishing_slot
+        agent = self.agent_id
+
+        # Confirms that agent has an established link
+        self.links_established = uint8(1)
+
+        # Cleans the agents published slot head in bot
+        clean_slot(slot=agent)
+
+        return
 
     def get_published(self):
         """
@@ -177,6 +272,25 @@ class Agent:
         :return: package.Package
         """
         return self.publish
+
+    def get_successor_link(self):
+        # Grabs published array from successor
+        published = self.successor_bot.get_published()
+
+        # Loops through possible number of agents
+        for i in range(3):
+
+            # Checks if the value at the index of the published array is not None and the current agent is authorized to
+            # access the package
+            if published[i] is not None and published[i].authorize(bot=self.bot):
+
+                # Puts package link in local variable
+                link = published[i].get_link()
+
+        # Move local variable to class variable
+        self.successor_link = link
+
+        return
 
     def identifier_setup(self):
         """
@@ -195,6 +309,7 @@ class Agent:
 
         :return: None
         """
+        DONE = self.DONE
         next_status = self.successor_link.successor_agent.segment_setup_status
         next_is_candidate = self.successor_link.successor_agent.candidate
 
@@ -210,7 +325,7 @@ class Agent:
                     delimiter = Token(delimiter=uint8(1), identifer=identifier)
                     self.successor_link.load_delimiter(delimiter=delimiter)
                     self.delimiter_passed = uint8(1)
-                    self.identifier_setup_status = self.done
+                    self.identifier_setup_status = DONE
 
             else:
 
@@ -221,7 +336,7 @@ class Agent:
 
                     self.successor_link.load_delimiter(delimiter=self.link.get_delimiter())
                     self.link.remove_delimiter()
-                    self.identifier_setup_status = self.done
+                    self.identifier_setup_status = DONE
 
         elif next_status and next_is_candidate:
 
@@ -231,7 +346,7 @@ class Agent:
                 self.identifier_token = Token(token_id=token_id, identifer=identifier)
 
                 self.delimiter = Token(delimiter=uint8(1), identifer=identifier)
-                self.identifier_setup_status = self.done
+                self.identifier_setup_status = DONE
 
             else:
                 token_id = self.create_uid()
@@ -239,7 +354,7 @@ class Agent:
                 self.identifier_token = Token(token_id=token_id, identifer=identifier)
 
                 self.delimiter = self.link.get_delimiter()
-                self.identifier_setup_status = self.done
+                self.identifier_setup_status = DONE
 
         self.wait += uint8(1)
 
@@ -281,6 +396,15 @@ class Agent:
 
         :return: None
         """
+
+        self.DONE = uint8(1)
+        self.NOT_DONE = uint8(0)
+        self.wait_time = uint8(50)
+        self.wait = uint8(0)
+
+        DONE = self.DONE
+        NOT_DONE = self.NOT_DONE
+
         self.predecessor = predecessor
         self.successor = successor
         self.current_node = current_node
@@ -290,7 +414,21 @@ class Agent:
         self.successor_bot = self.successor_node.get_bot()
         self.bot = bot
         self.agent_id = agent
-        self.initialized = self.done
+
+        self.link_published = NOT_DONE
+        self.links_tested = NOT_DONE
+        self.links_established = NOT_DONE
+
+        self.segment_setup_status = NOT_DONE
+        self.candidate = NOT_DONE
+
+        self.identifier_setup_phase_2_status = NOT_DONE
+        self.identifier_setup_status = NOT_DONE
+
+
+
+
+        self.initialized = DONE
 
     def is_initialized(self):
         """
@@ -306,19 +444,58 @@ class Agent:
 
         :return: 0 if not finished, 1 if finished.
         """
-        if not self.links_established:
-            self.boundary_setup()
-            return self.unfinished
-        elif not self.segment_setup_status:
-            self.segment_setup()
-            return self.unfinished
-        elif not self.identifier_setup_status:
-            self.identifier_setup()
-            return self.unfinished
+
+        # Move class variables to method variables
+        boundary_setup_status = self.boundary_setup_status
+        done = self.DONE
+        not_done = self.NOT_DONE
+
+        # Move class function to method function
+        boundary_setup = self.boundary_setup
+
+        # Check
+        if not boundary_setup_status:
+            boundary_setup()
+            return not_done
+        # elif not self.segment_setup_status:
+        #     self.segment_setup()
+        #     return self.unfinished
+        # elif not self.identifier_setup_status:
+        #     self.identifier_setup()
+        #     return self.unfinished
         # elif not self.identifier_setup_phase_2_status:
         #     self.identifier_setup_phase_2()
         #     return np.uint8(0)
-        return self.done
+        return done
+
+    def publish_link(self):
+        # Moves class variables to local variables
+        done = self.DONE
+        predecessor = self.predecessor_bot
+
+        # Move bot function to local variable
+        publish = self.bot.publish
+
+        # Creates link instance
+        link = Link()
+
+        # Initializes link instance
+        link.initialize()
+
+        # Creates package instance
+        package = Package()
+
+        # Place predecessor and link inside package
+        package.store_link(access=predecessor, link=link)
+
+        # Publishes package to bot
+        publish(agent_id=self.agent_id, item=package)
+
+        # Moves local variable back to class variable
+        self.link = link
+        self.link_published = done
+
+        return
 
     def segment_setup(self):
         """
@@ -332,3 +509,34 @@ class Agent:
         self.candidate = self.binary_choice()
         self.segment_setup_status = self.done
         self.wait = uint8(0)
+
+    def test_link(self):
+
+        # Moves class variables to local variables
+        link = self.link
+        successor_link = self.successor_link
+
+        # Runs link built in test
+        link.test_signal()
+        successor_link.test_signal()
+
+        # Confirms that the agent has test both links so that it will not test the links again
+        self.links_tested = uint8(1)
+
+        # sets agent to associated position within links
+        link.set_successor_agent(agent=self)
+        successor_link.set_predecessor_agent(agent=self)
+
+        # Move local variable to class variable
+        self.link = link
+        self.successor_link = successor_link
+
+        return
+
+
+def binary_choice():
+    return random.choice(np.array([0, 1], dtype='uint8'))
+
+
+def create_uid():
+    return array([random.randint(256, dtype='uint8'), random.randint(256, dtype='uint8')])

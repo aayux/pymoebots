@@ -1,3 +1,34 @@
+# __slots__ test ######################################################################################################
+from dataclasses import dataclass, field
+from numpy import uint8, uint64
+from sys import getsizeof
+
+# @dataclass
+class Test:
+    __slots__ = 'var', 'test', 'tests'
+
+    # var: bool = field(default=None)
+    # test: uint64 = field(default=None)
+    # tests: uint64 = field(default=None)
+
+    def __init__(self, var):
+        self.var = var
+        self.test = None
+        self.tests = None
+
+    def initialize(self):
+        self.var = uint64(1)
+
+def test_slots():
+    a = Test(var=None)
+    b = getsizeof(a)
+    a.initialize()
+    c = getsizeof(a)
+    return
+
+# end of __slots__ test ###############################################################################################
+
+
 from numpy import array
 
 def adding_to_array():
@@ -232,6 +263,7 @@ def test_bot_manager_initialization():
 
 
 if __name__ == "__main__":
+    test_slots()
     # adding_to_array()
 ##### Grid Class Tests ################################################################################################
     # test_grid_initialization()

@@ -213,8 +213,6 @@ class Bot:
 
         return
 
-
-
     def multi_task_scan_for_spaces_and_run_leader_election(self):
 
         # Moves class variables to local variables
@@ -289,6 +287,8 @@ class Bot:
         """
         This method writes information (ex tokens)to the selected agent
         """
+
+        # Publishes package to associated agents slot
         self.publishing[agent_id] = item
 
         return

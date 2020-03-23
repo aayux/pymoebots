@@ -8,14 +8,17 @@ class Link:
     """
     This class is responsible for communication between the agents of bots next to each other
     """
-    test: uint8 = field(default=uint8(0))
+
+    # Used to test link connection between two agents
+    test: uint8 = field(default=None)
+
     # link_id: uint8 = field(default=None)
-    link_id: ndarray = field(default=None)
+    # link_id: ndarray = field(default=None)
     token: object = field(default=None)
     delimiter: object = field(default=None)
     package: object = field(default=None)
-    successor_received: uint8 = field(default=uint8(0))
-    predecessor_received: uint8 = field(default=uint8(0))
+    successor_received: uint8 = field(default=None)
+    predecessor_received: uint8 = field(default=None)
     predecessor_agent: object = field(default=None)
     successor_agent: object = field(default=None)
 
@@ -41,6 +44,15 @@ class Link:
     def get_test(self):
         return self.test
 
+    def initialize(self):
+
+        # Initializes link
+        self.test = uint8(0)
+        self.successor_received = uint8(0)
+        self.predecessor_received = uint8(0)
+
+        return
+
     def load_delimiter(self, delimiter=None):
         self.delimiter = delimiter
 
@@ -50,5 +62,23 @@ class Link:
     def remove_delimiter(self):
         self.delimiter = None
 
+    def set_predecessor_agent(self, agent):
+
+        # sets links predecessor agent to given agent
+        self.predecessor_agent = agent
+
+        return
+
+    def set_successor_agent(self, agent):
+
+        # sets links predecessor agent to given agent
+        self.successor_agent = agent
+
+        return
+
     def test_signal(self):
+
+        # Add one to the test variable
         self.test += uint8(1)
+
+        return
