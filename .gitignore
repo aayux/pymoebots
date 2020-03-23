@@ -2,6 +2,10 @@
 Icon
 .idea
 .DS_store
+
+*.pc
+*.pyc
+*.pyo
 __pycache__
 
 /venvubuntu/
