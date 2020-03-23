@@ -8,8 +8,8 @@ import numpy as np
 class Package:
     access: object = field(default=None)
     link: object = field(default=None)
-    objects: np.ndarray = field(default=None)
-    package_id: ndarray = field(default=None)
+    # objects: ndarray = field(default=None)
+    # package_id: ndarray = field(default=None)
 
     def authorize(self, bot=None):
         if self.access is bot:
@@ -20,6 +20,8 @@ class Package:
         return self.link
 
     def store_link(self, access=None, link=None):
+
+        # stores bot that can access package and link
         self.access = access
         self.link = link
 
