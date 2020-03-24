@@ -1,1 +1,0 @@
-# amoebot-simulator-js
