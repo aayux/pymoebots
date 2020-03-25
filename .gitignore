@@ -1,14 +1,4 @@
-/.sync/
-Icon
-.idea
-.DS_store
-
 *.pc
 *.pyc
 *.pyo
-__pycache__
-
-/venvubuntu/
-/venvkali/
-/venvmac/
-demo.py
+**__pycache__
