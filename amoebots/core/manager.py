@@ -1,0 +1,1 @@
+class Manager: raise NotImplementedError
