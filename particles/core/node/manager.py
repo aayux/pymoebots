@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from numpy import uint8, uint16, uint32, uint64, ndarray
-from node_skeleton import Node
-from reuseables import increase_index
+from .skeleton import Node
+from ..utils.baseutils import increase_index
 
 
 @dataclass
-class NodeManager:
+class NodeManager(object):
     # Dictionary of nodes
     node_dict: dict = field(default=None)
 

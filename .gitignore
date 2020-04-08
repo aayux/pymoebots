@@ -1,4 +1,11 @@
+# binaries and cache
 *.pc
 *.pyc
 *.pyo
-**__pycache__
+**__pycache__/
+
+# notetaking
+todo.txt
+
+# manuscripts and research material
+**docs/manuscript/
