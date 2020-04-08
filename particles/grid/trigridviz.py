@@ -23,13 +23,13 @@ class TriangularGridViz(object):
         self.__grid_y_zig = plots[3]
 
         straight_lines = go.Scatter(x=self.__grid_x, y=self.__grid_y,
-                                    mode="lines", name="straight lines",
-                                    line=dict(width=1, color="black")
+                                    mode='lines', name="straight lines",
+                                    line=dict(width=1, color='black')
         )
 
         sheared_lines = go.Scatter(x=self.__grid_x_shear, y=self.__grid_y_shear,
-                                   mode="lines", name="sheared lines", 
-                                   line=dict(width=1,color="black")
+                                   mode='lines', name="sheared lines", 
+                                   line=dict(width=1,color='black')
         )
 
         self.__data.append(straight_lines)
@@ -39,9 +39,9 @@ class TriangularGridViz(object):
         # nodes are intersecting points on the grid
         nodes = go.Scatter(x=[x[0] for x in points], 
                            y=[y[1] for y in points],
-                           mode="markers",
-                           name="nodes",
-                           line=dict(width=2, color="black")
+                           mode='markers',
+                           name='nodes',
+                           line=dict(width=2, color='black')
         )
         self.__data.append(nodes)
 
@@ -50,8 +50,8 @@ class TriangularGridViz(object):
             bot = go.Scatter(x=[_bot[0][0], _bot[1][0]],
                              y=[_bot[0][1], _bot[1][1]],
                              name=f"bot {ix}",
-                             mode="markers",
-                             marker=dict(size=10, color="black"),
+                             mode='markers',
+                             marker=dict(size=10, color='black'),
                              showlegend=False
             )
             self.__data.append(bot)
@@ -62,15 +62,15 @@ class TriangularGridViz(object):
         self.__frames = [go.Frame(data=[go.Scatter(
                             x=[path[ix][0][jx], path[ix][2][jx]],
                             y=[path[ix][1][jx], path[ix][3][jx]],
-                            name=f"bot {ix}", mode=mode[1],
-                            marker=dict(size=10, color="black")) \
+                            name=f'bot {ix}', mode=mode[1],
+                            marker=dict(size=10, color='black')) \
                             if path[ix][0][jx] != path[ix][2][jx] \
                             else go.Scatter(
                             x=[path[ix][0][jx], path[ix][2][jx]],
                             y=[path[ix][1][jx], path[ix][3][jx]],
                             name=f"bot {ix}",
                             mode=mode[0],
-                            marker=dict(size=10, color="black"))
+                            marker=dict(size=10, color='black'))
                         for ix in range(len(path))])
                     for jx in range(len(path[0][0]))]
 
@@ -79,11 +79,11 @@ class TriangularGridViz(object):
                         data=self.__data, 
                         layout=dict(
                             title='Demo',
-                            updatemenus=[dict(type="buttons", 
+                            updatemenus=[dict(type='buttons',
                                                 buttons=[
                                                 dict(
-                                                    label="Play",
-                                                    method="animate",
+                                                    label='Play',
+                                                    method='animate',
                                                     args=[None, 
                                                         dict(frame=dict(duration=500, 
                                                                         redraw=True),
@@ -91,8 +91,8 @@ class TriangularGridViz(object):
                                                         transition=dict(duration=300,
                                                                         easing='quadratic-in-out'))]),
                                                 dict(
-                                                    label="Pause",
-                                                    method="animate",
+                                                    label='Pause',
+                                                    method='animate',
                                                 args=[None, 
                                                     dict(frame=dict(duration=0, 
                                                                     redraw=False),

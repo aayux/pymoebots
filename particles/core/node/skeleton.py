@@ -3,7 +3,7 @@ from numpy import uint8, ndarray, array
 
 
 @dataclass
-class Node:
+class Node(object):
     # Position of node in relation to the grid it is associated with
     position: ndarray = field(default=None)
 

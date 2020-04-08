@@ -1,1 +1,0 @@
-class Skeleton: raise NotImplementedError
