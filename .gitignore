@@ -1,4 +1,5 @@
-# binaries and cache
+# swaps, bytecode and miscellenea
+*.swp
 *.pc
 *.pyc
 *.pyo
@@ -8,4 +9,4 @@
 todo.txt
 
 # manuscripts and research material
-**docs/manuscript/*
+**/docs/manuscript
