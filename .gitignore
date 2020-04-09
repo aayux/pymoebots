@@ -1,4 +1,5 @@
 # swaps, bytecode and miscellenea
+*.DS_Store
 *.swp
 *.pc
 *.pyc
@@ -9,4 +10,4 @@
 todo.txt
 
 # manuscripts and research material
-**/docs/manuscript
+**manuscripts/
