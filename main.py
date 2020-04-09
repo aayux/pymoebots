@@ -1,6 +1,6 @@
-from particles.grid.trigrid import TriangularGrid
-from particles.core.node.manager import NodeManager
-from particles.core.bot.manager import BotManager
+from amoebot.grid.trigrid import TriangularGrid
+from amoebot.core.node.manager import NodeManager
+from amoebot.core.bot.manager import BotManager
 from time import perf_counter
 
 def main():
