@@ -1,99 +1,51 @@
 from dataclasses import dataclass, field
 from numpy import uint8, uint16, uint32, uint64, ndarray
 from .skeleton import Node
-from ..utils.baseutils import increase_index
-
+from ..utils.baseutils import increment_index
 
 @dataclass
 class NodeManager(object):
-    # Dictionary of nodes
+    # dictionary of `Node` objects
     node_dict: dict = field(default=None)
 
-    # Numpy array of plotted points
+    # numpy array of plotted points
     plotted_points: ndarray = field(default=None)
 
-    # Initialized variables
-    next_index: uint8 = field(default=None)
+    # next available index in the lookup
+    next_index: uint8 = uint8(0)
 
-    def add_node(self, position=None):
+    def add_node(self, position:ndarray):
+        r"""
+        adds individual nodes to node lookup
         """
-        Adds individual nodes to node list
+        # creates node and assigns it a place in the node dictionary
+        self.node_dict[self.next_index] = Node(position=position, 
+                                               node_ix=self.next_index)
+
+        # increment the index by one
+        self.next_index = increment_index(self.next_index)
+
+    def grid_builder(self):
+        r""" 
+        create nodes at grid positions and link the nodes into a full grid
         """
-        # Assigns Class variable to method variable
-        index = self.next_index
-        node_dict = self.node_dict
+        # rows and cols in the plotted points on the grid
+        nrows, ncols, _ = self.plotted_points.shape
 
-        # creates node and assigns it a spot in the node dictionary
-        node_dict[index] = Node(position=position, node_id=index)
-
-        # Increase index by one
-        index = increase_index(index)
-
-        # Assigns method variables back to Class variables
-        self.next_index = index
-        self.node_dict = node_dict
-
-    def create_node_structure(self):
-        points = self.plotted_points
-
-        # Creates variable for the rows in points
-        rows = len(points)
-
-        # Creates variable for the columns in points
-        columns = len(points[0])
-
-        # Creates variable to hold Class function
-        add_node = self.add_node
-
-        # Creates variable to hold Class function
-        link_nodes = self.link_nodes
-
-        # loops through the number of rows to add nodes
-        for row in range(rows):
-
-            # loops through the number of columns to add nodes
-            for column in range(columns):
-
-                # Creates point based on data at points[row][column]
-                point = points[row][column]
-
+        # place nodes on the grid
+        for ix in range(nrows):
+            for jx in range(ncols):
                 # add node to node manager
-                add_node(position=point)
+                self.add_node(position=self.plotted_points[ix][jx])
 
-        # Calls function to link all the created nodes together
-        link_nodes(row=columns)
+        # calls function to link all the created nodes together
+        self.link(nrows)
 
-    def get_node(self, node_id=None):
+    def link(self, nrows:int):
+        r"""
         """
-        gets specific node from node lise.
-        """
-        return self.node_dict[node_id]
 
-    def get_node_list(self):
-        """
-        Returns all nodes from node list
-        """
-        return self.node_dict
-
-    def get_number_nodes(self):
-        """
-        Returns total number of nodes in graph
-        """
-        return len(self.node_dict)
-
-    def initialize(self):
-
-        # initializes next index to zero
-        self.next_index = uint8(0)
-
-        # initializes node dictionary
-        self.node_dict = {}
-
-    def link_nodes(self, row=None):
-        # Parameter 'row' the total number of rows associated with the current grid is used to mod against index to
-        # determine the end of a row. If index % row == 0 that means we have arrived at a new row.
-
-        # Assigns class variables to method variable
+        # assigns class variables to method variable
         node_dict = self.node_dict
         index_range = len(self.node_dict)
 
@@ -106,14 +58,14 @@ class NodeManager(object):
         for index in range(index_range):
 
             # Pulls node from current index in our node dictionary
-            node = node_dict[index]
+            node = self.node_dict[index]
 
             # Checks of there is an entry for the next index position in our node dictionary and makes sure that it is
             # not a new row.
-            if index + 1 in node_dict and (index + 1) % row:
+            if index + 1 in self.node_dict and (index + 1) % nrows:
 
                 # Pulls next node from dictionary
-                next_node = node_dict[index + 1]
+                next_node = self.node_dict[index + 1]
 
                 # Sets current nodes right neighbor to next node
                 node.set_neighbor(port='right', node=next_node)
@@ -122,7 +74,7 @@ class NodeManager(object):
                 next_node.set_neighbor(port='left', node=node)
 
             # Checks if the current index modded by row is 0
-            if not index % row:
+            if not index % nrows:
 
                 # If it is, then switch row flag
                 row_flag = not row_flag
@@ -131,10 +83,10 @@ class NodeManager(object):
             if row_flag:
 
                 # Checks if the result of the current index modded by the row is in the previous row dictionary.
-                if index % row in prev_row:
+                if index % nrows in prev_row:
 
                     # If it is, then pull next node to work with from previous node dictionary
-                    next_node = prev_row[index % row]
+                    next_node = prev_row[index % nrows]
 
                     # Sets current nodes bottom left neighbor as the next node
                     node.set_neighbor(port='bottom left', node=next_node)
@@ -143,8 +95,8 @@ class NodeManager(object):
                     next_node.set_neighbor(port='top right', node=node)
 
                 # Checks if the result of the current index modded by the row plus 1 is in the previous row dictionary.
-                if (index % row) + 1 in prev_row:
-                    next_node = prev_row[(index % row) + 1]
+                if (index % nrows) + 1 in prev_row:
+                    next_node = prev_row[(index % nrows) + 1]
 
                     # Sets current nodes bottom right neighbor as the next node
                     node.set_neighbor(port='bottom right', node=next_node)
@@ -156,10 +108,10 @@ class NodeManager(object):
             else:
 
                 # Checks if the result of the current index modded by the row is in the previous row dictionary.
-                if index % row in prev_row:
+                if index % nrows in prev_row:
 
                     # If it is, then pull next node to work with from previous node dictionary
-                    next_node = prev_row[index % row]
+                    next_node = prev_row[index % nrows]
 
                     # Sets current nodes bottom right neighbor as the next node
                     node.set_neighbor(port='bottom right', node=next_node)
@@ -180,11 +132,25 @@ class NodeManager(object):
                         next_node.set_neighbor(port='top right', node=node)
 
             # Puts current node into the previous row dictionary at the index mode row
-            prev_row[index % row] = node
+            prev_row[index % nrows] = node
 
-        # Makes sure to put the results of the methods version of node dictionary into the class version (may be
-        # unnecessary.
-        self.node_dict = node_dict
+    def get_node(self, node_id=None):
+        """
+        gets specific node from node lise.
+        """
+        return self.node_dict[node_id]
+
+    def get_node_list(self):
+        """
+        Returns all nodes from node list
+        """
+        return self.node_dict
+
+    def get_number_nodes(self):
+        """
+        Returns total number of nodes in graph
+        """
+        return len(self.node_dict)
 
     def set_plotted_points(self, plotted_points):
 
