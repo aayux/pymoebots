@@ -1,6 +1,6 @@
 from amoebot.grid.trigrid import TriangularGrid
-from amoebot.core.node.manager import NodeManager
-from amoebot.core.bot.manager import BotManager
+from amoebot.elements.node.manager import NodeManager
+from amoebot.elements.bot.manager import BotManager
 from time import perf_counter
 
 def main():
@@ -10,20 +10,17 @@ def main():
         t1 = perf_counter()
 
         grid = TriangularGrid(grid_size_x, grid_size_y)
-        plotted_points = grid.get_grid()
+        grid_points = grid.get_grid()
 
-        node_manager = NodeManager()
-        node_manager.initialize()
-        node_manager.set_plotted_points(plotted_points=plotted_points)
-        node_manager.create_node_structure()
-        node_list = node_manager.get_node_list()
-        number_of_bots = node_manager.get_number_nodes() // 3
+        node_manager = NodeManager(points=grid_points)
+        node_manager.grid_builder()
+        
+        node_list = node_manager._get_node_list()
+        n_bots = node_manager.get_num_nodes() // 3
         
         bot_manager = BotManager()
-        bot_manager.initialize()
         
-        
-        bot_manager.random_bot_placement(number_of_bots=number_of_bots, 
+        bot_manager.random_bot_placement(number_of_bots=n_bots, 
                                          node_list=node_list)
 
         round = 0

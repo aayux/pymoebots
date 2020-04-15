@@ -1,66 +1,15 @@
+import numpy as np
+
 from dataclasses import dataclass, field
-from numpy import all, append, array, empty, ndarray, random, uint8, where, zeros
+from numpy import array, ndarray, uint8
 from concurrent.futures import ThreadPoolExecutor
-from agent import Agent
+from ..network.agent import Agent
 
 
 @dataclass
 class Bot:
-    """
-    This class is responsible for a bot's
-    general attributes and functions.
-    Bot functionality will be extended by using other modules.
-
-    :param bot_id: Bot's unique ID. Only used for debugging/non-algorithm operations.
-    :type bot_id: uint
-
-    :param port_structure: A record of a bot's neighbors, built from its self.orientate method.
-    :type port_structure: Array of directional keyword strings.
-
-    :param head:
-    :type head:
-
-    :param tail:
-    :type tail:
-
-    :param number_of_agents:
-    :type number_of_agents:
-
-    :param space:
-    :type space:
-
-    :param spaces:
-    :type spaces:
-
-    :param temp_space:
-    :type temp_space:
-
-    :param port_count:
-    :type port_count:
-
-    :param scan_flag:
-    :type scan_flag:
-
-    :param agents:
-    :type agents:
-
-    :param leader_election_status:
-    :type leader_election_status:
-
-    :param publishing:
-    :type publishing:
-
-    :param leader:
-    :type leader:
-
-    :param active:
-    :type active:
-
-    :param orientate_status:
-    :type orientate_status:
-
-    :param active:
-    :type active:
+    r"""
+    core amobeot functionalities, extended by using `action modules`
     """
 
     # id of bot, used for debugging purposes only
