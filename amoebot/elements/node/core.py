@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from numpy import uint8, ndarray, array
+from .. import attributes
 
 @dataclass
-class Node(object):
+class Node(Attributes):
     # position of node in relation to the grid
     position: ndarray = field(default=None)
 
@@ -59,8 +60,8 @@ class Node(object):
 
     def _get_occupied(self) -> uint8: return self.occupied
 
-    def _get_neighbor(self, port:str) -> object: return self.neighbors[port]
+    def _get_neighbor(self, port:str) -> Node: return self.neighbors[port]
 
-    def _set_neighbor(self, port: str, node: object):
+    def set_neighbor(self, port:str, node:Node):
         # assign a neighbouring node to port
         self.neighbors[port] = node
