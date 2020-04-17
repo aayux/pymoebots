@@ -22,7 +22,7 @@ class Node(Attributes):
     # the bot currently occupying this node
     bot: object = field(default=None)
 
-    def _post_init_(self):
+    def __post_init__(self):
         self.ports = array(['n', 'nw', 'sw', 's', 'se', 'ne'])
         self.neighbors = dict(n=None, nw=None, sw=None, 
                               s=None, se=None, ne=None)

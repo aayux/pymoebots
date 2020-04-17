@@ -14,14 +14,13 @@ def main():
 
         node_manager = NodeManager(points=grid_points)
         node_manager.grid_builder()
-        
-        node_list = node_manager._get_node_list()
+
+        node_dict = node_manager._get_node_dict()
         n_bots = node_manager.get_num_nodes() // 3
-        
+
         bot_manager = BotManager()
         
-        bot_manager.random_bot_placement(number_of_bots=n_bots, 
-                                         node_list=node_list)
+        bot_manager.random_placement(n_bots, node_dict.values())
 
         round = 0
         while True:
