@@ -41,7 +41,7 @@ class Amoebot(Attributes):
     # activation status, true means the bot is active
     active: uint8 = field(default=None)
 
-    def _post_init_(self):
+    def __post_init__(self):
         self.active = True
         self.agents = array([Agent(), Agent(), Agent()])
         self.n_agents = uint8(0)
@@ -55,10 +55,10 @@ class Amoebot(Attributes):
         
         self.empty_flag = uint8(0)
 
-    def worker(self) -> uint8:
+    def execute(self) -> uint8:
         r"""
         Worker function for each amoebot. Manages parallelisation between agents
-        and attaches functional modules to the amoebot.
+        and attaches functional modules to the amoebot as callbacks.
 
         returns: np.uint8:   execution status
         """

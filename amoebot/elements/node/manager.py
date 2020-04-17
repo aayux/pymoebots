@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from numpy import uint8, uint16, uint32, uint64, ndarray
+from numpy import uint8, ndarray
 from .core import Node
 from ..utils.baseutils import increment_index
 from ..manager import Manager
@@ -15,7 +15,7 @@ class NodeManager(Manager):
     # next available index in the lookup
     next_node_ix: uint8 = uint8(0)
 
-    def _post_init_(self, points:ndarray):
+    def __post_init__(self, points:ndarray):
         self.grid_points = points
 
     def grid_builder(self):
@@ -125,7 +125,7 @@ class NodeManager(Manager):
     def _get_node(self, node_ix:uint8) -> Node: 
         return self.node_dict[node_ix]
 
-    def _get_node_list(self) -> dict: return self.node_dict
+    def _get_node_dict(self) -> dict: return self.node_dict
 
     def _get_num_nodes(self) -> int: return len(self.node_dict)
 
