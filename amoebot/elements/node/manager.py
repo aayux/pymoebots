@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from numpy import uint8, uint16, uint32, uint64, ndarray
 from .core import Node
 from ..utils.baseutils import increment_index
-from .. import manager
+from ..manager import Manager
 
 @dataclass
 class NodeManager(Manager):

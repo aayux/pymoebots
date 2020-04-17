@@ -1,11 +1,15 @@
-from dataclasses import dataclass, field
-from numpy import all, append, array, ndarray, random, uint8, zeros
-from reuseables import increase_index
-from bot_skeleton import Bot
+import numpy as np
+
 from concurrent import futures
+from dataclasses import dataclass, field
+from numpy import array, ndarray, uint8
+
+from .core import Amoebot
+from ..utils.baseutils import increment_index
+from ..manager import Manager
 
 @dataclass
-class BotManager:
+class AmoebotManager(Manager):
     """
     Manages the system of Bots and keeps track of
     where they are on the field.

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from numpy import uint8, ndarray, array
-from .. import attributes
+from ..attributes import Attributes
 
 @dataclass
 class Node(Attributes):
@@ -29,6 +29,7 @@ class Node(Attributes):
 
     def scan_port(self, port:str) -> object:
         r"""
+        scan neighbouring ports and create nodes for bots to move into
         """
 
         node = self.neighbors[port]
