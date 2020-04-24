@@ -2,11 +2,11 @@ import numpy as np
 
 from dataclasses import dataclass, field
 from numpy import array, ndarray, uint8
-from ..network.agent import Agent
-from ..attributes import Attributes
+from ..functional.agent import Agent
+from ..core import Core
 
 @dataclass
-class Amoebot(Attributes):
+class Amoebot(Core):
     r"""
     core amobeot functionalities, extended using functional modules
     """
@@ -26,8 +26,8 @@ class Amoebot(Attributes):
     # number of parallel agents the bot is running
     n_agents: uint8 = field(default=None)
 
-    # numpy array of working agents
-    agents: ndarray = field(default=None)
+    # the ameobot's worker agents
+    agent: Agent = field(default=None)
 
     # count of ports scanned
     n_ports_scanned: uint8 = field(default=None)
@@ -43,7 +43,7 @@ class Amoebot(Attributes):
 
     def __post_init__(self):
         self.active = True
-        self.agents = array([Agent(), Agent(), Agent()])
+        self.agent = Agent()
         self.n_agents = uint8(0)
 
         self.head.arrival(bot=self)
@@ -58,7 +58,7 @@ class Amoebot(Attributes):
     def execute(self) -> uint8:
         r"""
         Worker function for each amoebot. Manages parallelisation between agents
-        and attaches functional modules to the amoebot as callbacks.
+        and attaches functional modules to the amoebot.
 
         returns: np.uint8:   execution status
         """
@@ -72,6 +72,8 @@ class Amoebot(Attributes):
     def orient(self) -> uint8:
         r""" 
         orients with a random clockwise ordering of ports around the bot
+
+        returns: np.uint8:   execution status
         """
 
         ports = self.head._get_ports()
@@ -111,10 +113,10 @@ class Amoebot(Attributes):
 
         return uint8(0)
 
-    def _clear_publishing_slot(self, slot:uint8): 
+    def _clear_pipe(self, slot:uint8): 
         self.pipe[slot] = None
 
-    def _get_published(self): return self.publishing
+    def _get_pipe(self): return self.pipe
 
     def _get_id(self): raise NotImplementedError
 

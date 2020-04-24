@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from numpy import uint8, ndarray, array
-from ..attributes import Attributes
+from ..core import Core
 
 @dataclass
-class Node(Attributes):
+class Node(Core):
     # position of node in relation to the grid
     position: ndarray = field(default=None)
 

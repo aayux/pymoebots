@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from numpy import ndarray, array, arange, linspace
-from .helpers import make_int_grid, make_uint_grid
+from ..extras.limits import make_int_grid, make_uint_grid
 
 
 @dataclass

@@ -14,13 +14,13 @@ class AnonList(UserList):
     def insert(self, x:object):
         r""" always inserts into a random index
         """
-        
+
         if self.data:
             ix = random.randint(0, len(self.data))
         else: ix = 0
         
         super().insert(ix, x)
-    
+
     def __getitem__(self, ix:int):
         raise RuntimeError(f"Fatal! Can not index int 'AnonList'")
 

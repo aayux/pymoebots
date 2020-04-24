@@ -1,5 +1,5 @@
 from numpy import ndarray, array, arange, linspace
-from ..utils.baseutils import int_limits, uint_limits
+from ..extras.limits import int_limits, uint_limits
 
 def make_int_grid(start:int, end:int, nrows:int, component:str,
                   ncols:int=None) -> array:
