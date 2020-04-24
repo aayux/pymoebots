@@ -7,10 +7,9 @@ from collections import defaultdict
 from numpy import array, ndarray, uint8
 
 from .core import Amoebot
-from .helpers import AnonList
+from ...extras.structures import AnonList
 from ..node.core import Node
-from ..utils.baseutils import increment_index
-from ..utils.exceptions import InitializationError
+from ...extras.exceptions import InitializationError
 from ..manager import Manager
 
 @dataclass
@@ -62,8 +61,10 @@ class AmoebotManager(Manager):
             # execute the amoebot algorithms and update execution status
             status[amoebot.execute()] = amoebot
         except IndexError:
-            raise InitializationError(f"Amoebots have not been initialized "
-                                      f"correctly, check file and retry. Exiting!")
+            raise InitializationError(
+                                f"Amoebots have not been initialized "
+                                f"correctly, check file and retry. Exiting!"
+            )
             sys.exit(0)
 
         self.status = status
@@ -71,6 +72,8 @@ class AmoebotManager(Manager):
     def m_activate(self) -> uint8:
         r"""
         sets up threaded calls to activation methods for all bots
+
+        returns: np.uint8:   execution status
         """
         # TODO: required? copy variables and methods to avoid contention
         activate = self._activate
@@ -91,6 +94,8 @@ class AmoebotManager(Manager):
         r"""
         Sequential bot activations; activations are arbitrary as long as each 
         amoebot gets a chance to run during a cycle.
+
+        returns: np.uint8:   execution status
         """
 
         # one cycle of activation per amoebot

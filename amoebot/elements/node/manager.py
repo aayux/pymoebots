@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from numpy import uint8, ndarray
 from .core import Node
-from ..utils.baseutils import increment_index
+from ...extras.limits import increment_index
 from ..manager import Manager
 
 @dataclass
