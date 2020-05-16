@@ -6,6 +6,9 @@
 *.pyo
 **__pycache__/
 
+# testing file
+main.py
+
 # notetaking
 todo.txt
 

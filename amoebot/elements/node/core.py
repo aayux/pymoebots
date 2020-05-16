@@ -1,31 +1,28 @@
-from dataclasses import dataclass, field
+from __future__ import annotations
+
 from numpy import uint8, ndarray, array
 from ..core import Core
 
-@dataclass
 class Node(Core):
-    # position of node in relation to the grid
-    position: ndarray = field(default=None)
+    def __init__(self, position:ndarray, node_ix:uint8):
+        # position of node in relation to the grid
+        self.position: ndarray = position
 
-    # node index in the lookup
-    node_ix: uint8 = field(default=None)
+        # node index in the lookup
+        self.node_ix: uint8 = node_ix
 
-    # ports labellings of the node
-    ports: ndarray = field(default=None)
+        # ports labellings of the node
+        self.ports: ndarray = array(['n', 'nw', 'sw', 's', 'se', 'ne'])
 
-    # dictionary identifying ports with neighbours
-    neighbors: dict = field(default=None)
+        # dictionary identifying ports with neighbours
+        self.neighbors: dict = dict(n=None, nw=None, sw=None, 
+                                    s=None, se=None, ne=None)
 
-    # 1 if a bot is on the node, 0 otherwise
-    occupied: uint8 = field(default=None)
+        # 1 if a bot is on the node, 0 otherwise
+        self.occupied: uint8 = None
 
-    # the bot currently occupying this node
-    bot: object = field(default=None)
-
-    def __post_init__(self):
-        self.ports = array(['n', 'nw', 'sw', 's', 'se', 'ne'])
-        self.neighbors = dict(n=None, nw=None, sw=None, 
-                              s=None, se=None, ne=None)
+        # the bot currently occupying this node
+        self.bot: object = None
 
     def scan_port(self, port:str) -> object:
         r"""
