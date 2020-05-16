@@ -1,0 +1,3 @@
+Stochastic Maze Solving with the Geometric Amobeot Model
+--------------------------------------------------------
+Manuscript notepad for ideas
