@@ -1,4 +1,4 @@
-## Pymoebot
+## Pymoebots
 **Stochastic Algorithms simulator for the Amoebot Model based on work by the [SOPS Group](https://sops.engineering.asu.edu/)**
 
 ### Acknowledgements

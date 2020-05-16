@@ -1,2 +1,2 @@
 class Core(object):
-    def __inti__(self): pass
+    def __init__(self): pass

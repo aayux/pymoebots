@@ -2,9 +2,7 @@ import sys
 import numpy as np
 
 from concurrent import futures
-from dataclasses import dataclass, field
-from collections import defaultdict
-from numpy import array, ndarray, uint8
+from numpy import ndarray, uint8
 
 from .core import Amoebot
 from ...extras.structures import AnonList
@@ -12,20 +10,17 @@ from ..node.core import Node
 from ...extras.exceptions import InitializationError
 from ..manager import Manager
 
-@dataclass
 class AmoebotManager(Manager):
     r"""
     manages thread assignment to agents and allocates functionals to bots
     """
 
-    # holds all `Amoebot` objects created anonymously
-    amoebots:AnonList = field(default_factory=AnonList)
+    def __init__(self):
+        # holds all `Amoebot` objects created anonymously
+        self.amoebots:AnonList = AnonList()
 
-    # truth values signalling execution status of each bot, 1 when complete
-    status: dict = field(default_factory=dict)
-
-    def __post_init__(self):
-        self.status = {0: list(), 1: list()}
+        # truth values signalling execution status of each bot, 1 when complete
+        self.status: dict = {0: list(), 1: list()}
 
     def _add_bot(self, node:Node):
         r"""
@@ -43,7 +38,7 @@ class AmoebotManager(Manager):
         triangular graph randomly
         """
 
-        node_list = ndarray(node_list)
+        node_list = np.asarray(node_list)
         np.random.shuffle(node_list)
 
         # add bot to the list at random node position

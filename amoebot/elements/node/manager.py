@@ -1,22 +1,19 @@
-from dataclasses import dataclass, field
 from numpy import uint8, ndarray
 from .core import Node
 from ...extras.limits import increment_index
 from ..manager import Manager
 
-@dataclass
 class NodeManager(Manager):
-    # dictionary of `Node` objects
-    node_dict: dict = field(default_factory=dict)
+    def __init__(self, points:ndarray):
 
-    # numpy array of plotted points
-    grid_points: ndarray = field(default=None)
+        # dictionary of `Node` objects
+        self.node_dict: dict = dict()
 
-    # next available index in the lookup
-    next_node_ix: uint8 = uint8(0)
+        # numpy array of plotted points
+        self.grid_points: ndarray = points
 
-    def __post_init__(self, points:ndarray):
-        self.grid_points = points
+        # next available index in the lookup
+        self.next_node_ix: uint8 = uint8(0)
 
     def grid_builder(self):
         r""" 

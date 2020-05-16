@@ -2,7 +2,7 @@ import numpy as np
 
 from dataclasses import dataclass, field
 from numpy import array, ndarray, uint8
-from ..functional.agent import Agent
+from ...functional.agent import Agent
 from ..core import Core
 
 @dataclass
@@ -43,7 +43,7 @@ class Amoebot(Core):
 
     def __post_init__(self):
         self.active = True
-        self.agent = Agent()
+        # self.agent = Agent()
         self.n_agents = uint8(0)
 
         self.head.arrival(bot=self)

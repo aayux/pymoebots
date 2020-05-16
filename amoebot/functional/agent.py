@@ -2,8 +2,8 @@ import numpy as np
 from numpy import uint8, array
 from dataclasses import dataclass, field
 
-from ..network.objects import MessagePipe, Packet, Token
-from ..network.handler import MessageHandler
+# from ..network.objects import MessagePipe, Packet, Token
+# from ..network.handler import MessageHandler
 
 @dataclass
 class Agent(object):
