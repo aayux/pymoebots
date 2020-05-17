@@ -59,3 +59,44 @@ class Agent(object):
         self.s_bot = self.successor_node._get_bot()
     
     def compression(self): raise NotImplementedError
+    
+    def move(self, direction:str=None):
+        r"""
+        Simple (random) movement algorithm for the amoebot model.
+        
+        :param direction: direction of movement (one of port labeling); if no 
+                          value provided, movement is performed randomly.
+        :type value: str
+        
+        :return: None
+        """
+        # contract and expanded particle
+        if self.bot.head is not self.bot.tail:
+            pull = self.bot.tail
+            self.bot.tail = self.bot.head
+            pull.departure()
+        
+        # select a random direction all available ports in scan order
+        elif direction is None:
+            open_ports = self._scan_ports(mode='open')
+            if open_ports:
+                push = self.bot.head.get_node(np.random.choice(open_ports))
+                self.bot.head = push
+                self.bot.head.arrival(bot=self.bot)
+        
+        # collect state for tracker
+    
+    def _scan_ports(self, mode='open') -> object:
+        r"""
+        mode : (open) returns a list of open ports for bot to move to
+        """
+        if mode == 'open':
+            open_ports = list()
+            for port in self.bot.head._get_ports():
+                
+                node = self.bot.head._get_neighbor(port)
+                if (node is not None) and (not node._get_occupied()):
+                    open_ports.append(port)
+
+            return open_ports
+        else: return None

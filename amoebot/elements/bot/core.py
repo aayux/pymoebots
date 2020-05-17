@@ -96,23 +96,6 @@ class Amoebot(Core):
         """
         self.pipe[slot] = packet
 
-    def scan_ports(self) -> uint8:
-        r"""
-        """
-        # TODO: required? copy variables and methods to avoid contention
-        scan_port = self.head.scan_port
-        n_ports_scanned = self.n_ports_scanned
-        empty_flag = self.empty_flag
-
-        # scan the neighbouring ports for occupancy status
-        occupied = scan_port(self.port_labels[n_ports_scanned % 6]).get_occupied()
-        if not occupied: empty_flag = uint8(1)
-
-        self.port_count += uint8(1)
-        self.empty_flag = empty_flag
-
-        return uint8(0)
-
     def _clear_pipe(self, slot:uint8): 
         self.pipe[slot] = None
 
