@@ -5,12 +5,12 @@
 *** Notes on the Algorithm
 
 	1. all nodes have the same fixed port labellings? ::
-	+ Nodes do, bots don't.
+	+ Nodes do, bots don't
 
-	2. CURRENT: Optimize amoebot.core.node.manager.Node.link() and solve orientation of ports is rotated by 90 in the stochastic work :: 
-	+ just change the direction of links.
+	2. orientation of ports is rotated by 90 in the stochastic work :: 
+	+ just change the direction of links
 
-	3. How much memory does an amoebot carry? ::
+	3. How much memory does an amoebot use ::
 
 	4. How to place non-gridlike obstacles or walls on the grid ::
 	+ remove regular node objects from Node, make them inaccessible
@@ -20,10 +20,14 @@
 	+ strip away message handling abilities and refer to them as function calls to methods of class `MessageHandler` only
 
 	6. How many agents can a bot launch ::
-	+ At least initially, a bot is its own agent.
-	+ This is most likely true more generally, but there may be opportunity to optimize later.
+	+ wrt movement there can be no more than one competing agent per bot
+	+ stationary algorithms may have the possibility of assigning more than one agent to task -- depends
 
-**** TODO generate a random bot configuration in json format, connect to viz and make them move.
+**** TODO start writing test cases
+**** TODO create bot configurations in json format
+**** DONE write functions for random movement
+**** TODO place blocking objects on grid
+**** TODO server: create a Django backend
 
 *** Notes on the JS front-end
 
