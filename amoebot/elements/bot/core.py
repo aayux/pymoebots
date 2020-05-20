@@ -43,7 +43,6 @@ class Amoebot(Core):
 
     def __post_init__(self):
         self.active = True
-        # self.agent = Agent()
         self.n_agents = uint8(0)
 
         self.head.arrival(bot=self)
@@ -64,16 +63,19 @@ class Amoebot(Core):
         """
         # if the bot is active
         if self.active:
-            # do stuff
-            return uint8(0)
-        else:
+
+            self.agent = Agent(bot=self, agent_id=1)
+            self.agent.move()
+
             return uint8(1)
+        
+        else: return uint8(0)
     
     def orient(self) -> uint8:
         r""" 
         orients with a random clockwise ordering of ports around the bot
 
-        returns: np.uint8:   execution status
+        returns: np.uint8: execution status
         """
 
         ports = self.head._get_ports()

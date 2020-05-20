@@ -30,11 +30,10 @@ class AmoebotManager(Manager):
         bot = Amoebot(head=node)
         self.amoebots.insert(bot)
 
-
     # TODO: move placement to separate class
     def random_placement(self, n_bots:int, node_list:list):
         r"""
-        places bots on an instance of a `elements.node.core.Node` of the 
+        places bots on an instance of `elements.node.core.Node` of the 
         triangular graph randomly
         """
 
@@ -48,7 +47,6 @@ class AmoebotManager(Manager):
         r"""
         execute one timestep of `elements.bots.core.Amoebot.execute()`
         """
-
         # TODO: required? copy variables and methods to avoid contention
         status = self.status
 

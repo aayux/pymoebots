@@ -1,4 +1,4 @@
-from numpy import uint8, ndarray
+from numpy import uint8, ndarray, array
 from .core import Node
 from ...extras.limits import increment_index
 from ..manager import Manager
@@ -10,7 +10,7 @@ class NodeManager(Manager):
         self.node_dict: dict = dict()
 
         # numpy array of plotted points
-        self.grid_points: ndarray = points
+        self.grid_points: ndarray = array(points)
 
         # next available index in the lookup
         self.next_node_ix: uint8 = uint8(0)
