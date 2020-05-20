@@ -23,9 +23,10 @@
 	+ wrt movement there can be no more than one competing agent per bot
 	+ stationary algorithms may have the possibility of assigning more than one agent to task -- depends
 
-**** TODO start writing test cases
+**** DONE start writing test cases
 **** TODO create bot configurations in json format
 **** DONE write functions for random movement
+**** TODO connect random movement module to core and test
 **** TODO place blocking objects on grid
 **** TODO server: create a Django backend
 

@@ -12,7 +12,7 @@ class Node(Core):
         self.node_ix: uint8 = node_ix
 
         # ports labellings of the node
-        self.ports: ndarray = np.array(['n', 'nw', 'sw', 's', 'se', 'ne'])
+        self.ports: ndarray = array(['n', 'nw', 'sw', 's', 'se', 'ne'])
 
         # dictionary identifying ports with neighbours
         self.neighbors: dict = dict(n=None, nw=None, sw=None, 

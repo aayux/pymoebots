@@ -79,6 +79,6 @@ class TriangularGrid(object):
         self.grid_y = grid_y
         self.grid = grid
 
-    def get_grid(self): return self.grid
+    def _get_grid(self): return self.grid
 
-    def get_grid_components(self): return [self.grid_x, self.grid_y]
+    def _get_grid_components(self): return [self.grid_x, self.grid_y]
