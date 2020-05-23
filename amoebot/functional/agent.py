@@ -30,7 +30,7 @@ class Agent(object):
 
         :param direction: direction of movement (one of port labeling); if no 
                           value provided, movement is performed randomly.
-        :type value: str
+        :type: str
 
         :return: None
         """
@@ -47,12 +47,13 @@ class Agent(object):
                 push = self.bot.head._get_neighbor(np.random.choice(open_ports))
                 self.bot.head = push
                 self.bot.head.arrival(bot=self.bot)
-        
-        # collect state for tracker
-    
-    def _scan_ports(self, mode='open') -> object:
+
+    def _scan_ports(self, mode:str='open') -> object:
         r"""
-        mode : (open) returns a list of open ports for bot to move to
+        :param mode : (open) returns a list of open ports for bot to move to
+        :type: str
+
+        :return: None
         """
         if mode == 'open':
             open_ports = list()
