@@ -54,6 +54,8 @@ class Amoebot(Core):
         
         self.empty_flag = uint8(0)
 
+        self.orient()
+
     def execute(self) -> uint8:
         r"""
         Worker function for each amoebot. Manages parallelisation between agents

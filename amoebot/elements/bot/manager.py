@@ -55,7 +55,7 @@ class AmoebotManager(Manager):
             status[amoebot.execute()] = amoebot
         except IndexError:
             raise InitializationError(
-                                f"Amoebots have not been initialized "
+                                f"Amoebots have not been initialized ",
                                 f"correctly, check file and retry. Exiting!"
             )
             sys.exit(0)
