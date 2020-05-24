@@ -1,12 +1,45 @@
-var nameSpaceURI = "http://www.w3.org/2000/svg";
-var algName = "pymoebots";
-var cameraDim = {w: 1800, h: 800};
-var scale = 60;
+nameSpaceURI = "http://www.w3.org/2000/svg";
 
+var cameraDim = {w: 1500, h: 750};
+var scale = 41;
 var originLoc = {x: 0, y: 0};
 var amoebotLoc = [];
 
-( function drawGrid() {
+/*
+function shearPoint( point ) {
+    // shear points from the Euclidean plane into the triangular grid
+    newPoint = { x : 0, y : 0 };
+    newPoint.x += point.x * scale;
+    if ( point.y % 2 == 1 ) { newPoint.x += ( 1 / 2 ) * scale; }
+    newPoint.y -= ( point.y * Math.sqrt( 3 ) / 2 ) * scale;
+    return( newPoint );
+}
+
+function addAmoebot( x , y ) {
+    // add amoebots to the grid
+}
+*/
+
+async function loadHistory() {
+    /*
+    load the state history from JSON source file
+    returns :: 200 on success, 400 on failure
+    */
+    try {
+        // GET request to downloading tracking data
+        const response = await fetch( "tracker" ).then(
+                                response => response.json() ).then(
+                                    data => state_history = data ).then(
+                                        () => { return 200; }
+                                    );
+        return response;
+    } catch( e ) {
+        response = 400;
+        return response;
+    }
+}
+
+function drawGrid() {
     var camera = document.getElementById( "camera" );
     camera.setAttribute( "width", cameraDim.w );
     camera.setAttribute( "height", cameraDim.h );
@@ -17,24 +50,24 @@ var amoebotLoc = [];
     var gridDist = Math.floor( cameraDim.w / scale );
 
     // get points for longitudanal lines
-    for( var i = -gridDist; i <= cameraDim.w + gridDist; i += gridDist ) {
+    for( var i = -cameraDim.w * gridDist; i <= cameraDim.w * gridDist; i += gridDist ) {
         gridLines.push({
-            p1: {x: i, y: -1 * (cameraDim.h + 1)}, 
-            p2: {x: i, y: cameraDim.h + 1}
+            p1: {x: i, y: - 30 *  ( cameraDim.h + 1 ) }, 
+            p2: {x: i, y: 30 * ( cameraDim.h + 1 ) }
         });
     }
 
-    for( var i = -cameraDim.w; i <= cameraDim.w * gridDist; i += gridDist ) {
+    for( var i = -cameraDim.w * gridDist; i <= cameraDim.w * gridDist; i += gridDist ) {
         // right sheared diagonal
         gridLines.push({
-            p1: { x : i, y : - ( cameraDim.h + 1 ) },
-            p2: { x : i - ( cameraDim.h + 1 ) * Math.sqrt( 3 ), y : cameraDim.h + 1 }
+            p1: { x : i, y : - 30 * ( cameraDim.h + 1 ) },
+            p2: { x : i - 30 * ( cameraDim.h + 1 ) * Math.sqrt( 3 ), y : 30 * (cameraDim.h + 1) }
         });
         
         // left sheared diagonal
         gridLines.push({
-            p1: {x : i, y : -1 * (cameraDim.h + 1)},
-            p2: {x : i + ( cameraDim.h + 1 ) * Math.sqrt( 3 ), y : cameraDim.h + 1 }
+            p1: {x : i, y : - 30 * ( cameraDim.h + 1 ) },
+            p2: {x : i + 30 * ( cameraDim.h + 1 ) * Math.sqrt( 3 ), y : 30 * (cameraDim.h + 1) }
         });
     }
 
@@ -49,11 +82,13 @@ var amoebotLoc = [];
         newLine.setAttribute( "y2", gridLine.p2.y );
         camera.getElementById( "grid" ).appendChild(newLine);
     }
-})();
+}
 
 
-( function dragMotion() {
-    // drag around the grid
+function allowDragMotion() {
+    /* 
+    allow drag across the grid
+    */
     var camera = document.getElementById( "camera" );
     var dragLoc = { x : 0, y : 0 };
 
@@ -78,14 +113,12 @@ var amoebotLoc = [];
         camera.onmouseup = null;
         camera.onmouseleave = null;
   } 
-})();
-
+}
 
 function updateViz() {
-    /* 
-    The primary visual update function :: changes bot positions and line 
-    positions relative to the origin calculated on drag
-    */
+    // The primary visual update function :: changes bot positions and line 
+    // positions relative to the origin calculated on drag
+    
     
     ( function updateOrigin() {
         // update the anchored origin
@@ -93,45 +126,44 @@ function updateViz() {
         origin.setAttribute( "cx", originLoc.x );
         origin.setAttribute( "cy", originLoc.y );
     })();
-    
-    /*
-    ( function updateAmoebots() {
-        // update bot positions relative to the origin
-        var amoebotVis = manager.bot_dict;
-        for( var i = 0; i < amoebotVis.length; i++ ) {
-            var amoebotParts = amoebotVis[ i ].visualRep;
-            var tailLocation = squareToTriangle( amoebotVis[ i ].tail );
-            var headLocation = squareToTriangle( amoebotVis[ i ].head );
-
-            amoebotParts.botTail.setAttribute( "cx", originLoc.x + tailLocation.x );
-            amoebotParts.botTail.setAttribute( "cy", originLoc.y + tailLocation.y );
-
-            amoebotParts.botHead.setAttribute( "cx", originLoc.x + headLocation.x );
-            amoebotParts.botHead.setAttribute( "cy", originLoc.y + headLocation.y );
-        }
-    })(); 
-    */
 
     ( function updateGrid() {
         // update grid lines
         var gridViz = document.getElementById( "grid" );
-        var moduloX = originLoc.x % scale;
-        var moduloY = originLoc.y % ( scale * Math.sqrt( 3 ) );
+        var moduloX = originLoc.x;
+        var moduloY = originLoc.y;
         gridViz.setAttribute("transform",
         "translate(" + moduloX + ", " + moduloY + ")"
         );
     })();
 }
 
-function squareToTriangle( point ) {
-    // shear points from the Euclidean plane into the triangular grid
-    newPoint = { x : 0, y : 0 };
-    newPoint.x += point.x * scale;
-    if ( point.y % 2 == 1 ) { newPoint.x += ( 1 / 2 ) * scale; }
-    newPoint.y -= ( point.y * Math.sqrt( 3 ) / 2 ) * scale;
-    return( newPoint );
+function initializeManager() {
+    /*
+    instantiate the amoebot manager and place particles on the grid
+    returns :: -1 on failure, 0 on success
+    */
+    if ( JSON.stringify(state_history) == "{}" ) {
+      console.log( "ERROR: No bot data was received!" );
+      return -1;
+    }
+    // manager = new AmoebotManager( state_history );
+    updateViz();
+    return 0;
 }
 
-function addAmoebot( x , y ) {
-    // add amoebots to the grid
-}
+/*
+driver code :: load history, draw the grid and set up the visualiser
+*/
+loadHistory().then(
+    ( response ) => {
+        console.log( response );
+        if ( response == 200 ) {
+            drawGrid();
+            allowDragMotion();
+            initializeManager();
+        } else {
+            console.log("Error: No bot data was receieved.")
+        }
+    }
+);
