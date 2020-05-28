@@ -1,94 +1,11 @@
+require('amoebot.viz-objects.js');
+
 nameSpaceURI = "http://www.w3.org/2000/svg";
 
-var cameraDim = {w: 1500, h: 750};
+var cameraDim = { w : 1500, h : 750 };
 var scale = 41;
-var originLoc = {x: 0, y: 0};
-var amoebotLoc = [];
+var originLoc = { x : 0, y : 0 };
 
-class AmoebotVizManager {
-    /*
-    mantains visual information and current position of particles
-    */
-    constructor( state_history ) {
-        this.state_history = state_history;
-        this.state_dict = [];
-        
-        // Current round of simulation.
-        this._round = 0;
-
-        // Tracks whether the current round is through
-        this.incompleteRound = false;
-
-        for ( let ix in this.state_history[ '0' ] ) {
-            this.state_dict.push(
-                new AmoebotData(
-                    this.state_history['0'][ix].x,
-                    this.state_history['0'][ix].y, ix,
-                )
-            );
-        }
-      this.simData = null;
-      if (this.state_history){
-        this.simData = this.analyzeBotHistory();
-      }
-    }
-
-    analyzeBotHistory() {
-      /*
-      Find out how many bots we have and how many rounds.
-      */
-      var bots   = Object.keys(this.bot_history['0']).length;
-      var rounds = Object.keys(this.bot_history).length;
-      return({rounds, bots});
-    }
-
-    singleBotStepFunction(round, bot, updateVis) {
-      if (round <= this.simData.rounds) {
-        if (round > 0) {
-          this.incompleteRound = true;
-        }
-        if (bot <= this.simData.bots) {
-          let historical_bot = this.bot_history[round][bot];
-          let curr_bot = this.bot_dict[bot];
-
-          curr_bot.head.x = (historical_bot.x % 2 == 0) ? historical_bot.x / 2 : (historical_bot.x - 1) / 2;
-          curr_bot.head.y = historical_bot.y;
-
-          curr_bot.tail.x = (historical_bot.x % 2 == 0) ? historical_bot.x / 2 : (historical_bot.x - 1) / 2;
-          curr_bot.tail.y = historical_bot.y;
-
-          curr_bot.agent_stage = historical_bot.agents_on;
-          curr_bot.agent_statuses_stage = {
-            'agent0': historical_bot.agent0,
-            'agent1': historical_bot.agent1,
-            'agent2': historical_bot.agent2
-          };
-          curr_bot.update();
-          if (updateVis) updateVisuals();
-        }
-        if (round == this.simData.rounds) {
-          this.incompleteRound = false;
-        }
-      }
-    }
-
-    stepFunction (updateVis) {
-      /*
-      Updates the bots' positions and states from previous step.
-      One step is one full pass through all the bots.
-      */
-      this.step ++;
-      for (let i in this.bot_history[this.step]) {
-
-        this.singleBotStepFunction(this.step, i, updateVis);
-
-      }
-      //updateVisuals();
-    }
-  }
-
-
-/*
 function shearPoint( point ) {
     // shear points from the Euclidean plane into the triangular grid
     newPoint = { x : 0, y : 0 };
@@ -98,10 +15,15 @@ function shearPoint( point ) {
     return( newPoint );
 }
 
-function addAmoebot( x , y ) {
+function addAmoebot( x, y ) {
     // add amoebots to the grid
+    return undefined;
 }
-*/
+
+function onClickPlace() {
+    // get click position
+    addAmoebot( x, y)
+}
 
 async function requestHistory() {
     /*
@@ -109,12 +31,12 @@ async function requestHistory() {
     returns :: 200 on success, 400 on failure
     */
     // GET request to downloading tracking data
-    const response = await fetch( "history" )
+    const httpStatus = await fetch( "history" )
                         .then( response => response.json() )
-                        .then( data => state_history = data )
+                        .then( response => tracks = response )
                         .then( () => { return 200; } )
                         .catch( () => { return 400; } );
-    return response;
+    return httpStatus;
 }
 
 function drawGrid() {
@@ -193,10 +115,11 @@ function allowDragMotion() {
 }
 
 function updateViz() {
-    // The primary visual update function :: changes bot positions and line 
-    // positions relative to the origin calculated on drag
-    
-    
+    /*
+    the primary visual update function, changes grid, particle and maze 
+    positions relative to the origin calculated on drag
+    */
+
     ( function updateOrigin() {
         // update the anchored origin
         var origin = document.getElementById( "origin" );
@@ -215,30 +138,38 @@ function updateViz() {
     })();
 }
 
-function initializeManager() {
+function initializeTracker() {
     /*
-    instantiate the amoebot manager and place particles on the grid
+    instantiate the amoebot tracker and place particles on the grid
     returns :: -1 on failure, 0 on success
     */
-    if ( JSON.stringify(state_history) == "{}" ) {
+    if ( JSON.stringify( tracks ) == "{}" ) {
       console.log( "ERROR: No bot data was received!" );
       return -1;
     }
-    vmanager = new AmoebotVizManager( state_history );
+    vtracker = new AmoebotVizTracker( tracks );
     updateViz();
     return 0;
+}
+
+function onClickPlay( playback_speed ) {
+    return undefined;
+}
+
+function onClickStep( ) {
+    return undefined;
 }
 
 /*
 driver code :: load history, draw the grid and set up visualiser
 */
 requestHistory().then(
-    ( response ) => {
-        console.log( response );
-        if ( response == 200 ) {
+    ( httpStatus ) => {
+        console.log( httpStatus );
+        if ( httpStatus == 200 ) {
             drawGrid();
             allowDragMotion();
-            initializeManager();
+            initializeTracker();
         } else {
             console.log("Error: No bot data was receieved.")
         }
