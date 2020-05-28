@@ -5,6 +5,89 @@ var scale = 41;
 var originLoc = {x: 0, y: 0};
 var amoebotLoc = [];
 
+class AmoebotVizManager {
+    /*
+    mantains visual information and current position of particles
+    */
+    constructor( state_history ) {
+        this.state_history = state_history;
+        this.state_dict = [];
+        
+        // Current round of simulation.
+        this._round = 0;
+
+        // Tracks whether the current round is through
+        this.incompleteRound = false;
+
+        for ( let ix in this.state_history[ '0' ] ) {
+            this.state_dict.push(
+                new AmoebotData(
+                    this.state_history['0'][ix].x,
+                    this.state_history['0'][ix].y, ix,
+                )
+            );
+        }
+      this.simData = null;
+      if (this.state_history){
+        this.simData = this.analyzeBotHistory();
+      }
+    }
+
+    analyzeBotHistory() {
+      /*
+      Find out how many bots we have and how many rounds.
+      */
+      var bots   = Object.keys(this.bot_history['0']).length;
+      var rounds = Object.keys(this.bot_history).length;
+      return({rounds, bots});
+    }
+
+    singleBotStepFunction(round, bot, updateVis) {
+      if (round <= this.simData.rounds) {
+        if (round > 0) {
+          this.incompleteRound = true;
+        }
+        if (bot <= this.simData.bots) {
+          let historical_bot = this.bot_history[round][bot];
+          let curr_bot = this.bot_dict[bot];
+
+          curr_bot.head.x = (historical_bot.x % 2 == 0) ? historical_bot.x / 2 : (historical_bot.x - 1) / 2;
+          curr_bot.head.y = historical_bot.y;
+
+          curr_bot.tail.x = (historical_bot.x % 2 == 0) ? historical_bot.x / 2 : (historical_bot.x - 1) / 2;
+          curr_bot.tail.y = historical_bot.y;
+
+          curr_bot.agent_stage = historical_bot.agents_on;
+          curr_bot.agent_statuses_stage = {
+            'agent0': historical_bot.agent0,
+            'agent1': historical_bot.agent1,
+            'agent2': historical_bot.agent2
+          };
+          curr_bot.update();
+          if (updateVis) updateVisuals();
+        }
+        if (round == this.simData.rounds) {
+          this.incompleteRound = false;
+        }
+      }
+    }
+
+    stepFunction (updateVis) {
+      /*
+      Updates the bots' positions and states from previous step.
+      One step is one full pass through all the bots.
+      */
+      this.step ++;
+      for (let i in this.bot_history[this.step]) {
+
+        this.singleBotStepFunction(this.step, i, updateVis);
+
+      }
+      //updateVisuals();
+    }
+  }
+
+
 /*
 function shearPoint( point ) {
     // shear points from the Euclidean plane into the triangular grid
@@ -20,23 +103,18 @@ function addAmoebot( x , y ) {
 }
 */
 
-async function loadHistory() {
+async function requestHistory() {
     /*
     load the state history from JSON source file
     returns :: 200 on success, 400 on failure
     */
-    try {
-        // GET request to downloading tracking data
-        const response = await fetch( "tracker" ).then(
-                                response => response.json() ).then(
-                                    data => state_history = data ).then(
-                                        () => { return 200; }
-                                    );
-        return response;
-    } catch( e ) {
-        response = 400;
-        return response;
-    }
+    // GET request to downloading tracking data
+    const response = await fetch( "history" )
+                        .then( response => response.json() )
+                        .then( data => state_history = data )
+                        .then( () => { return 200; } )
+                        .catch( () => { return 400; } );
+    return response;
 }
 
 function drawGrid() {
@@ -83,7 +161,6 @@ function drawGrid() {
         camera.getElementById( "grid" ).appendChild(newLine);
     }
 }
-
 
 function allowDragMotion() {
     /* 
@@ -147,15 +224,15 @@ function initializeManager() {
       console.log( "ERROR: No bot data was received!" );
       return -1;
     }
-    // manager = new AmoebotManager( state_history );
+    vmanager = new AmoebotVizManager( state_history );
     updateViz();
     return 0;
 }
 
 /*
-driver code :: load history, draw the grid and set up the visualiser
+driver code :: load history, draw the grid and set up visualiser
 */
-loadHistory().then(
+requestHistory().then(
     ( response ) => {
         console.log( response );
         if ( response == 200 ) {

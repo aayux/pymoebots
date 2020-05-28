@@ -29,8 +29,10 @@
       <g id="amoebots"></g>
       <circle cx=0 cy=0 fill="white" stroke="black" stroke-width=".5" id="origin" r="6"></circle>
     </svg>
-
-    <script src="js/main.js">
+    
+    {% load static %}
+    <!-- use django static tag ton load js file and css file. -->
+    <script src="{% static 'js/main.js' %}"></script>
     </script>
   </body>
 </html>
