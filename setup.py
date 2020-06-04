@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 PACKAGES = find_packages()
 
-opts = dict(name="amoebot",
+opts = dict(name="pymoebots",
             maintainer="Aayush Yadav",
             description="Stochastic Algorithms simulator for the Amoebot Model",
             url="http://github.com/aayux/pymoebots",
