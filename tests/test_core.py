@@ -1,5 +1,4 @@
 import pytest
-import random
 
 from .. amoebot.grid.trigrid import TriangularGrid
 from .. amoebot.elements.node.manager import NodeManager

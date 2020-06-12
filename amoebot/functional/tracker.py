@@ -29,7 +29,7 @@ class StateTracker(object):
         # TODO optimize this block
         # read data from json file if it exists
         if statefile.exists():
-            with open(statefile, 'r') as f: 
+            with open(statefile, 'r') as f:
                 state_dict = json.load(f)
             
             # if current _round is not the newest
