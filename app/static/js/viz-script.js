@@ -22,7 +22,7 @@ function addAmoebot( x, y ) {
 
 function onClickPlace() {
     // get click position
-    addAmoebot( x, y)
+    addAmoebot( x, y )
 }
 
 async function requestHistory() {
