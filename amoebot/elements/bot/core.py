@@ -11,8 +11,9 @@ class Amoebot(Core):
     core amobeot functionalities, extended using functional modules
     """
 
-    # bot should be anonymous, use this for debugging only
-    # bot_id: int = field(default=None)
+    # bots should be locally indistinguishable this name-mangled
+    # variable is used only for optimizing the frontend load
+    __bot_id: int = field(default=None)
 
     # stores unique ordering of ports
     port_labels: ndarray = field(default=None)
@@ -26,7 +27,7 @@ class Amoebot(Core):
     # number of parallel agents the bot is running
     n_agents: uint8 = field(default=None)
 
-    # the ameobot's worker agents
+    # the ameobot's worker agent
     agent: Agent = field(default=None)
 
     # count of ports scanned
@@ -35,23 +36,18 @@ class Amoebot(Core):
     # 1 if port scan returns an empty space
     empty_flag: uint8 = field(default=None)
 
-    # a message pipe for sharing packets between agents
-    pipe: ndarray = field(default=None)
-
     # activation status, true means the bot is active
     active: uint8 = field(default=None)
 
     def __post_init__(self):
         self.active = True
-        self.n_agents = uint8(0)
 
         self.head.arrival(bot=self)
         self.tail = self.head
 
         self.n_ports_scanned = uint8(0)
         self.port_labels = np.empty(0, dtype='<U2')
-        self.pipe = np.empty(3, dtype='object')
-        
+
         self.empty_flag = uint8(0)
 
         self.orient()
@@ -66,7 +62,7 @@ class Amoebot(Core):
         # if the bot is active
         if self.active:
 
-            self.agent = Agent(bot=self, agent_id=1)
+            self.agent = Agent(bot=self, agent_id=0)
             self.agent.move()
 
             return uint8(1)
@@ -93,17 +89,6 @@ class Amoebot(Core):
             choice_ix += uint8(1)
 
         return uint8(1)
-    
-    def publish(self, slot:uint8, packet:object):
-        r"""
-        write (tokens) to the selected agent at slot
-        """
-        self.pipe[slot] = packet
-
-    def _clear_pipe(self, slot:uint8): 
-        self.pipe[slot] = None
-
-    def _get_pipe(self): return self.pipe
 
     def _get_id(self): raise NotImplementedError
 

@@ -7,30 +7,31 @@ class AnonList(UserList):
     maintained an indexing is impossible.
     """
 
-    def append(self, x:object):
+    def append(self, item:object):
         raise RuntimeError(f"Can not append to 'AnonList' objects, use the "
                            f"'insert' method.")
     
-    def insert(self, x:object):
-        r""" always inserts into a random index
+    def insert(self, item:object, index:int=None):
+        r""" inserts into a random index if no index is supplied
         """
 
         if self.data:
-            ix = random.randint(0, len(self.data))
-        else: ix = 0
+            index = index if ix else random.randint(0, len(self.data))
+        else: index = 0
         
-        super().insert(ix, x)
+        super().insert(ix, item)
 
-    def __getitem__(self, ix:int):
-        raise RuntimeError(f"Fatal! Can not index int 'AnonList'")
+    # uncomment to use a fully anonymised list
+    # def __getitem__(self, index:int):
+    #     raise RuntimeError(f"Fatal! Can not index into 'AnonList'")
 
-    def __iter__(self) -> object:
-        r""" returns an `iter` object over randomised list ordering
-        """
+    # def __iter__(self) -> object:
+    #     r""" returns an `iter` object over randomised list ordering
+    #     """
         
-        self._copy_data()
-        random.shuffle(self._data)
-        return iter(self._data)
+    #     self._copy_data()
+    #     random.shuffle(self._data)
+    #     return iter(self._data)
     
     def __repr__(self) -> str:
         r""" returns a shuffled string
