@@ -1,78 +1,49 @@
 import numpy as np
 
-from dataclasses import dataclass, field
 from numpy import array, ndarray, uint8
-from ...functional.agent import Agent
+
 from ..core import Core
 
-@dataclass
+# global wait time for agents
+WAIT_TIME: uint8 = 64
+
 class Amoebot(Core):
-    r"""
-    core amobeot functionalities, extended using functional modules
+    r""" core amobeot functionalities, extended using algorithmic modules
     """
 
-    # bot should be anonymous, use this for debugging only
-    # bot_id: int = field(default=None)
+    def __init__(self, __bot_id:int, head:object):
 
-    # stores unique ordering of ports
-    port_labels: ndarray = field(default=None)
+        # bots should be locally indistinguishable this name-mangled
+        # variable is used only for optimizing the frontend load
+        self.__bot_id:int = __bot_id
 
-    # head of the bot
-    head: object = field(default=None)
-
-    # tail of the bot
-    tail: object = field(default=None)
-
-    # number of parallel agents the bot is running
-    n_agents: uint8 = field(default=None)
-
-    # the ameobot's worker agents
-    agent: Agent = field(default=None)
-
-    # count of ports scanned
-    n_ports_scanned: uint8 = field(default=None)
-
-    # 1 if port scan returns an empty space
-    empty_flag: uint8 = field(default=None)
-
-    # a message pipe for sharing packets between agents
-    pipe: ndarray = field(default=None)
-
-    # activation status, true means the bot is active
-    active: uint8 = field(default=None)
-
-    def __post_init__(self):
-        self.active = True
-        self.n_agents = uint8(0)
-
+        # head of the bot
+        self.head:object = head
         self.head.arrival(bot=self)
-        self.tail = self.head
 
-        self.n_ports_scanned = uint8(0)
+        # tail of the bot, initially same as head
+        self.tail:object = self.head
+
+        # rate parameter for poisson clock
+        self.lam:uint8 = uint8(1)
+
+        # count of ports scanned
+        self.n_ports_scanned:uint8 = uint8(0)
+
+        # stores unique ordering of ports
         self.port_labels = np.empty(0, dtype='<U2')
-        self.pipe = np.empty(3, dtype='object')
-        
-        self.empty_flag = uint8(0)
+
+        # 1 if port scan returns an empty space
+        # self.empty_flag:uint8 = uint8(0)
+
+        # activation status, true means the bot is active
+        self.active:bool = self._reset_clock(refresh=True)
+
+        # wait timer for agents
+        self.wait: uint8 = WAIT_TIME
 
         self.orient()
 
-    def execute(self) -> uint8:
-        r"""
-        Worker function for each amoebot. Manages parallelisation between agents
-        and attaches functional modules to the amoebot.
-
-        returns: np.uint8:   execution status
-        """
-        # if the bot is active
-        if self.active:
-
-            self.agent = Agent(bot=self, agent_id=1)
-            self.agent.move()
-
-            return uint8(1)
-        
-        else: return uint8(0)
-    
     def orient(self) -> uint8:
         r""" 
         orients with a random clockwise ordering of ports around the bot
@@ -93,18 +64,20 @@ class Amoebot(Core):
             choice_ix += uint8(1)
 
         return uint8(1)
-    
-    def publish(self, slot:uint8, packet:object):
+
+    def _reset_clock(self, refresh:bool) -> bool:
         r"""
-        write (tokens) to the selected agent at slot
         """
-        self.pipe[slot] = packet
+        if refresh:
+            self.clock = uint8(np.random.poisson(lam=self.lam))
+        
+        else: self.clock -= 1
 
-    def _clear_pipe(self, slot:uint8): 
-        self.pipe[slot] = None
+        return False if self.clock else True
 
-    def _get_pipe(self): return self.pipe
 
-    def _get_id(self): raise NotImplementedError
-
-    def _get_head(self): return self.head
+    def execute(self): raise NotImplementedError
+    
+    def move_agent(self, **kwargs): raise NotImplementedError
+    
+    def compress_agent(self, **kwargs): raise NotImplementedError

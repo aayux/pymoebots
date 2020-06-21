@@ -1,102 +1,114 @@
-import sys
+import logging
 import numpy as np
+import multiprocessing
 
-from concurrent import futures
-from numpy import ndarray, uint8
+from collections import defaultdict
+from numpy import array, ndarray, uint8
 
-from .core import Amoebot
-from ...extras.structures import AnonList
-from ..node.core import Node
-from ...extras.exceptions import InitializationError
+from .agent import Agent
 from ..manager import Manager
+from ..tracker import StateTracker
+from ...extras.structures import AnonList, PersistentStore
 
 class AmoebotManager(Manager):
-    r"""
-    manages thread assignment to agents and allocates functionals to bots
+    r""" manages thread assignment to agents and allocates functionals to bots
     """
 
-    def __init__(self):
+    def __init__(self, config_num:str):
         # holds all `Amoebot` objects created anonymously
-        self.amoebots:AnonList = AnonList()
+        self.amoebots: object = AnonList()
 
-        # truth values signalling execution status of each bot, 1 when complete
-        self.status: dict = {0: list(), 1: list()}
+        # object of class `StateTracker`
+        self.tracker: object = StateTracker(config_num)
 
-    def _add_bot(self, node:Node):
+        # persistent storage for asynchronous read/write
+        self.store = PersistentStore(config_num)
+
+    def exec_async(self, n_cores:int) -> dict:
         r"""
-        adds individual amoebots to the `AnonList`
+        Set up asynchronous calls for bot execution and create a queueing 
+        manager for writing the state configuration file.
+
+        returns (dict) : execution status
         """
 
-        bot = Amoebot(head=node)
-        self.amoebots.insert(bot)
+        mp_manager = multiprocessing.Manager()
+        queue = mp_manager.Queue()
 
-    # TODO: move placement to separate class
-    def random_placement(self, n_bots:int, node_list:list):
+        # mp_logger = multiprocessing.log_to_stderr()
+        # mp_logger.setLevel(multiprocessing.SUBDEBUG)
+
+        with multiprocessing.Pool(processes=n_cores - 1) as pool:
+            
+            # load the persistent storage
+            self.store.read()
+
+            # create a listener process that handles queued writes
+            _ = pool.apply_async(self._queueing_manager, (queue,))
+
+            # execute algorithm on aynchronous agents
+            for __bot_id, _ in enumerate(self.amoebots):
+                job = pool.apply_async(self._exec_step, 
+                                            (__bot_id, queue)
+                                    )
+
+                # collect results from the pool
+                job.get()
+
+            # kill the listener process
+            queue.put(['ps-kill', '', ''])
+
+            pool.close()
+            pool.join()
+
+    def exec_sequential(self) -> dict:
         r"""
-        places bots on an instance of `elements.node.core.Node` of the 
-        triangular graph randomly
         """
+        for __bot_id, _ in enumerate(self.amoebots):
+            self._exec_step(__bot_id)
 
-        node_list = np.asarray(node_list)
-        np.random.shuffle(node_list)
-
-        # add bot to the list at random node position
-        for ix in range(n_bots): self._add_bot(node_list[ix])
-
-    def _activate(self, amoebot:Amoebot):
-        r"""
-        execute one timestep of `elements.bots.core.Amoebot.execute()`
+    def _exec_step(self, __bot_id:int, queue:object=None):
+        r""" execute one step of `elements.bots.core.Amoebot.execute()`
         """
-        # TODO: required? copy variables and methods to avoid contention
-        status = self.status
+        # for asynchronous function calls
+        if queue is not None: 
+            if not self.store.persistent[__bot_id]:
+                self.store.persistent[__bot_id] = self.amoebots[__bot_id]
 
-        try:
-            # execute the amoebot algorithms and update execution status
-            status[amoebot.execute()] = amoebot
-        except IndexError:
-            raise InitializationError(
-                                f"Amoebots have not been initialized ",
-                                f"correctly, check file and retry. Exiting!"
-            )
-            sys.exit(0)
+            # read amoebot data from persistent state
+            amoebot = self.store.persistent[__bot_id]
+            
+            # execute the amoebot algorithm(s) and update execution status
+            amoebot, actv_status = amoebot.execute()
 
-        self.status = status
+            queue.put([__bot_id, amoebot, actv_status])
+        
+        else: amoebot, actv_status = self.amoebots[__bot_id].execute()
 
-    def m_activate(self) -> uint8:
-        r"""
-        sets up threaded calls to activation methods for all bots
+    def _queueing_manager(self, queue:object):
+        while True:
+            # pop the leading entry in the queue
+            response = queue.get()
 
-        returns: np.uint8:   execution status
+            # exit the listener process
+            if response[0] == 'ps-kill': break
+            
+            __bot_id, amoebot, actv_status = response
+
+            self.store.persistent[__bot_id] = amoebot
+
+            state = (amoebot.head, amoebot.tail, amoebot.clock)
+
+            # if there was an activation for this bot
+            if actv_status:
+                # call `StateTracker.update` to update the configuration
+                self.tracker.update(__bot_id, state)
+
+        self.store.write()
+
+
+    def _add_bot(self, __bot_id:int, node:object):
+        r""" adds individual particles to the (partially anonymous) `AnonList`
         """
-        # TODO: required? copy variables and methods to avoid contention
-        activate = self._activate
-
-        with futures.ThreadPoolExecutor() as executor:
-
-            # maps range to active method
-            executor.map(activate, self.amoebots)
-
-        status = self.status
-
-        # return 1 if everything ran successfully
-        if len(status[0]) == 0: return uint8(1)
-
-        return uint8(0)
-
-    def s_activate(self) -> uint8:
-        r"""
-        Sequential bot activations; activations are arbitrary as long as each 
-        amoebot gets a chance to run during a cycle.
-
-        returns: np.uint8:   execution status
-        """
-
-        # one cycle of activation per amoebot
-        for amoebot in self.amoebots: self._activate(amoebot)
-
-        status = self.status
-
-        # return 1 if everything ran successfully
-        if len(status[0]) == 0: return uint8(1)
-
-        return uint8(0)
+        bot = Agent(__bot_id, head=node)
+        self.amoebots.insert(bot, __bot_id)
