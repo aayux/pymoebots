@@ -4,7 +4,7 @@ import numpy as np
 
 from pathlib import Path
 
-from ..elements.bot.manager import AmoebotManager
+from .bot.manager import AmoebotManager
 from ..extras.exceptions import InitializationError
 
 STORE = './.dumps/init0'
@@ -53,8 +53,11 @@ class StateGenerator(object):
 
     def collect_states(self, node_list:list, 
                        config0:dict) -> AmoebotManager:
-        # collect state information from source
-        # place bots on the grid and return an `AmoebotManager` object
+        r""" 
+        Collect state information from source place bots on the grid. 
+
+        returns: AmoebotManager : object handler for manager class
+        """
         raise NotImplementedError
 
     def write(self, config0:list):
@@ -62,7 +65,7 @@ class StateGenerator(object):
         statefile = Path(STORE) / Path(self.save_as)
 
         # write state information to the json file
-        with open(statefile, 'w') as f: json.dump(config0, f)
+        with open(statefile, 'w') as f: json.dump(config0, f, indent=4)
 
     def _generate_init0(self, save_as:str=None) -> str:
         # create hidden space 

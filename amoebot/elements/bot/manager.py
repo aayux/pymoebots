@@ -1,116 +1,114 @@
-import psutil
+import logging
 import numpy as np
 import multiprocessing
 
 from collections import defaultdict
 from numpy import array, ndarray, uint8
 
-from .core import Amoebot
-
-from ..node.core import Node
+from .agent import Agent
 from ..manager import Manager
-
-from ...functional.tracker import StateTracker
-from ...extras.structures import AnonList
-from ...extras.exceptions import InitializationError
-
-N_CORES = psutil.cpu_count(logical=True)
+from ..tracker import StateTracker
+from ...extras.structures import AnonList, PersistentStore
 
 class AmoebotManager(Manager):
-    r"""
-    manages thread assignment to agents and allocates functionals to bots
+    r""" manages thread assignment to agents and allocates functionals to bots
     """
 
-    def __init__(self, config_num):
+    def __init__(self, config_num:str):
         # holds all `Amoebot` objects created anonymously
         self.amoebots: object = AnonList()
 
-        # truth values signalling execution status of each bot, 1 when complete
-        self.status: dict = {0: list(), 1: list()}
-
         # object of class `StateTracker`
-        self.tracker: object = StateTracker(self, config_num)
+        self.tracker: object = StateTracker(config_num)
 
-    def m_activate(self) -> uint8:
+        # persistent storage for asynchronous read/write
+        self.store = PersistentStore(config_num)
+
+    def exec_async(self, n_cores:int) -> dict:
         r"""
-        Sets up parallel calls to activation methods for all bots.
+        Set up asynchronous calls for bot execution and create a queueing 
+        manager for writing the state configuration file.
 
-        returns: np.uint8:   execution status
+        returns (dict) : execution status
         """
-        activate = self._activate
 
         mp_manager = multiprocessing.Manager()
         queue = mp_manager.Queue()
 
-        with multiprocessing.Pool(processes=N_CORES) as pool:
-            
-            # create a listener process that handles queued writes
-            _ = pool.apply_async(self._queue_manager, (queue,))
+        # mp_logger = multiprocessing.log_to_stderr()
+        # mp_logger.setLevel(multiprocessing.SUBDEBUG)
 
-            # activate aynchronous agents
-            jobs = list()
-            for amoebot in self.amoebots:
-                job = pool.apply_async(activate, (amoebot, queue))
-                jobs.append(job)
+        with multiprocessing.Pool(processes=n_cores - 1) as pool:
             
-            # collect results from the pool
-            for job in jobs: 
+            # load the persistent storage
+            self.store.read()
+
+            # create a listener process that handles queued writes
+            _ = pool.apply_async(self._queueing_manager, (queue,))
+
+            # execute algorithm on aynchronous agents
+            for __bot_id, _ in enumerate(self.amoebots):
+                job = pool.apply_async(self._exec_step, 
+                                            (__bot_id, queue)
+                                    )
+
+                # collect results from the pool
                 job.get()
 
             # kill the listener process
-            queue.put(['-9', 'ps-kill'])
+            queue.put(['ps-kill', '', ''])
 
             pool.close()
             pool.join()
 
-        status = self.status
-
-        # return 1 if everything ran successfully
-        if len(status[0]) == 0: return uint8(1)
-
-        return uint8(0)
-
-    def _add_bot(self, __bot_id, node:Node):
+    def exec_sequential(self) -> dict:
         r"""
-        adds individual particles to the (partially anonymous) `AnonList`
         """
+        for __bot_id, _ in enumerate(self.amoebots):
+            self._exec_step(__bot_id)
 
-        bot = Amoebot(__bot_id, head=node)
-        self.amoebots.insert(bot, __bot_id)
-
-    def _activate(self, amoebot:Amoebot, queue:object):
-        r"""
-        execute one timestep of `elements.bots.core.Amoebot.execute()`
+    def _exec_step(self, __bot_id:int, queue:object=None):
+        r""" execute one step of `elements.bots.core.Amoebot.execute()`
         """
-        # TODO: required? copy variables and methods to avoid contention
-        status = self.status
+        # for asynchronous function calls
+        if queue is not None: 
+            if not self.store.persistent[__bot_id]:
+                self.store.persistent[__bot_id] = self.amoebots[__bot_id]
 
-        try:
-            # execute the amoebot algorithms and update execution status
-            status[amoebot.execute()] = amoebot
+            # read amoebot data from persistent state
+            amoebot = self.store.persistent[__bot_id]
+            
+            # execute the amoebot algorithm(s) and update execution status
+            amoebot, actv_status = amoebot.execute()
 
-            # collect state information from this bot
-            self.tracker.collect_states(amoebot.__bot_id)
+            queue.put([__bot_id, amoebot, actv_status])
         
-        except IndexError:
-            raise InitializationError(
-                                f"Amoebots have not been initialized ",
-                                f"correctly, check file and retry. Exiting!"
-            )
+        else: amoebot, actv_status = self.amoebots[__bot_id].execute()
 
-        self.status = status
-
-    def _queue_manager(self, queue:object):
+    def _queueing_manager(self, queue:object):
         while True:
             # pop the leading entry in the queue
-            (__bot_id, config) = queue.get()
+            response = queue.get()
 
-            # escape from the listener
-            if (__bot_id == -9) and (config == 'ps-kill'): break
+            # exit the listener process
+            if response[0] == 'ps-kill': break
+            
+            __bot_id, amoebot, actv_status = response
 
-            # call `StateTracker.update` to write and
-            # overwrite the amoebot data
-            self.amoebots[__bot_id].head.position, 
-            self.amoebots[__bot_id].tail.position, 
-            self.amoebots[__bot_id].port_labels = self.tracker.update(__bot_id, 
-                                                                      config)
+            self.store.persistent[__bot_id] = amoebot
+
+            state = (amoebot.head, amoebot.tail, amoebot.clock)
+
+            # if there was an activation for this bot
+            if actv_status:
+                # call `StateTracker.update` to update the configuration
+                self.tracker.update(__bot_id, state)
+
+        self.store.write()
+
+
+    def _add_bot(self, __bot_id:int, node:object):
+        r""" adds individual particles to the (partially anonymous) `AnonList`
+        """
+        bot = Agent(__bot_id, head=node)
+        self.amoebots.insert(bot, __bot_id)
