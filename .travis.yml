@@ -9,7 +9,7 @@ env:
     # List package dependencies for conda
     - CONDA_DEPS="pytest numpy"
     # package name for test invocation
-    - PACKAGENAME="amoebot"
+    - PACKAGENAME="tests"
 
 before_install:
 # Here we download miniconda and install the dependencies

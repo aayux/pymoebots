@@ -1,19 +1,20 @@
 import pytest
 
-from .. amoebot.grid.trigrid import TriangularGrid
-from .. amoebot.elements.node.manager import NodeManager
-from .. amoebot.elements.bot.manager import AmoebotManager
+from amoebot.grid.trigrid import TriangularGrid
+from amoebot.elements.node.manager import NodeManager
+from amoebot.elements.stategen import StateGenerator
 
+
+import sys
+# it is hard to say what entails as sufficiently large
+LARGE_INT = sys.maxsize
+
+import psutil
+N_CORES = psutil.cpu_count(logical=True)
 
 @pytest.fixture
-def large_integer():
-    r""" 
-    it is hard to say what entails as sufficiently large, so might as well go 
-    all the way
-    """
-    import sys
-    return sys.maxint
-
+def incr_recursionlimit():
+    sys.setrecursionlimit(25000)
 
 def test_trigrid_small():
     r""" test the triangular grid creation for small grids
@@ -28,7 +29,7 @@ def test_trigrid_small():
 def test_trigrid_large():
     r""" test the triangular grid creation for large grids
     """
-    x = y = large_integer()
+    x = y = LARGE_INT
     g = TriangularGrid(x, y)
     points = g._get_grid()
 
@@ -37,7 +38,7 @@ def test_trigrid_large():
 def test_nodemanager_add_single_node():
     r"""
     """
-    from .. amoebot.elements.node.core import Node
+    from amoebot.elements.node.core import Node
 
     point = [0, 0]
     nm = NodeManager(point)
@@ -48,7 +49,7 @@ def test_nodemanager_add_single_node():
 def test_nodemanager_grid_builder():
     r"""
     """
-    from .. amoebot.elements.node.core import Node
+    from amoebot.elements.node.core import Node
 
     x = y = 4
     g = TriangularGrid(x, y)
@@ -70,59 +71,55 @@ def test_amoebotmanager_activate_and_launch_agent():
     """
     assert True
 
-def test_agent_random_movement():
+def test_agent_out_of_bounds():
     r"""
     """
+    assert True
+
+def test_agent_random_movement_async(incr_recursionlimit):
+    r"""
+    """
+
+    incr_recursionlimit()
+
     x = y = 16
-    n_bots = 4
-    n_rounds = 50
+    n_bots = 2
+    steps = 5
 
     g = TriangularGrid(x, y)
     points = g._get_grid()
 
     nm = NodeManager(points)
     nm.grid_builder()
-    nodes = nm._get_node_dict()
+    node_dict = nm._get_node_dict()
 
-    am = AmoebotManager()
-    am.random_placement(n_bots, list(nodes.values()))
+    sg = StateGenerator(list(node_dict.values()), n_bots=n_bots)
+    am = sg.manager
 
-    _round = 0
-    while _round < n_rounds:
-        _ = am.m_activate()
-        _round += 1
+    for _ in range(steps): 
+        am.exec_async(n_cores=N_CORES())
 
     assert True
 
-def test_tracker_random_movement():
+def test_agent_random_movement_sequential():
     r"""
     """
 
-    from .. amoebot.functional.tracker import StateTracker
-
     x = y = 16
-    n_bots = 4
-    n_rounds = 50
+    n_bots = 2
+    steps = 5
 
     g = TriangularGrid(x, y)
     points = g._get_grid()
 
     nm = NodeManager(points)
     nm.grid_builder()
-    nodes = nm._get_node_dict()
+    node_dict = nm._get_node_dict()
 
-    am = AmoebotManager()
-    am.random_placement(n_bots, list(nodes.values()))
+    sg = StateGenerator(list(node_dict.values()), n_bots=n_bots)
+    am = sg.manager
 
-    # intialise the tracking object
-    t = StateTracker()
-
-    _round = 0
-    while _round < n_rounds:
-
-        _ = am.m_activate()
-        t.collect_states(am)
-
-        _round += 1
+    for _ in range(steps): 
+        am.exec_sequential()
 
     assert True
