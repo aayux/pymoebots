@@ -6,6 +6,7 @@
 *.pyo
 **__pycache__/
 .dumps/*
+**db.sqlite3
 
 # testing file
 main.py

@@ -1,7 +1,7 @@
-from .. amoebot.grid.trigrid import TriangularGrid
-from .. amoebot.elements.node.manager import NodeManager
-from .. amoebot.elements.bot.manager import AmoebotManager
-from .. amoebot.functional.tracker import StateTracker
+# from .. amoebot.grid.trigrid import TriangularGrid
+# from .. amoebot.elements.node.manager import NodeManager
+# from .. amoebot.elements.bot.manager import AmoebotManager
+# from .. amoebot.functional.tracker import StateTracker
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -12,7 +12,7 @@ def simulator():
 
 def index(request):
     # render page from template
-    return
+    return render(request=request, template_name='index.html', context=None)
 
 def history(request):
     if request.method == 'GET':

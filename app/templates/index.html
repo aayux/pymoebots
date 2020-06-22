@@ -10,8 +10,9 @@
   <body>
     
     <div id="header">
-      <h1>Pymoebots: Stochastic Maze Solver</h1>
-  </div>
+      <h1>Pymoebots</h1>
+      <h3>Stochastic Algorithms Simulator for the Amoebot Model</h3>
+    </div>
 
     <hr>
 
@@ -32,7 +33,7 @@
     
     {% load static %}
     <!-- use django static tag ton load js file and css file. -->
-    <script src="{% static 'js/viz-script.js' %}"></script>
+    <script src="{% static 'js/viz-script.js' %}", type="module"></script>
     </script>
   </body>
 </html>
