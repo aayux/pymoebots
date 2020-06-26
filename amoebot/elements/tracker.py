@@ -32,7 +32,6 @@ class StateTracker(object):
         # complete path to the state file
         statefile = Path(self.store) / Path(self.save_as)
 
-        # TODO optimize this block
         # read data from json file if it exists
         if statefile.exists():
             with open(statefile, 'r') as f:
