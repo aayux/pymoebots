@@ -1,12 +1,12 @@
-
+import {nameSpaceURI, unit} from './config.js';
 
 // TODO :: re-write for vertical anchor grid
-function shearPoint( point ) {
+export function shearPoint( point ) {
     // shear points from the Euclidean plane into the triangular grid
-    newPoint = { x : 0, y : 0 };
-    newPoint.x += point.x * scale;
-    if ( point.y % 2 == 1 ) { newPoint.x += ( 1 / 2 ) * scale; }
-    newPoint.y -= ( point.y * Math.sqrt( 3 ) / 2 ) * scale;
+    var newPoint = { x : 0, y : 0 };
+    newPoint.y += point.y * unit;
+    if ( point.x % 2 == 1 ) { newPoint.y += ( 1 / 2 ) * unit; }
+    newPoint.x += ( point.x * Math.sqrt( 3 ) / 2 ) * unit;
     return( newPoint );
 }
 
