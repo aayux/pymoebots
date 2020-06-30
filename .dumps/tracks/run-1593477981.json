@@ -1,0 +1,132 @@
+[
+    {
+        "mov_bot": 2,
+        "config": {
+            "head_pos": [
+                80,
+                44
+            ],
+            "tail_pos": [
+                79,
+                45
+            ]
+        }
+    },
+    {
+        "mov_bot": 0,
+        "config": {
+            "head_pos": [
+                114,
+                22
+            ],
+            "tail_pos": [
+                113,
+                23
+            ]
+        }
+    },
+    {
+        "mov_bot": 1,
+        "config": {
+            "head_pos": [
+                15,
+                45
+            ],
+            "tail_pos": [
+                12,
+                46
+            ]
+        }
+    },
+    {
+        "mov_bot": 2,
+        "config": {
+            "head_pos": [
+                80,
+                44
+            ],
+            "tail_pos": [
+                80,
+                44
+            ]
+        }
+    },
+    {
+        "mov_bot": 0,
+        "config": {
+            "head_pos": [
+                114,
+                22
+            ],
+            "tail_pos": [
+                114,
+                22
+            ]
+        }
+    },
+    {
+        "mov_bot": 1,
+        "config": {
+            "head_pos": [
+                15,
+                45
+            ],
+            "tail_pos": [
+                15,
+                45
+            ]
+        }
+    },
+    {
+        "mov_bot": 2,
+        "config": {
+            "head_pos": [
+                79,
+                45
+            ],
+            "tail_pos": [
+                80,
+                44
+            ]
+        }
+    },
+    {
+        "mov_bot": 0,
+        "config": {
+            "head_pos": [
+                113,
+                23
+            ],
+            "tail_pos": [
+                114,
+                22
+            ]
+        }
+    },
+    {
+        "mov_bot": 1,
+        "config": {
+            "head_pos": [
+                16,
+                44
+            ],
+            "tail_pos": [
+                15,
+                45
+            ]
+        }
+    },
+    {
+        "mov_bot": 1,
+        "config": {
+            "head_pos": [
+                16,
+                44
+            ],
+            "tail_pos": [
+                16,
+                44
+            ]
+        }
+    }
+]

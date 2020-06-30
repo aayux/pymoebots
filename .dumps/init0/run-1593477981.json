@@ -1,0 +1,56 @@
+[
+    {
+        "head_pos": [
+            113,
+            23
+        ],
+        "tail_pos": [
+            113,
+            23
+        ],
+        "port_labels": [
+            "ne",
+            "n",
+            "nw",
+            "sw",
+            "s",
+            "se"
+        ]
+    },
+    {
+        "head_pos": [
+            12,
+            46
+        ],
+        "tail_pos": [
+            12,
+            46
+        ],
+        "port_labels": [
+            "sw",
+            "s",
+            "se",
+            "ne",
+            "n",
+            "nw"
+        ]
+    },
+    {
+        "head_pos": [
+            79,
+            45
+        ],
+        "tail_pos": [
+            79,
+            45
+        ],
+        "port_labels": [
+            "nw",
+            "sw",
+            "s",
+            "se",
+            "ne",
+            "n"
+        ]
+    }
+]
