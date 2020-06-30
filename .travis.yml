@@ -1,13 +1,12 @@
 language: python
 
 python:
-  - 3.7
   - 3.8
 
 env:
   global:
     # List package dependencies for conda
-    - CONDA_DEPS="pytest numpy"
+    - CONDA_DEPS="sys psutil random json collections numpy multiprocessing"
     # package name for test invocation
     - PACKAGENAME="tests"
 

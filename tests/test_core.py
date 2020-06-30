@@ -9,8 +9,8 @@ import sys
 # it is hard to say what entails as sufficiently large
 LARGE_INT = sys.maxsize
 
-import psutil
-N_CORES = psutil.cpu_count(logical=True)
+# set the number of cores for multiprocessing
+N_CORES = 2
 
 @pytest.fixture
 def incr_recursionlimit():
@@ -84,20 +84,18 @@ def test_agent_random_movement_async(incr_recursionlimit):
 
     x = y = 16
     n_bots = 2
-    steps = 5
+    max_iter = 5
 
     g = TriangularGrid(x, y)
     points = g._get_grid()
 
     nm = NodeManager(points)
     nm.grid_builder()
-    node_dict = nm._get_node_dict()
 
-    sg = StateGenerator(list(node_dict.values()), n_bots=n_bots)
-    am = sg.manager
+    node_list = list(nm.get_node_dict.values())
 
-    for _ in range(steps): 
-        am.exec_async(n_cores=N_CORES())
+    gen = StateGenerator(node_list, n_bots=n_bots)
+    gen.manager.exec_async(n_cores=N_CORES, max_iter=max_iter)
 
     assert True
 
@@ -107,19 +105,17 @@ def test_agent_random_movement_sequential():
 
     x = y = 16
     n_bots = 2
-    steps = 5
+    max_iter = 5
 
     g = TriangularGrid(x, y)
     points = g._get_grid()
 
     nm = NodeManager(points)
     nm.grid_builder()
-    node_dict = nm._get_node_dict()
 
-    sg = StateGenerator(list(node_dict.values()), n_bots=n_bots)
-    am = sg.manager
+    node_list = list(nm.get_node_dict.values())
 
-    for _ in range(steps): 
-        am.exec_sequential()
+    gen = StateGenerator(node_list, n_bots=n_bots)
+    gen.manager.exec_sequential(max_iter=max_iter)
 
     assert True
