@@ -51,7 +51,7 @@ class AmoebotManager(Manager):
         """
         for _ in range(max_iter):
             for __id, _ in enumerate(self.amoebots):
-                self.amoebots[__id] = _exec_step(amoebots=self.amoebots[__id])
+                self.amoebots[__id] = _exec_step(amoebot=self.amoebots[__id])
 
     def _add_bot(self, __id:int, node:object):
         r""" adds individual particles to the (partially anonymous) `AnonList`

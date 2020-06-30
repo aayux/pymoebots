@@ -1,29 +1,17 @@
-from dataclasses import dataclass, field
 from numpy import ndarray, array, arange, linspace
 from .helpers import make_int_grid, make_uint_grid
 
-
-@dataclass
 class TriangularGrid(object):
-    # number of points in the x directions
-    x: int
+    def __init__(self, x, y):
+        # number of points in the x directions
+        self.x: int = x
 
-    # number of points in the y directions
-    y: int
+        # number of points in the y directions
+        self.y: int = y
 
-    # bottom left most point
-    origin: ndarray = field(default=array([0, 0]))
+        # bottom left most point
+        self.origin: ndarray = array([0, 0])
 
-    # combined (x,y) grid
-    grid: ndarray = field(default=None)
-
-    # x component of grid
-    grid_x: ndarray = field(default=None)
-
-    # y component of grid
-    grid_y: ndarray = field(default=None)
-
-    def __post_init__(self):
         # basic sanity checks
         if self.x < 1 or not isinstance(self.x, int):
             raise Exception(f"Unable to create graph. "
@@ -79,6 +67,8 @@ class TriangularGrid(object):
         self.grid_y = grid_y
         self.grid = grid
 
-    def _get_grid(self): return self.grid
+    @property
+    def get_grid(self): return self.grid
 
-    def _get_grid_components(self): return [self.grid_x, self.grid_y]
+    @property
+    def get_grid_components(self): return (self.grid_x, self.grid_y)
