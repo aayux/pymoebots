@@ -119,10 +119,12 @@ class NodeManager(Manager):
             # update current column's last visited node
             visited[ix % ncols] = node
 
-    def _get_node(self, node_ix:uint8) -> Node: 
+    def get_node(self, node_ix:uint8) -> Node: 
         return self.node_dict[node_ix]
 
-    def _get_node_dict(self) -> dict: return self.node_dict
+    @property
+    def get_node_dict(self) -> dict: return self.node_dict
 
-    def _get_num_nodes(self) -> int: return len(self.node_dict)
+    @property
+    def get_num_nodes(self) -> int: return len(self.node_dict)
 
