@@ -5,7 +5,7 @@
 *.pyc
 *.pyo
 **__pycache__/
-.dumps/*
+**.dumps/*
 
 # testing file
 main.py

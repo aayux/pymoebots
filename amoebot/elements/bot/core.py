@@ -51,7 +51,7 @@ class Amoebot(Core):
         returns: np.uint8: execution status
         """
 
-        ports = self.head._get_ports()
+        ports = self.head.get_ports
         n_ports = uint8(len(ports))
 
         # choose a port at random

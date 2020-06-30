@@ -84,7 +84,7 @@ class PersistentStore(object):
 
     def _generate_persistant(self, save_as:str=None):
         # create hidden space 
-        self.store = './.dumps/persistant'
+        self.store = './.dumps/persistent'
         Path(self.store).mkdir(parents=True, exist_ok=True)
 
         # create a unique file for every run using config_num
