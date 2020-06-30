@@ -76,29 +76,6 @@ def test_agent_out_of_bounds():
     """
     assert True
 
-def test_agent_random_movement_async(incr_recursionlimit):
-    r"""
-    """
-
-    incr_recursionlimit()
-
-    x = y = 16
-    n_bots = 2
-    max_iter = 5
-
-    g = TriangularGrid(x, y)
-    points = g._get_grid()
-
-    nm = NodeManager(points)
-    nm.grid_builder()
-
-    node_list = list(nm.get_node_dict.values())
-
-    gen = StateGenerator(node_list, n_bots=n_bots)
-    gen.manager.exec_async(n_cores=N_CORES, max_iter=max_iter)
-
-    assert True
-
 def test_agent_random_movement_sequential():
     r"""
     """
