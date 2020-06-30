@@ -6,7 +6,7 @@ python:
 env:
   global:
     # List package dependencies for conda
-    - CONDA_DEPS="sys psutil random json collections numpy multiprocessing"
+    - CONDA_DEPS="psutil random json collections numpy multiprocessing"
     # package name for test invocation
     - PACKAGENAME="tests"
 
