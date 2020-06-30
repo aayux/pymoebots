@@ -62,7 +62,7 @@ class Agent(Amoebot):
         # expand a contracted particle
         else:
             # get all available ports in scan order
-            open_ports = self._scan_ports(mode='open')
+            open_ports = self.get_open_ports
 
             # select a random direction when none provided
             if direction is None and open_ports: 
@@ -70,23 +70,19 @@ class Agent(Amoebot):
             
             # move to indicated direction if available
             if direction in open_ports:
-                push = self.head._get_neighbor(direction)
+                push = self.head.get_neighbor(direction)
                 self.head = push
                 self.head.arrival(bot=self)
 
-    def _scan_ports(self, mode:str='open') -> object:
-        r"""
-        mode :  (open) returns a list of open ports for bot to move to
-
-        returns: None
+    @property
+    def get_open_ports(self) -> list:
+        r""" a list of open ports for bot to move to
         """
-        if mode == 'open':
-            open_ports = list()
-            for port in self.head._get_ports():
-                
-                node = self.head._get_neighbor(port)
-                if (node is not None) and (not node._get_occupied()):
-                    open_ports.append(port)
+        open_port_list = list()
+        for port in self.head.get_ports:
+            
+            node = self.head.get_neighbor(port)
+            if (node is not None) and (not node.get_occupied):
+                open_port_list.append(port)
 
-            return open_ports
-        else: return None
+        return open_port_list

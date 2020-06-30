@@ -86,7 +86,7 @@ class StateTracker(object):
         r""" state configuration objects of a single amoebot
         """
 
-        head, tail = state[0], state[1]
+        head, tail, _ = state
 
         config = dict(
                     head_pos=head.position.tolist(), 
