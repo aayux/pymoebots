@@ -64,6 +64,7 @@ class Agent(Amoebot):
             # get all available ports in scan order
             open_ports = self.get_open_ports
 
+
             # select a random direction when none provided
             if direction is None and open_ports: 
                 direction = np.random.choice(open_ports)
