@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
+  <head>
+
     <title>Pymoebots</title>
     <meta content=";text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+    
+    {% load static %}
+    <!-- use django static tag ton load js file and css file. -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+
+  </head>
 
   <body>
-    
+
     <div id="header">
       <h1>Pymoebots</h1>
       <h3>Stochastic Algorithms Simulator for the Amoebot Model</h3>
@@ -16,24 +22,31 @@
 
     <hr>
 
-    <nav>
-        <strong>
-            <button id="request" onclick="" type="button">step</button>
-        </strong>
-    </nav>
+    </br>
 
-  </br>
-    
+    <div class="btn-grp-create">
+      <button class="btn-create" id="request" onclick="" type="button"><img src="{% static "icons/add-file50px.png" %}"></button>
+      <button class="btn-create" id="request" onclick="" type="button"><img src="{% static "icons/pin-pad50px.png" %}"></button>
+      <button class="btn-create" id="request" onclick="" type="button"><img src="{% static "icons/save50px.png" %}"></button>
+    </div>
+
     <svg id="camera">
-      <rect fill="None" height=100% stroke-width=0.1% width=100% stroke="black"></rect>
-      <g id="grid"></g>
-      <g id="amoebots"></g>
-      <circle cx=0 cy=0 fill="white" stroke="black" stroke-width=".25" id="origin" r="6"></circle>
-    </svg>
-    
-    {% load static %}
-    <!-- use django static tag ton load js file and css file. -->
-    <script src="{% static 'js/viz-script.js' %}", type="module"></script>
-    </script>
+        <rect fill="None" height=100% stroke-width=0.1% width=100% stroke="black"></rect>
+        <g id="grid"></g>
+        <g id="amoebots"></g>
+        <circle cx=0 cy=0 fill="white" stroke="black" stroke-width=".25" id="origin" r="6"></circle>
+      </svg>
+      
+      <!-- {% load static %} -->
+      <!-- use django static tag ton load js file and css file. -->
+      <script type="module" src="{% static 'js/base.viz-script.js' %}"></script>
+      </script>
+
+    </br>
+    <div class="btn-grp-contrl">
+      <button class="btn-contrl" id="request" onclick="" type="button"><img src="{% static "icons/play-button-circled50px.png" %}"></button>
+      <button class="btn-contrl" id="request" onclick="" type="button"><img src="{% static "icons/pause-button50px.png" %}"></button>
+      <button class="btn-contrl" id="request" onclick="" type="button"><img src="{% static "icons/forward-button50px.png" %}"></button> 
+    </div>
   </body>
 </html>

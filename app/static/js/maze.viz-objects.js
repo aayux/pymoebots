@@ -1,4 +1,4 @@
-nameSpaceURI = 'http://www.w3.org/2000/svg';
+import { nameSpaceURI, unit } from './config.js';
 
 class MazeVizElements {
 

@@ -1,22 +1,13 @@
-import {shearPoint} from './amoebot.viz-objects.js';
-import {nameSpaceURI, cameraDim, unit, originLoc, pixels} from './config.js';
+import { 
+        nameSpaceURI, cameraDim, unit, originLoc, response 
+    } from './config.js';
 
-function addAmoebot( x, y ) {
-    // add amoebots to the grid
-    let amoebot = document.createElementNS(nameSpaceURI, 'circle');
 
-    const pos = shearPoint( {x : x, y : y} );
-    amoebot.setAttribute('fill', 'black');
-    amoebot.setAttribute('r', `${ pixels / 2 }px`);
-    amoebot.setAttribute('cx', pos.x);
-    amoebot.setAttribute('cy', pos.y);
-    amoebot.setAttribute('stroke-width', `${ pixels }px`);
-
-    camera.getElementById('amoebots').appendChild(amoebot);
-}
+import { addAmoebot, AmoebotVizTracker } from './amoebot.viz-objects.js';
 
 function onClickPlace() {
-    // get click position
+    // get click position and save as format of `TriGrid` class
+    var x; var y;
     addAmoebot( x, y )
 }
 
@@ -26,7 +17,7 @@ async function requestHistory() {
     returns :: 200 on success, 400 on failure
     */
     // GET request to downloading tracking data
-    const requestStatus = await fetch( "history" )
+    const requestStatus = await fetch( 'history' )
                         .then( response => response.json() )
                         .then( () => { return 200; } )
                         .catch( () => { return 400; } );
@@ -41,26 +32,26 @@ function updateViz() {
 
     ( function updateOrigin() {
         // update the anchored origin
-        var origin = document.getElementById( "origin" );
-        origin.setAttribute( "cx", originLoc.x );
-        origin.setAttribute( "cy", originLoc.y );
+        var origin = document.getElementById( 'origin' );
+        origin.setAttribute( 'cx', originLoc.x );
+        origin.setAttribute( 'cy', originLoc.y );
     })();
 
     ( function updateGrid() {
         // update grid lines
-        var gridViz = document.getElementById( "grid" );
+        var gridViz = document.getElementById( 'grid' );
         var moduloX = originLoc.x % ( unit * Math.sqrt( 3 ) );
         var moduloY = originLoc.y % unit;
-        gridViz.setAttribute("transform",
-        "translate(" + moduloX + ", " + moduloY + ")"
+        gridViz.setAttribute('transform',
+        'translate(' + moduloX + ', ' + moduloY + ')'
         );
     })();
 }
 
 function drawGrid() {
-    var camera = document.getElementById( "camera" );
-    camera.setAttribute( "width", cameraDim.w );
-    camera.setAttribute( "height", cameraDim.h );
+    var camera = document.getElementById( 'camera' );
+    camera.setAttribute( 'width', cameraDim.w );
+    camera.setAttribute( 'height', cameraDim.h );
 
     var gridLines = [];
 
@@ -99,15 +90,15 @@ function drawGrid() {
     }
 
     // draw the grid
-    for( var gridLine of gridLines ) {
-        var newLine = document.createElementNS( nameSpaceURI, "line" );
-        newLine.setAttribute( "stroke", "black" );
-        newLine.setAttribute( "stroke-width", ".25" );
-        newLine.setAttribute( "x1", gridLine.p1.x );
-        newLine.setAttribute( "x2", gridLine.p2.x );
-        newLine.setAttribute( "y1", gridLine.p1.y );
-        newLine.setAttribute( "y2", gridLine.p2.y );
-        camera.getElementById( "grid" ).appendChild(newLine);
+    for( let gridLine of gridLines ) {
+        var newLine = document.createElementNS( nameSpaceURI, 'line' );
+        newLine.setAttribute( 'stroke', 'black' );
+        newLine.setAttribute( 'stroke-width', '.25' );
+        newLine.setAttribute( 'x1', gridLine.p1.x );
+        newLine.setAttribute( 'x2', gridLine.p2.x );
+        newLine.setAttribute( 'y1', gridLine.p1.y );
+        newLine.setAttribute( 'y2', gridLine.p2.y );
+        camera.getElementById( 'grid' ).appendChild(newLine);
     }
 }
 
@@ -115,7 +106,7 @@ function allowDragMotion() {
     /* 
     allow drag across the grid
     */
-    var camera = document.getElementById( "camera" );
+    var camera = document.getElementById( 'camera' );
     var dragLoc = { x : 0, y : 0 };
 
     camera.onmousedown = function( event ) {
@@ -146,7 +137,10 @@ function initializeTracker() {
     instantiate the amoebot tracker and place particles on the grid
     returns :: -1 on failure, 0 on success
     */
-    if ( JSON.stringify( config0 ) == "{}" ) {
+    config0 = response[0];
+    tracks = response[1];
+
+    if ( JSON.stringify( config0 ) == '{}' ) {
       console.log( "ERROR: No bot data was received!" );
       return -1;
     }
@@ -165,8 +159,8 @@ function updateDisplay( step ) {
     var curStep = document.querySelector( '#step' );
     var nBots = document.querySelector( '#num_bots' );
 
-    curStep.textContent = `Step: ${step}`;
-    nBots.textContent = `# Amoebots : ${window.nBots}`;
+    curStep.textContent = `Step: ${ step }`;
+    nBots.textContent = `# Amoebots : ${ window.nBots }`;
 }
 
 function onClickPlay( playback_speed ) {
@@ -206,11 +200,10 @@ driver code; load history, draw the grid and set up visualiser
 //             allowDragMotion();
 //             initializeTracker();
 //         } else {
-//             console.log("Error: No bot data was receieved.")
+//             console.log('Error: No bot data was receieved.')
 //         }
 //     }
 // );
 
 drawGrid();
 allowDragMotion();
-addAmoebot(3,1);

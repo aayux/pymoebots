@@ -1,0 +1,41 @@
+
+/* Style buttons */
+.btn-create {
+    background-color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: block;
+  }
+
+.btn-contrl {
+    background-color: #ffffff;
+    border: none;
+    cursor: pointer;
+  }
+
+#btn-ico img {
+    display: block;
+    height: 4px;
+    width: 4px;
+}
+
+.btn-grp-create {
+    background-color: #ffffff;
+    padding: 12px 4px;
+    float: right;
+  }
+
+.btn-grp-contrl {
+    background-color: #ffffff;
+    padding: 12px 4px;
+    float: left;
+  }
+
+/* Add a background color on hover */
+.btn-grp-create button:hover {
+    background-color: #e7e6e6b9;
+  }
+
+.btn-grp-contrl button:hover {
+    background-color: #e7e6e6b9;
+  }

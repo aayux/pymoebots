@@ -1,6 +1,5 @@
-import {nameSpaceURI, unit} from './config.js';
+import { nameSpaceURI, unit } from './config.js';
 
-// TODO :: re-write for vertical anchor grid
 export function shearPoint( point ) {
     // shear points from the Euclidean plane into the triangular grid
     var newPoint = { x : 0, y : 0 };
@@ -8,6 +7,18 @@ export function shearPoint( point ) {
     if ( point.x % 2 == 1 ) { newPoint.y += ( 1 / 2 ) * unit; }
     newPoint.x += ( point.x * Math.sqrt( 3 ) / 2 ) * unit;
     return( newPoint );
+}
+
+export function addAmoebot( x, y , i) {
+    /* 
+    add amoebots to the grid
+    */
+    // create a new visual template object
+    var bot = new AmoebotVizTemplate( i, [x, y], [x, y] );
+
+    // update bot status
+    bot.update()
+
 }
 
 class AmoebotVizElements {
@@ -25,7 +36,7 @@ class AmoebotVizElements {
         // SVG element group
         this.vizObject = document.createElementNS( nameSpaceURI, 'g' );
         this.vizObject.setAttribute( 'class', 'amoebot' );
-        this.vizObject.setAttribute( 'name', `B${this.bot_id}` );
+        this.vizObject.setAttribute( 'name', `B${ this.bot_id }` );
 
         this.botHead = this.drawHead( this.bot_id );
         this.botTail = this.drawTail( this.bot_id , this.botHead );
@@ -41,8 +52,8 @@ class AmoebotVizElements {
 
         : returns : reference to the new element object
         */
-        let newElement = document.createElementNS( nameSpaceURI, 'circle' );
-        newElement.setAttribute( 'name', `H-B${bot_id}` );
+        var newElement = document.createElementNS( nameSpaceURI, 'circle' );
+        newElement.setAttribute( 'name', `H-B${ bot_id }` );
         
         
         // locate on the triangualr grid
@@ -56,7 +67,7 @@ class AmoebotVizElements {
         newElement.setAttribute( 'cx', position.x );
         newElement.setAttribute( 'cy', position.y );
         newElement.setAttribute( 'fill', 'black' );
-        newElement.setAttribute( 'r', `${pixels}px` );
+        newElement.setAttribute( 'r', `${ pixels }px` );
         
         // add to SVG group
         this.vizObject.appendChild( newElement );
@@ -72,8 +83,8 @@ class AmoebotVizElements {
 
         : returns : reference to the new element object
         */
-       let newElement = document.createElementNS( nameSpaceURI, 'circle' );
-       newElement.setAttribute( 'name', `T-B${bot_id}` );
+       var newElement = document.createElementNS( nameSpaceURI, 'circle' );
+       newElement.setAttribute( 'name', `T-B${ bot_id }` );
        
        
        // locate on the triangualr grid
@@ -87,13 +98,28 @@ class AmoebotVizElements {
         newElement.setAttribute( 'cx', position.x );
         newElement.setAttribute( 'cy', position.y );
         newElement.setAttribute( 'fill', 'black' );
-        newElement.setAttribute( 'r', `${pixels}px` );
-       
-       // TODO :: check if head and tail are same, if not draw a line element
-       
-       // add to SVG group
-       this.vizObject.appendChild( newElement );
-       
+        newElement.setAttribute( 'r', `${ pixels }px` );
+
+        // add to SVG group
+        this.vizObject.appendChild( newElement );
+
+        // check if head and tail are same, if not draw a line element
+
+        var xHead = botHead.getAttribute( 'cx' );
+        var yHead = botHead.getAttribute( 'cy' );
+
+        if ( position.x == xHead && position.y == yHead  ) {
+            var newLine = document.createElementNS( nameSpaceURI, 'line' );
+            newLine.setAttribute( 'stroke', 'black' );
+            newLine.setAttribute( 'stroke-width', `${ pixels / 4 }px` );
+            newLine.setAttribute( 'x1', position.x );
+            newLine.setAttribute( 'x2', xHead );
+            newLine.setAttribute( 'y1', position.y );
+            newLine.setAttribute( 'y2', yHead );
+            this.vizObject.appendChild( newLine );
+
+       }
+
        // return a reference
        return newElement;
     }
@@ -104,7 +130,7 @@ class AmoebotVizElements {
 
         : returns : reference to the new element object
         */
-        let newElement = document.createElementNS( nameSpaceURI, 'circle' );
+        var newElement = document.createElementNS( nameSpaceURI, 'circle' );
         return;
     }
 }
@@ -183,7 +209,7 @@ class AmoebotVizInit {
     }
 }
 
-class AmoebotVizTracker extends AmoebotVizInit{
+export class AmoebotVizTracker extends AmoebotVizInit{
     /*
     extends initializer class and provides step-wise execution capability
     */
