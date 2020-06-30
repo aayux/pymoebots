@@ -1,13 +1,12 @@
+import sys
 import pytest
 
 from amoebot.grid.trigrid import TriangularGrid
 from amoebot.elements.node.manager import NodeManager
 from amoebot.elements.stategen import StateGenerator
 
-
-import sys
 # it is hard to say what entails as sufficiently large
-LARGE_INT = sys.maxsize
+LARGE_INT = 2 ** 12
 
 # set the number of cores for multiprocessing
 N_CORES = 2
@@ -21,7 +20,7 @@ def test_trigrid_small():
     """
     x = y = 4
     g = TriangularGrid(x, y)
-    points = g._get_grid()
+    points = g.get_grid
 
     assert points.shape == (x, y, 2)
 
@@ -31,7 +30,7 @@ def test_trigrid_large():
     """
     x = y = LARGE_INT
     g = TriangularGrid(x, y)
-    points = g._get_grid()
+    points = g.get_grid
 
     assert points.shape == (x, y, 2)
 
@@ -53,7 +52,7 @@ def test_nodemanager_grid_builder():
 
     x = y = 4
     g = TriangularGrid(x, y)
-    points = g._get_grid()
+    points = g.get_grid
 
     nm = NodeManager(points)
     nm.grid_builder()
@@ -85,7 +84,7 @@ def test_agent_random_movement_sequential():
     max_iter = 5
 
     g = TriangularGrid(x, y)
-    points = g._get_grid()
+    points = g.get_grid
 
     nm = NodeManager(points)
     nm.grid_builder()
