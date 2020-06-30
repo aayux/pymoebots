@@ -2,7 +2,7 @@
 
 [![build status](
   http://img.shields.io/travis/aayux/pymoebots/master.svg?style=flat)](
- https://travis-ci.org/aayux/pymoebots)
+ https://travis-ci.com/github/aayux/pymoebots)
 
 **Stochastic Algorithms simulator for the Amoebot Model based on work by the [SOPS Group](https://sops.engineering.asu.edu/)**
 
