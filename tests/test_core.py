@@ -1,8 +1,8 @@
 import pytest
 
-from amoebot.grid.trigrid import TriangularGrid
-from amoebot.elements.node.manager import NodeManager
-from amoebot.elements.stategen import StateGenerator
+from .. amoebot.grid.trigrid import TriangularGrid
+from .. amoebot.elements.node.manager import NodeManager
+from .. amoebot.elements.stategen import StateGenerator
 
 
 import sys
