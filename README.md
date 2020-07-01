@@ -1,13 +1,15 @@
-## Pymoebots
+## Pymoebots: Stochastic Algorithms Simulator for the Amoebot Model
 
-[![build status](
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![build status](
   http://img.shields.io/travis/aayux/pymoebots/master.svg?style=flat)](
- https://travis-ci.org/aayux/pymoebots)
-
-**Stochastic Algorithms simulator for the Amoebot Model based on work by the [SOPS Group](https://sops.engineering.asu.edu/)**
+ https://travis-ci.com/aayux/pymoebots.svg?token=5ykcpxpsSYeM1yqgzqww&branch=master)
 
 ### Acknowledgements
 
-This repository was rebased from [JesseTCS/bot_algorithm](#), which is now under [RUC-Shende](https://github.com/RUC-Shende/programmable_particles_app_engine). The original source was intended as a simulator for Leader Election in the Amoebot model using Python.
+This project is based on work by the [SOPS Group](https://sops.engineering.asu.edu/).
 
-The original front-end was written by [dbushta](https://github.com/dbushta) and [chri55](https://github.com/chri55).
+The repository was rebased from [RUC-Shende/programmable-particles](https://github.com/RUC-Shende/programmable-particles). The original front-end was written by [dbushta](https://github.com/dbushta) and [chri55](https://github.com/chri55), and [JesseTCS](https://github.com/JesseTCS) wrote the simulator for the Leader Election algorithm in the Amoebot model.
+
+### Contributing
+
+Because of multiple sources and variable timelines, the commit history is somewhat messy. Following the first release version, all contributions must follow the newest [guidelines](https://github.com/aayux/aayux/pymoebots/CONTRIBUTING.md).

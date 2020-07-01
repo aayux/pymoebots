@@ -32,7 +32,6 @@ class StateTracker(object):
         # complete path to the state file
         statefile = Path(self.store) / Path(self.save_as)
 
-        # TODO optimize this block
         # read data from json file if it exists
         if statefile.exists():
             with open(statefile, 'r') as f:
@@ -87,7 +86,7 @@ class StateTracker(object):
         r""" state configuration objects of a single amoebot
         """
 
-        head, tail = state[0], state[1]
+        head, tail, _ = state
 
         config = dict(
                     head_pos=head.position.tolist(), 

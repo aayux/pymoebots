@@ -1,11 +1,11 @@
 # swaps, bytecode and miscellenea
 *.DS_Store
+*.sqlite3
 *.swp
 *.pc
 *.pyc
 *.pyo
 **__pycache__/
-**db.sqlite3
 **runs/
 **.dumps/
 
