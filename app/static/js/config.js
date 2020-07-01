@@ -11,7 +11,4 @@ export const unit = 25;
 export const originLoc = { x : 0, y : 0 };
 
 // size of one dot to represent amoebot
-export const pixels = cameraDim.h / 100;
-
-// global json response variable
-export var response = [];
+export const pixels = 4;

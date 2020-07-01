@@ -25,28 +25,36 @@
     </br>
 
     <div class="btn-grp-create">
-      <button class="btn-create" id="request" onclick="" type="button"><img src="{% static "icons/add-file50px.png" %}"></button>
-      <button class="btn-create" id="request" onclick="" type="button"><img src="{% static "icons/pin-pad50px.png" %}"></button>
-      <button class="btn-create" id="request" onclick="" type="button"><img src="{% static "icons/save50px.png" %}"></button>
+      <input type="file" id="config-files" /> 
+      <button class="btn-create" id="btn-open" onclick="document.getElementById('config-files').click()" type="button"><img src="{% static "icons/add-file50px.png" %}"></button>
+
+      <button class="btn-create" id="" onclick="" type="button"><img src="{% static "icons/pin-pad50px.png" %}"></button>
+
+      <button class="btn-create" id="" onclick="" type="button"><img src="{% static "icons/save50px.png" %}"></button>
     </div>
 
-    <svg id="camera">
+    <div class="grid-win">
+      <svg id="camera">
         <rect fill="None" height=100% stroke-width=0.1% width=100% stroke="black"></rect>
         <g id="grid"></g>
         <g id="amoebots"></g>
         <circle cx=0 cy=0 fill="white" stroke="black" stroke-width=".25" id="origin" r="6"></circle>
       </svg>
-      
-      <!-- {% load static %} -->
-      <!-- use django static tag ton load js file and css file. -->
-      <script type="module" src="{% static 'js/base.viz-script.js' %}"></script>
-      </script>
+    </div>
+
+    <!-- use django static tag ton load js file and css file. -->
+    <script type="module" src="{% static 'js/base.viz-script.js' %}"></script>
 
     </br>
+
     <div class="btn-grp-contrl">
-      <button class="btn-contrl" id="request" onclick="" type="button"><img src="{% static "icons/play-button-circled50px.png" %}"></button>
-      <button class="btn-contrl" id="request" onclick="" type="button"><img src="{% static "icons/pause-button50px.png" %}"></button>
-      <button class="btn-contrl" id="request" onclick="" type="button"><img src="{% static "icons/forward-button50px.png" %}"></button> 
+      <button class="btn-contrl" id="" onclick="" type="button"><img src="{% static "icons/play-button-circled50px.png" %}"></button>
+      <button class="btn-contrl" id="" onclick="" type="button"><img src="{% static "icons/pause-button50px.png" %}"></button>
+      <button class="btn-contrl" id="btn-step" type="button"><img src="{% static "icons/forward-button50px.png" %}"></button> 
+      <div class="slider">
+        slower <input id="playback" type="range" min="1" max="100"> faster
+      </div>
     </div>
+
   </body>
 </html>

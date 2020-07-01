@@ -1,9 +1,20 @@
+import { nameSpaceURI, cameraDim, unit, originLoc } from './config.js';
+import { getRequest } from './apis.request-handler.js';
 import { 
-        nameSpaceURI, cameraDim, unit, originLoc, response 
-    } from './config.js';
+        shearPoint, 
+        addAmoebot, 
+        AmoebotVizTracker 
+    } from './amoebot.viz-objects.js';
 
+function getPlayBackSpeed() {
+    var playback = document.getElementById( 'playback' );
 
-import { addAmoebot, AmoebotVizTracker } from './amoebot.viz-objects.js';
+    // update the current slider value
+    playback.oninput = function() {
+        return this.value;
+    }
+
+}
 
 function onClickPlace() {
     // get click position and save as format of `TriGrid` class
@@ -11,14 +22,15 @@ function onClickPlace() {
     addAmoebot( x, y )
 }
 
-async function requestHistory() {
+async function requestHistory( runId ) {
     /*
     load the state history from JSON source file
     returns :: 200 on success, 400 on failure
     */
-    // GET request to downloading tracking data
-    const requestStatus = await fetch( 'history' )
-                        .then( response => response.json() )
+    // GET request to fetch configuration and tracker data
+    const requestStatus = await getRequest( 'history/' + runId )
+                        .then( requestStatus => requestStatus )
+                        .then( reqResponse => response = reqResponse )
                         .then( () => { return 200; } )
                         .catch( () => { return 400; } );
     return requestStatus;
@@ -35,6 +47,36 @@ function updateViz() {
         var origin = document.getElementById( 'origin' );
         origin.setAttribute( 'cx', originLoc.x );
         origin.setAttribute( 'cy', originLoc.y );
+    })();
+
+    ( function updateAmoebots() {
+        /* update bots positions relative to the origin */
+        var bot_list = window.vtracker.bot_list;
+        for( let i = 0; i < bot_list.length; i++ ) {
+            var botViz = bot_list[i].vizObject;
+            var tailPosition = shearPoint(bot_list[i].tail);
+            var headPosition = shearPoint(bot_list[i].head);
+
+            var xHead = originLoc.x + headPosition.x;
+            var yHead = originLoc.y + headPosition.y;
+
+            var xTail = originLoc.x + tailPosition.x;
+            var yTail = originLoc.y + tailPosition.y;
+
+            botViz.vizBotH.setAttribute( 'cx', xHead );
+            botViz.vizBotH.setAttribute( 'cy', yHead );
+
+            botViz.vizBotT.setAttribute( 'cx', xTail );
+            botViz.vizBotT.setAttribute( 'cy', yTail );
+
+            if ( xHead == xTail || yHead == yTail ) {
+                botViz.lineElement.setAttribute( 'x1', xTail );
+                botViz.lineElement.setAttribute( 'x2', xHead );
+                botViz.lineElement.setAttribute( 'y1', yTail );
+                botViz.lineElement.setAttribute( 'y2', yHead );
+                botViz.vizObject.appendChild( botViz.lineElement );
+            }
+        }
     })();
 
     ( function updateGrid() {
@@ -59,7 +101,7 @@ function drawGrid() {
     var hGridDist = unit * Math.sqrt(3);
 
     // get points for longitudanal lines
-    for( var i = - hGridDist; i <= cameraDim.w + hGridDist; i += hGridDist / 2 ) {
+    for( let i = - hGridDist; i <= cameraDim.w + hGridDist; i += hGridDist / 2 ) {
         gridLines.push({
             p1: {x: i, y: - 2 *  unit }, 
             p2: {x: i, y: cameraDim.h + ( 2 * unit ) }
@@ -68,7 +110,7 @@ function drawGrid() {
 
     // vertical offsets on the grid
     var vGridOffset = ( Math.floor( cameraDim.h / ( 2 * unit ) ) + 1 ) * unit * 3;
-    for( var i = -vGridOffset; i <= cameraDim.h + vGridOffset; i += unit ) {
+    for( let i = -vGridOffset; i <= cameraDim.h + vGridOffset; i += unit ) {
         // right sheared diagonal
         gridLines.push({
             p1: { x : -2 * hGridDist, y : i },
@@ -132,27 +174,30 @@ function allowDragMotion() {
   } 
 }
 
+function launchEventListener() {
+    document.getElementById( 'btn-step' ).addEventListener( 'click', onClickStep);
+}
+
 function initializeTracker() {
     /*
     instantiate the amoebot tracker and place particles on the grid
     returns :: -1 on failure, 0 on success
     */
-    config0 = response[0];
-    tracks = response[1];
-
-    if ( JSON.stringify( config0 ) == '{}' ) {
-      console.log( "ERROR: No bot data was received!" );
+    if ( JSON.stringify( response.init0 ) == '{}' ) {
+      console.log( "ERROR: Response string is empty" );
       return -1;
     }
 
-    window.vtracker = new AmoebotVizTracker( config0, tracks );
-    window.nBots, window.nSteps = window.vtracker.getConfigInfo();
+    window.vtracker = new AmoebotVizTracker( 
+                                response.init0, response.tracks 
+                        );
+    [window.nBots, window.nSteps] = window.vtracker.getConfigInfo();
 
     updateViz();
     return 0;
 }
 
-function updateDisplay( step ) {
+function updateDisplay() {
     /*
     update configuration information on the web page
     */
@@ -165,13 +210,10 @@ function updateDisplay( step ) {
 
 function onClickPlay( playback_speed ) {
     /*
-
     */
-    var step = 0;
-
     motor = setInterval(
         function () {
-            updateDisplay( step );
+            updateDisplay();
             if ( step <= window.nSteps ) {
                 window.vtracker.vizOneStep( step );
                 step ++;
@@ -179,10 +221,17 @@ function onClickPlay( playback_speed ) {
     }, playback_speed );
 }
 
-function onClickStep( step ) {
-   step ++;
-    if ( step <= window.nSteps ) {
-        vtracker.vizOneStep( step );
+/* global variables */
+// step counter
+var step = 0;
+// json response variable
+var response;
+
+function onClickStep() {
+    /*
+    */
+   if ( step <= window.nSteps ) {
+        step += window.vtracker.vizOneStep( step );
         updateViz();
         return 1;
    }
@@ -192,18 +241,20 @@ function onClickStep( step ) {
 /*
 driver code; load history, draw the grid and set up visualiser
 */
-// requestHistory().then(
-//     ( requestStatus ) => {
-//         console.log( requestStatus );
-//         if ( requestStatus == 200 ) {
-//             drawGrid();
-//             allowDragMotion();
-//             initializeTracker();
-//         } else {
-//             console.log('Error: No bot data was receieved.')
-//         }
-//     }
-// );
 
 drawGrid();
-allowDragMotion();
+
+var runs = document.getElementById( 'config-files' )
+runs.oninput = function() {
+    requestHistory( this.files[0].name ).then(
+        ( requestStatus ) => {
+            if ( requestStatus == 200 ) {
+                initializeTracker();
+                allowDragMotion();
+                launchEventListener();
+            } else {
+                console.log('ERROR: No bot data was receieved.')
+            }
+        }
+    );
+}

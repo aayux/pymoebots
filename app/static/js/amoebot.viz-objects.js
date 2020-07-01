@@ -1,4 +1,6 @@
-import { nameSpaceURI, unit } from './config.js';
+import { nameSpaceURI, unit, pixels } from './config.js';
+
+const amoebotsDOM = camera.getElementById( 'amoebots' );
 
 export function shearPoint( point ) {
     // shear points from the Euclidean plane into the triangular grid
@@ -17,7 +19,7 @@ export function addAmoebot( x, y , i) {
     var bot = new AmoebotVizTemplate( i, [x, y], [x, y] );
 
     // update bot status
-    bot.update()
+    // bot.update()
 
 }
 
@@ -29,31 +31,30 @@ class AmoebotVizElements {
         // object of class AmoebotVizTemplate 
         this.bot_data = data
         this.bot_id = data.bot_id
-        
-        // create head and tail elements and connect
-        // create representation objects and append
 
         // SVG element group
         this.vizObject = document.createElementNS( nameSpaceURI, 'g' );
         this.vizObject.setAttribute( 'class', 'amoebot' );
         this.vizObject.setAttribute( 'name', `B${ this.bot_id }` );
-
-        this.botHead = this.drawHead( this.bot_id );
-        this.botTail = this.drawTail( this.bot_id , this.botHead );
-
-        camera.getElementById( 'amoebots' ).appendChild( this.vizObject );
-
-        // updateViz();
     }
 
-    drawHead( bot_id ) {
+    drawElements() {
+        // create head and tail elements and connect
+        // create representation objects and append
+        this.vizBotH = this.drawHead();
+        this.vizBotT = this.drawTail();
+
+        camera.getElementById( 'amoebots' ).appendChild( this.vizObject );
+    }
+
+    drawHead() {
         /*
         draw a standard particle head element to stand on a point
 
         : returns : reference to the new element object
         */
-        var newElement = document.createElementNS( nameSpaceURI, 'circle' );
-        newElement.setAttribute( 'name', `H-B${ bot_id }` );
+        var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
+        vizElement.setAttribute( 'name', `H-B${ this.bot_id }` );
         
         
         // locate on the triangualr grid
@@ -64,27 +65,27 @@ class AmoebotVizElements {
                             }
                         );
         
-        newElement.setAttribute( 'cx', position.x );
-        newElement.setAttribute( 'cy', position.y );
-        newElement.setAttribute( 'fill', 'black' );
-        newElement.setAttribute( 'r', `${ pixels }px` );
+        vizElement.setAttribute( 'cx', position.x );
+        vizElement.setAttribute( 'cy', position.y );
+        vizElement.setAttribute( 'fill', 'black' );
+        vizElement.setAttribute( 'r', `${ pixels }px` );
         
         // add to SVG group
-        this.vizObject.appendChild( newElement );
+        this.vizObject.appendChild( vizElement );
         
         // return a reference
-        return newElement;
+        return vizElement;
     }
 
-    drawTail( bot_id, botHead ) {
+    drawTail() {
         /*
         draw a standard particle tail element to stand on a point, and draw
         the connecting line from head to tail (if they are not the same).
 
         : returns : reference to the new element object
         */
-       var newElement = document.createElementNS( nameSpaceURI, 'circle' );
-       newElement.setAttribute( 'name', `T-B${ bot_id }` );
+       var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
+       vizElement.setAttribute( 'name', `T-B${ this.bot_id }` );
        
        
        // locate on the triangualr grid
@@ -95,33 +96,34 @@ class AmoebotVizElements {
                            }
                        );
        
-        newElement.setAttribute( 'cx', position.x );
-        newElement.setAttribute( 'cy', position.y );
-        newElement.setAttribute( 'fill', 'black' );
-        newElement.setAttribute( 'r', `${ pixels }px` );
+        vizElement.setAttribute( 'cx', position.x );
+        vizElement.setAttribute( 'cy', position.y );
+        vizElement.setAttribute( 'fill', 'black' );
+        vizElement.setAttribute( 'r', `${ pixels }px` );
 
         // add to SVG group
-        this.vizObject.appendChild( newElement );
+        this.vizObject.appendChild( vizElement );
 
         // check if head and tail are same, if not draw a line element
 
-        var xHead = botHead.getAttribute( 'cx' );
-        var yHead = botHead.getAttribute( 'cy' );
+        var xHead = this.vizBotH.getAttribute( 'cx' );
+        var yHead = this.vizBotH.getAttribute( 'cy' );
 
-        if ( position.x == xHead && position.y == yHead  ) {
-            var newLine = document.createElementNS( nameSpaceURI, 'line' );
-            newLine.setAttribute( 'stroke', 'black' );
-            newLine.setAttribute( 'stroke-width', `${ pixels / 4 }px` );
-            newLine.setAttribute( 'x1', position.x );
-            newLine.setAttribute( 'x2', xHead );
-            newLine.setAttribute( 'y1', position.y );
-            newLine.setAttribute( 'y2', yHead );
-            this.vizObject.appendChild( newLine );
+        this.lineElement = document.createElementNS( nameSpaceURI, 'line' );
+        this.lineElement.setAttribute( 'stroke', 'black' );
+        this.lineElement.setAttribute( 'stroke-width', `${ pixels / 2 }px` );
 
+        if ( position.x == xHead || position.y == yHead ) {
+            this.lineElement.setAttribute( 'x1', position.x );
+            this.lineElement.setAttribute( 'x2', xHead );
+            this.lineElement.setAttribute( 'y1', position.y );
+            this.lineElement.setAttribute( 'y2', yHead );
        }
 
+       this.vizObject.appendChild( this.lineElement );
+
        // return a reference
-       return newElement;
+       return vizElement;
     }
 
     drawTrace() {
@@ -130,7 +132,7 @@ class AmoebotVizElements {
 
         : returns : reference to the new element object
         */
-        var newElement = document.createElementNS( nameSpaceURI, 'circle' );
+        var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
         return;
     }
 }
@@ -159,11 +161,6 @@ class AmoebotVizTemplate {
         // visualisation object
         this.vizObject = new AmoebotVizElements( this );
     }
-
-    update() {
-        // update status
-        return undefined;
-    }
 }
 
 class AmoebotVizInit {
@@ -171,41 +168,37 @@ class AmoebotVizInit {
     mantains visual information and tracks current position of particles
     */
 
-    constructor( config0, tracks ) {
+    constructor( init0, tracks ) {
         // starting configuration of the system
-        this.config0 = config0;
+        this.init0 = this.init = init0;
 
         // motion history tracker
         this.tracks = tracks;
 
-        // step of simulation
-        this.step = 0;
+        this.placeBotsOnGrid();
 
-        // dictionary of particle positions on triangular grid
-        this.bot_dict = [];
-
-        for ( let bot_id in this.config0 ) {
-            this.bot_dict.push(
-                new AmoebotVizTemplate(
-                    bot_id,
-                    this.config0[ bot_id ].head_pos,
-                    this.config0[ bot_id ].tail_pos
-                )
-            );
-        }
-
-        placeBotsOnGrid();
+        return this;
     }
 
     placeBotsOnGrid() {
 
-        // get positions on the triangular grid
-        for ( let bot_id in this.config0 ) {
-            var bot = this.bot_dict[bot_id];
-            bot.update();
-        }
+        // list of particle positions on triangular grid
+        this.bot_list = [];
 
-        // updateViz();
+        // clear all svg objects
+        amoebotsDOM.innerHTML = '';
+
+        for( let bot_id in this.init ) {
+            this.bot_list.push(
+                new AmoebotVizTemplate(
+                    bot_id,
+                    this.init0[ bot_id ].head_pos,
+                    this.init0[ bot_id ].tail_pos
+                )
+            );
+
+            this.bot_list[bot_id].vizObject.drawElements();
+        }
     }
 }
 
@@ -215,7 +208,7 @@ export class AmoebotVizTracker extends AmoebotVizInit{
     */
 
     getConfigInfo() {
-        var nBots = this.config0.length;
+        var nBots = this.init0.length;
         var nSteps = this.tracks.length;
         return([nBots, nSteps]);
     }
@@ -223,16 +216,14 @@ export class AmoebotVizTracker extends AmoebotVizInit{
     vizOneStep( step ) {
         // one step is one bot movement
         var track = this.tracks[ step ];
-        this.bot_id = track.move_bot;
-        var bot = this.bot_dict[ this.bot_id ];
-        bot = new AmoebotVizTemplate(
-                                        this.bot_id,
-                                        track.config.head_pos,
-                                        track.config.tail_pos
-                                    );
-        bot.update();   // NOTE :: is this operation in place? we still need to delete old position
+        this.bot_id = String(track.mov_bot);
 
+        this.init[ this.bot_id ].head_pos = track.config.head_pos;
+        this.init[ this.bot_id ].tail_pos = track.config.tail_pos;                                
+
+        this.placeBotsOnGrid();
+        // bot.update();
         // updateViz();
-
+        return 1;
     }
 }

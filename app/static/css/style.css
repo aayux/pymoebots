@@ -1,5 +1,9 @@
+/* the grid window viewer */
+.grid-win {
+    padding: 10px 50px 5px 75px;
+  }
 
-/* Style buttons */
+/* style buttons */
 .btn-create {
     background-color: #ffffff;
     border: none;
@@ -13,29 +17,54 @@
     cursor: pointer;
   }
 
-#btn-ico img {
-    display: block;
-    height: 4px;
-    width: 4px;
-}
-
 .btn-grp-create {
     background-color: #ffffff;
-    padding: 12px 4px;
-    float: right;
+    float: left;
   }
 
 .btn-grp-contrl {
     background-color: #ffffff;
-    padding: 12px 4px;
+    padding-left: 75px;
+    padding-bottom: 10px;
     float: left;
   }
 
-/* Add a background color on hover */
+/* background color on hover */
 .btn-grp-create button:hover {
-    background-color: #e7e6e6b9;
+    border-radius: 25%;
+    background-color: #e7e2e2d8;
   }
 
 .btn-grp-contrl button:hover {
-    background-color: #e7e6e6b9;
+    border-radius: 25%;
+    background-color: #e7e2e2d8;
+  }
+
+/* slider */
+.slider {
+  -webkit-appearance: none;  /* override default CSS styles */
+  appearance: none;
+  opacity: 0.7; /* set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+  }
+
+.slider:hover {
+  opacity: 1; /* fully shown on mouse-over */
+  cursor: pointer;
+  }
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    cursor: pointer; /* cursor on hover */
+  }
+  
+.slider::-moz-range-thumb {
+    cursor: pointer; /* cursor on hover */
+  }
+
+/* ... */
+#config-files {
+    display :none;
   }
