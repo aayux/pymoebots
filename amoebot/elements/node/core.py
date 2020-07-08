@@ -50,16 +50,21 @@ class Node(Core):
         self.occupied = uint8(0)
         self.bot = None
 
-    def _get_bot(self) -> object: return self.bot
-
-    def _get_ix(self) -> uint8: return self.node_ix
-
-    def _get_ports(self) -> ndarray: return self.ports
-
-    def _get_occupied(self) -> uint8: return self.occupied
-
-    def _get_neighbor(self, port:str) -> Node: return self.neighbors[port]
+    def get_neighbor(self, port:str) -> Node: return self.neighbors[port]
 
     def set_neighbor(self, port:str, node:Node):
         # assign a neighbouring node to port
         self.neighbors[port] = node
+
+    @property
+    def get_bot(self) -> object: return self.bot
+
+    @property
+    def get_ix(self) -> uint8: return self.node_ix
+
+    @property
+    def get_ports(self) -> ndarray: return self.ports
+
+    @property
+    def get_occupied(self) -> uint8: return self.occupied
+
