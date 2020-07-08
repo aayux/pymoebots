@@ -69,7 +69,7 @@ function updateViz() {
             botViz.vizBotT.setAttribute( 'cx', xTail );
             botViz.vizBotT.setAttribute( 'cy', yTail );
 
-            if ( xHead == xTail || yHead == yTail ) {
+            if ( xHead != xTail || yHead != yTail ) {
                 botViz.lineElement.setAttribute( 'x1', xTail );
                 botViz.lineElement.setAttribute( 'x2', xHead );
                 botViz.lineElement.setAttribute( 'y1', yTail );
@@ -121,7 +121,7 @@ function drawGrid() {
         });
         
         // left sheared diagonal
-        // TIP: swap x and y for p2 to see cool folds in the grid!
+        // TIP :: swap x and y for p2 to see cool folds in the grid!
         gridLines.push({
             p1: {x : -2 * unit * Math.sqrt(3), y : i },
             p2: {
@@ -174,10 +174,6 @@ function allowDragMotion() {
   } 
 }
 
-function launchEventListener() {
-    document.getElementById( 'btn-step' ).addEventListener( 'click', onClickStep);
-}
-
 function initializeTracker() {
     /*
     instantiate the amoebot tracker and place particles on the grid
@@ -191,10 +187,26 @@ function initializeTracker() {
     window.vtracker = new AmoebotVizTracker( 
                                 response.init0, response.tracks 
                         );
-    [window.nBots, window.nSteps] = window.vtracker.getConfigInfo();
+    [ window.nBots, window.nSteps ] = window.vtracker.getConfigInfo();
 
     updateViz();
     return 0;
+}
+
+function launchEventListener() {
+
+    // get the slider value before starting
+    var slider = document.getElementById( 'playback' );
+
+    document.getElementById( 'btn-step' ).addEventListener( 'click', 
+                                                        onClickStep 
+                                                    );
+    document.getElementById( 'btn-play' ).addEventListener( 'click', 
+                                    function () { 
+                                        onClickPlay( 
+                                                1 / ( 1e-3 + slider.value ) 
+                                            );
+                                    });
 }
 
 function updateDisplay() {
@@ -211,13 +223,13 @@ function updateDisplay() {
 function onClickPlay( playback_speed ) {
     /*
     */
-    motor = setInterval(
-        function () {
-            updateDisplay();
-            if ( step <= window.nSteps ) {
-                window.vtracker.vizOneStep( step );
-                step ++;
-            }
+
+    setInterval( function () {
+                    // updateDisplay();
+                    if ( step < window.nSteps ) {
+                        step += window.vtracker.vizOneStep( step );
+                        updateViz();
+                }
     }, playback_speed );
 }
 
@@ -230,7 +242,7 @@ var response;
 function onClickStep() {
     /*
     */
-   if ( step <= window.nSteps ) {
+   if ( step < window.nSteps ) {
         step += window.vtracker.vizOneStep( step );
         updateViz();
         return 1;

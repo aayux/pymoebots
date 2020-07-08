@@ -113,7 +113,7 @@ class AmoebotVizElements {
         this.lineElement.setAttribute( 'stroke', 'black' );
         this.lineElement.setAttribute( 'stroke-width', `${ pixels / 2 }px` );
 
-        if ( position.x == xHead || position.y == yHead ) {
+        if ( position.x != xHead || position.y != yHead ) {
             this.lineElement.setAttribute( 'x1', position.x );
             this.lineElement.setAttribute( 'x2', xHead );
             this.lineElement.setAttribute( 'y1', position.y );
