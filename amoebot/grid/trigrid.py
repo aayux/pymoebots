@@ -59,8 +59,8 @@ class TriangularGrid(object):
             if row % 2: grid_x[row] += 1
 
         # zip x and y components together into grid array
-        grid = array([array([array([grid_x[ix][jx], 
-                                    grid_y[ix][jx]]) for jx in range(self.x)]) \
+        grid = array([array([array([grid_y[ix][jx], 
+                                    grid_x[ix][jx]]) for jx in range(self.x)]) \
                                                      for ix in range(self.y)])
 
         self.grid_x = grid_x

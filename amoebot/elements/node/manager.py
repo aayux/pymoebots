@@ -29,7 +29,7 @@ class NodeManager(Manager):
                 self._add_node(position=self.grid_points[ix][jx])
 
         # calls function to link all the created nodes together
-        self._linkup(nrows)
+        self._linkup(ncols)
 
     def _add_node(self, position:ndarray):
         r"""
@@ -52,8 +52,8 @@ class NodeManager(Manager):
         # column parity holds True if odd
         col_parity = True
 
-        # loops through all points associated with the current grid
-        for ix in range(len(self.node_dict)):
+        # iterate over all points in the current grid
+        for ix in self.node_dict:
 
             node = self.node_dict[ix]
 
@@ -69,7 +69,7 @@ class NodeManager(Manager):
                 next_node.set_neighbor(port='s', node=node)
 
             # flip column parity at every column
-            if not ix % ncols: col_parity = ~col_parity
+            if not ix % ncols: col_parity = not col_parity
 
             if col_parity:
 
@@ -90,20 +90,21 @@ class NodeManager(Manager):
                     next_node = visited[(ix % ncols) + 1]
 
                     # set node's southeastern neighbour as the next node
-                    node.set_neighbor(port='se', node=next_node)
+                    node.set_neighbor(port='nw', node=next_node)
 
                     # set next node's northwestern neighbour
-                    next_node.set_neighbor(port='nw', node=node)
-            else:   # even row
+                    next_node.set_neighbor(port='se', node=node)
+            # even column
+            else:
                 if ix % ncols in visited.keys():
 
                     next_node = visited[ix % ncols]
 
                     # set node's southeastern neighbour as the next node
-                    node.set_neighbor(port='se', node=next_node)
+                    node.set_neighbor(port='nw', node=next_node)
 
                     # set next node's northwestern neighbour
-                    next_node.set_neighbor(port='nw', node=node)
+                    next_node.set_neighbor(port='se', node=node)
 
                     # set next node to node directly south of current next node
                     next_node = next_node.get_neighbor(port='s')
@@ -111,10 +112,10 @@ class NodeManager(Manager):
                     if next_node:
 
                         # set node's southeastern neighbour as the next node
-                        node.set_neighbor(port='se', node=next_node)
+                        node.set_neighbor(port='sw', node=next_node)
 
                         # set next node's northwestern neighbour
-                        next_node.set_neighbor(port='nw', node=node)
+                        next_node.set_neighbor(port='ne', node=node)
 
             # update current column's last visited node
             visited[ix % ncols] = node
