@@ -1,11 +1,13 @@
 # swaps, bytecode and miscellenea
 *.DS_Store
+*.sqlite3
 *.swp
 *.pc
 *.pyc
 *.pyo
 **__pycache__/
-**.dumps/*
+**runs/
+**.dumps/
 
 # testing file
 main.py
