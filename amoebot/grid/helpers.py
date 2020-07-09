@@ -58,7 +58,7 @@ def make_uint_grid(start:int, end:int, nrows:int, component:str,
 
     if component == 'x':
         if start <= lim_8 and end <= lim_8:
-            grid = array([arange(start, end, 1, 
+            grid = array([arange(start, end, 2, 
                                  dtype='uint8') for _ in range(nrows)])
         elif start <= lim_16 and end <= lim_16:
             grid = array([arange(start, end, 2, 
@@ -71,15 +71,15 @@ def make_uint_grid(start:int, end:int, nrows:int, component:str,
                                  dtype='uint64') for _ in range(nrows)])
     elif component == 'y':
         if start <= lim_8 and end <= lim_8:
-            grid = array([linspace(start + (2 * row), start + (2 * row), ncols, 
+            grid = array([linspace(start + row, start + row, ncols, 
                                    dtype='uint8') for row in range(nrows)])
         elif start <= lim_16 and end <= lim_16:
-            grid = array([linspace(start + (2 * row), start + (2 * row), ncols, 
+            grid = array([linspace(start + row, start + row, ncols, 
                                    dtype='uint16') for row in range(nrows)])
         elif start <= lim_32 and end <= lim_32:
-            grid = array([linspace(start + (2 * row), start + (2 * row), ncols, 
+            grid = array([linspace(start + row, start + row, ncols, 
                                    dtype='uint32') for row in range(nrows)])
         else:
-            grid= array([linspace(start + (2 * row), start + (2 * row), ncols, 
+            grid= array([linspace(start + row, start + row, ncols, 
                                   dtype='uint64') for row in range(nrows)])
     return grid

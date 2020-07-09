@@ -61,11 +61,11 @@ class AmoebotManager(Manager):
 
 
 def _exec_async(
-                tracker:object, 
-                ip_buffr:object, 
-                op_buffr:object, 
-                shared:object, 
-                lock:object, 
+                tracker:StateTracker, 
+                ip_buffr:multiprocessing.managers.AutoProxy, 
+                op_buffr:multiprocessing.managers.AutoProxy, 
+                shared:multiprocessing.managers.NamespaceProxy, 
+                lock:multiprocessing.managers.AcquirerProxy, 
                 n_cores:int, 
                 max_iter:int, 
                 buffer_len:int

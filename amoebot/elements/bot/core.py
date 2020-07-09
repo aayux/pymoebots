@@ -33,8 +33,8 @@ class Amoebot(Core):
         # stores unique ordering of ports
         self.port_labels = np.empty(0, dtype='<U2')
 
-        # 1 if port scan returns an empty space
-        # self.empty_flag:uint8 = uint8(0)
+        # status flag for compression algorithm
+        self.cflag:uint8 = uint8(0)
 
         # activation status, true means the bot is active
         self.active:bool = self._reset_clock(refresh=True)
@@ -74,7 +74,23 @@ class Amoebot(Core):
         else: self.clock -= 1
 
         return False if self.clock else True
+    
+    @property
+    def _is_contracted(self):
+        return np.all(self.head.position == self.tail.position)
 
+    def get_open_ports(self, scan_tail=False) -> list:
+        r""" a list of open ports for bot to move to
+        """
+        open_port_list = list()
+        scan = self.tail if scan_tail else self.head
+
+        for port in scan.get_ports:
+            node = scan.get_neighbor(port)
+            if (node is not None) and (not node.get_occupied):
+                open_port_list.append(port)
+
+        return open_port_list
 
     def execute(self): raise NotImplementedError
     
