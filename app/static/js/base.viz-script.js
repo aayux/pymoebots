@@ -195,18 +195,12 @@ function initializeTracker() {
 
 function launchEventListener() {
 
-    // get the slider value before starting
-    var slider = document.getElementById( 'playback' );
-
     document.getElementById( 'btn-step' ).addEventListener( 'click', 
-                                                        onClickStep 
-                                                    );
+                                                            onClickStep 
+                                                        );
     document.getElementById( 'btn-play' ).addEventListener( 'click', 
-                                    function () { 
-                                        onClickPlay( 
-                                                1 / ( 1e-3 + slider.value ) 
-                                            );
-                                    });
+                                                            onClickPlay
+                                                        );
 }
 
 function updateDisplay() {
@@ -220,9 +214,13 @@ function updateDisplay() {
     nBots.textContent = `# Amoebots : ${ window.nBots }`;
 }
 
-function onClickPlay( playback_speed ) {
+function onClickPlay() {
     /*
     */
+
+    // get the slider value before starting
+    var slider = document.getElementById( 'playback' );
+    var playback_speed = Math.ceil( 1 / ( 1e-3 + slider.value ) );
 
     setInterval( function () {
                     // updateDisplay();
@@ -234,8 +232,10 @@ function onClickPlay( playback_speed ) {
 }
 
 /* global variables */
+
 // step counter
 var step = 0;
+
 // json response variable
 var response;
 
