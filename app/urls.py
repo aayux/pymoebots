@@ -1,4 +1,4 @@
-"""django_server URL Configuration
+"""app URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.0/topics/http/urls/
@@ -18,7 +18,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path('', views.index, name="index"),
-    path("history", views.history, name="history"),
+    path('admin/', admin.site.urls),
+    path('', views.index, name='index'),
+    path(r'history/<slug:run>', views.history, name='history'),
 ]
