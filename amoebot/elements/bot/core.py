@@ -1,6 +1,6 @@
 import numpy as np
 
-from numpy import array, ndarray, uint8
+from numpy import array, ndarray, uint8, float16
 
 from ..core import Core
 
@@ -25,7 +25,10 @@ class Amoebot(Core):
         self.tail:object = self.head
 
         # rate parameter for poisson clock
-        self.lam:uint8 = uint8(1)
+        self.mu:uint8 = uint8(1)
+
+        # compression parameter
+        self.lam:float16 = float16(5.)
 
         # count of ports scanned
         self.n_ports_scanned:uint8 = uint8(0)
@@ -69,16 +72,12 @@ class Amoebot(Core):
         r"""
         """
         if refresh:
-            self.clock = uint8(np.random.poisson(lam=self.lam))
+            self.clock = uint8(np.random.poisson(lam=self.mu))
         
         else: self.clock -= 1
 
         return False if self.clock else True
     
-    @property
-    def _is_contracted(self):
-        return np.all(self.head.position == self.tail.position)
-
     def get_open_ports(self, scan_tail=False) -> list:
         r""" a list of open ports for bot to move to
         """
@@ -91,6 +90,19 @@ class Amoebot(Core):
                 open_port_list.append(port)
 
         return open_port_list
+    
+    @property
+    def _open_port_head(self) -> list:
+        return self.get_open_ports(scan_tail=False)
+
+    @property
+    def _open_port_tail(self) -> list:
+        return self.get_open_ports(scan_tail=True)
+
+    @property
+    def _is_contracted(self):
+        return np.all(self.head.position == self.tail.position)
+
 
     def execute(self): raise NotImplementedError
     

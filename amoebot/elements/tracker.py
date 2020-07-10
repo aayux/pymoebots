@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from numpy import array, uint8
 
-from ..extras.exceptions import InitializationError
+from ..utils.exceptions import InitializationError
 
 class StateTracker(object):
     r""" 

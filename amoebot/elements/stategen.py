@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 
 from .bot.manager import AmoebotManager
-from ..extras.exceptions import InitializationError
+from ..utils.exceptions import InitializationError
 
 STORE = './.dumps/init0'
 

@@ -9,7 +9,7 @@ from .agent import Agent
 from ..manager import Manager
 from ..tracker import StateTracker
 
-from ...extras.structures import AnonList
+from ...utils.structures import AnonList
 
 class AmoebotManager(Manager):
     r""" 
