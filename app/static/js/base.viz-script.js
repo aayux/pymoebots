@@ -220,7 +220,9 @@ function onClickPlay() {
 
     // get the slider value before starting
     var slider = document.getElementById( 'playback' );
-    var playback_speed = Math.ceil( 1 / ( 1e-3 + slider.value ) );
+    // var playback_speed = Math.ceil( 1 / ( 1e-3 + slider.value ) );
+
+    var playback_speed = 100;
 
     setInterval( function () {
                     // updateDisplay();

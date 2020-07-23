@@ -11,11 +11,11 @@ class Amoebot(Core):
     r""" core amobeot functionalities, extended using algorithmic modules
     """
 
-    def __init__(self, __bot_id:int, head:object):
+    def __init__(self, __id:int, head:object):
 
         # bots should be locally indistinguishable this name-mangled
         # variable is used only for optimizing the frontend load
-        self.__bot_id:int = __bot_id
+        self.__id:int = __id
 
         # head of the bot
         self.head:object = head
@@ -30,9 +30,6 @@ class Amoebot(Core):
         # compression parameter
         self.lam:float16 = float16(5.)
 
-        # count of ports scanned
-        self.n_ports_scanned:uint8 = uint8(0)
-
         # stores unique ordering of ports
         self.port_labels = np.empty(0, dtype='<U2')
 
@@ -43,7 +40,7 @@ class Amoebot(Core):
         self.active:bool = self._reset_clock(refresh=True)
 
         # wait timer for agents
-        self.wait: uint8 = WAIT_TIME
+        # self.wait: uint8 = WAIT_TIME
 
         self.orient()
 
@@ -54,19 +51,22 @@ class Amoebot(Core):
         returns: np.uint8: execution status
         """
 
+        # BUG the way we currently read neighbours for nodes relies on
+        # common node orientation, so bot orientations can not be random.
+        
         ports = self.head.get_ports
-        n_ports = uint8(len(ports))
+        # n_ports = uint8(len(ports))
 
-        # choose a port at random
-        choice = np.random.choice(ports)
-        choice_ix = uint8(np.where(ports == choice))
+        # # choose a port at random
+        # choice = np.random.choice(ports)
+        # choice_ix = uint8(np.where(ports == choice))
 
-        for _ in range(n_ports):
-            self.port_labels = np.append(self.port_labels, 
-                                        ports[choice_ix % uint8(6)])
-            choice_ix += uint8(1)
+        # for _ in range(n_ports):
+        #     self.port_labels = np.append(self.port_labels, 
+        #                                 ports[choice_ix % uint8(6)])
+        #     choice_ix += uint8(1)
 
-        return uint8(1)
+        self.port_labels = array(ports)
 
     def _reset_clock(self, refresh:bool) -> bool:
         r"""
@@ -84,13 +84,13 @@ class Amoebot(Core):
         open_port_list = list()
         scan = self.tail if scan_tail else self.head
 
-        for port in scan.get_ports:
-            node = scan.get_neighbor(port)
-            if (node is not None) and (not node.get_occupied):
-                open_port_list.append(port)
+        for n_port, b_port in zip(scan.get_ports, self.port_labels):
+            neigbor_node = scan.get_neighbor(n_port)
+            if (neigbor_node is not None) and (not neigbor_node.get_occupied):
+                open_port_list.append(b_port)
 
         return open_port_list
-    
+
     @property
     def _open_port_head(self) -> list:
         return self.get_open_ports(scan_tail=False)
@@ -101,8 +101,7 @@ class Amoebot(Core):
 
     @property
     def _is_contracted(self):
-        return np.all(self.head.position == self.tail.position)
-
+        return self.head is self.tail
 
     def execute(self): raise NotImplementedError
     

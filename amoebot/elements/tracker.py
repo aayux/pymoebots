@@ -28,7 +28,7 @@ class StateTracker(object):
         config = self._collect_config(state)
         return config
 
-    def update(self, __bot_id:int, state:tuple):
+    def update(self, __id:int, state:tuple):
         # complete path to the state file
         statefile = Path(self.store) / Path(self.save_as)
 
@@ -43,10 +43,11 @@ class StateTracker(object):
 
         config = self._collect_config(state)
 
-        tracks.append(dict(mov_bot=__bot_id, config=config))
+        tracks.append(dict(mov_bot=__id, config=config))
 
         # append state information to the json file
-        with open(statefile, 'w') as f: json.dump(tracks, f, indent=4)
+        with open(statefile, 'w') as f: 
+            json.dump(tracks, f, indent=4)
 
     def checkpoint_terminal_state(self, manager:object):
         r"""

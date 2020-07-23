@@ -12,14 +12,17 @@ class Node(Core):
         self.node_ix: uint8 = node_ix
 
         # ports labellings of the node
-        self.ports: ndarray = array(['n', 'nw', 'sw', 's', 'se', 'ne'])
+        self.ports: ndarray = array([
+                                        'n', 'nw', 'sw', 
+                                        's', 'se', 'ne'], 
+                                    dtype='<U2')
 
         # dictionary identifying ports with neighbours
         self.neighbors: dict = dict(n=None, nw=None, sw=None, 
                                     s=None, se=None, ne=None)
 
         # 1 if a bot is on the node, 0 otherwise
-        self.occupied: uint8 = None
+        self.occupied: uint8 = uint8(0)
 
         # the bot currently occupying this node
         self.bot: object = None
@@ -35,7 +38,7 @@ class Node(Core):
             
             # create a spare `Node` object
             node = Node()
-        
+
         return node
 
     def arrival(self, bot:object):

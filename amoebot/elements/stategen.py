@@ -3,13 +3,15 @@ import json
 import numpy as np
 
 from pathlib import Path
+from numpy import array, uint8
 
 from .bot.manager import AmoebotManager
 from ..utils.exceptions import InitializationError
+from ..utils.algorithms import binary_search
 
 STORE = './.dumps/init0'
 
-def config0_reader(node_list:list, config_num:str) -> list:
+def config0_reader(config_num:str) -> list:
     r""" read a config0 with given config_num
     """
 
@@ -33,32 +35,29 @@ class StateGenerator(object):
 
     This generator class also provides access to the `AmoebotManager` object.
     """
-    def __init__(self, node_list:list, config0:list=None, **kwargs):
+    def __init__(self, node_list:list, config_num:str=None, **kwargs):
 
-        self.config_num: str = self._generate_init0(save_as=None)
-
-        if config0 is None:
+        if config_num is None:
             try: 
+                self.config_num = self._generate_init0(save_as=None)
                 self.manager, config0 = self._random_placement(kwargs['n_bots'], 
                                                                node_list)
             except KeyError:
                 raise InitializationError(
                             f"Randomly placed bots require argument `n_bots`."
                 )
+            
+            self.write(config0)
 
         else:
-            self.manager = self.collect_states(node_list, config0)
-        
-        self.write(config0)
-
-    def collect_states(self, node_list:list, 
-                       config0:dict) -> AmoebotManager:
-        r""" 
-        Collect state information from source place bots on the grid. 
-
-        returns: AmoebotManager : object handler for manager class
-        """
-        raise NotImplementedError
+            self.config_num = config_num
+            try: 
+                _ = self._generate_init0(save_as=config_num)
+                self.manager, config0 = self._config0_placement(node_list)
+            except KeyError:
+                raise InitializationError(
+                            f"Bots from config require argument `points`."
+                )
 
     def write(self, config0:list):
         # complete path to the state file
@@ -73,9 +72,10 @@ class StateGenerator(object):
 
         # create a unique time stamp for every run
         if save_as is None:
-            config_num = int(time.time())
-            save_as = f'run-{config_num}'
-
+            config_num = str(time.time())
+        else: config_num = save_as
+        
+        save_as = f'run-{config_num}'
         self.save_as = f'{save_as}.json'
 
         return config_num
@@ -85,8 +85,7 @@ class StateGenerator(object):
         """
         state = dict(
                         head_pos=bot.head.position.tolist(),
-                        tail_pos=bot.tail.position.tolist(),
-                        port_labels=bot.port_labels.tolist()
+                        tail_pos=bot.tail.position.tolist()
                     )
         return state
     
@@ -110,3 +109,30 @@ class StateGenerator(object):
         config0 = vec_collector(manager.amoebots)
 
         return manager, config0.tolist()
+
+    def _config0_placement(self, node_list:list) -> AmoebotManager:
+        r""" 
+        Collect state information from source place bots on the grid. 
+
+        returns: AmoebotManager : object handler for manager class
+        """
+        manager = AmoebotManager(self.config_num)
+
+        try:
+            config0 = config0_reader(self.config_num)
+        except FileNotFoundError:
+                raise InitializationError(
+                            f"Configuration file looks incorrect."
+                )
+
+        node_list_pos = array([node.position for node in node_list], 
+                                                            dtype=uint8)
+
+        # add bot to the list at known position
+        for ix, bot in enumerate(config0):
+            node_ix = binary_search(node_list_pos, key=bot['head_pos'])
+            # NOTE we assume head and tail positions are same at config0
+            manager._add_bot(ix, node_list[node_ix])
+
+        return manager, config0
+

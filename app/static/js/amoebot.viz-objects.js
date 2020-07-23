@@ -67,9 +67,11 @@ class AmoebotVizElements {
         
         vizElement.setAttribute( 'cx', position.x );
         vizElement.setAttribute( 'cy', position.y );
-        vizElement.setAttribute( 'fill', 'black' );
+        vizElement.setAttribute( 'fill', 'white' );
         vizElement.setAttribute( 'r', `${ pixels }px` );
-        
+        vizElement.setAttribute( 'stroke', 'black' );
+        vizElement.setAttribute( 'stroke-width', `${ pixels / 3 }px` );
+
         // add to SVG group
         this.vizObject.appendChild( vizElement );
         
@@ -99,7 +101,7 @@ class AmoebotVizElements {
         vizElement.setAttribute( 'cx', position.x );
         vizElement.setAttribute( 'cy', position.y );
         vizElement.setAttribute( 'fill', 'black' );
-        vizElement.setAttribute( 'r', `${ pixels }px` );
+        vizElement.setAttribute( 'r', `${ 3 * pixels / 4 }px` );
 
         // add to SVG group
         this.vizObject.appendChild( vizElement );

@@ -3,6 +3,35 @@ import numpy as np
 
 from numpy import uint8
 
+from .exceptions import ShapeError
+
+def binary_search(data:list, key:object, lo:int=0, hi:int=None) -> int:
+    dim_l, dim_w = data.shape
+    if hi is None: hi = dim_l - 1
+
+    assert dim_w == len(key) == 2, \
+        ShapeError(
+            f"`data` has width {dim_w} but `key` is of length {len(key)}"
+        )
+    
+    while lo < hi:
+        md = (lo + hi) // 2
+        search = data[md].tolist()
+        # check first dimension
+        if search[0] < key[0]:
+            lo = md + 1
+        elif search[0] > key[0]: 
+            hi = md
+        # if first dimensions are equal, check next
+        elif search[1] < key[1]:
+            lo = md + 1
+        elif search[1] > key[1]: 
+            hi = md
+        else:
+            return md
+
+    return -1
+
 class GraphAlgorithms(object):
     r"""
     """
@@ -14,7 +43,7 @@ class GraphAlgorithms(object):
         r"""
         """
 
-        visited = np.zeros_like(self.graph_dict, dtype=uint8)
+        visited = np.zeros(len(self.graph_dict), dtype=uint8)
         queue = collections.deque([root])
         visited[root] = uint8(1)
 
@@ -36,7 +65,7 @@ class GraphAlgorithms(object):
         r"""
         """
 
-        visited = np.zeros_like(self.graph_dict, dtype=uint8)
+        visited = np.zeros(len(self.graph_dict), dtype=uint8)
         stack = collections.deque([root])
         visited[root] = uint8(1)
 
