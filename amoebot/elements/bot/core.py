@@ -13,8 +13,8 @@ class Amoebot(Core):
 
     def __init__(self, __id:int, head:object):
 
-        # bots should be locally indistinguishable this name-mangled
-        # variable is used only for optimizing the frontend load
+        # bots should be locally indistinguishable, this name-mangled
+        # variable is accesible only to the manager
         self.__id:int = __id
 
         # head of the bot
@@ -37,7 +37,7 @@ class Amoebot(Core):
         self.cflag:uint8 = uint8(0)
 
         # activation status, true means the bot is active
-        self.active:bool = self._reset_clock(refresh=True)
+        self.active, self.clock = self._reset_clock(refresh=True)
 
         # wait timer for agents
         # self.wait: uint8 = WAIT_TIME
@@ -73,11 +73,11 @@ class Amoebot(Core):
         """
         if refresh:
             self.clock = uint8(np.random.poisson(lam=self.mu))
-        
+
         else: self.clock -= 1
 
-        return False if self.clock else True
-    
+        return (False, self.clock) if self.clock else (True, self.clock)
+
     def get_open_ports(self, scan_tail=False) -> list:
         r""" a list of open ports for bot to move to
         """

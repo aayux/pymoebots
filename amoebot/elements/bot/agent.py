@@ -15,8 +15,11 @@ class Agent(Amoebot):
     """
 
     def __init__(self, __id:int, head:object):
-        self.__id = __id
+        # initialise the super class
         super().__init__(__id, head)
+
+        # does not share id with super class
+        self.__id = __id
 
     def execute(self, logger=logging.RootLogger, lock:object=None) -> tuple:
         r"""
@@ -26,35 +29,36 @@ class Agent(Amoebot):
         returns: np.uint8: execution status
         """
 
+        # get the current process name for logging
+        cpname = multiprocessing.current_process().name
+
+        # generate a pre-execution log message
+        log_message = (
+                        f'pre/{cpname} :: < agent {self.__id} {self} '
+                        f'clock {self.clock} active {int(self.active)} >\n'
+                        f'\thead {self.head} at {self.head.position}\n'
+                        f'\ttail {self.tail} at {self.tail.position}.'
+                    )
+
+        # log the state information
+        logging.info(log_message)
+
+
         # if the agent is active
         if self.active:
-
-            # get the current process name for logging
-            cpname = multiprocessing.current_process().name
-
-            # generate a log message
-            log_message = (
-                            f'pre/{cpname} :: < agent {self.__id} {self} '
-                            f'clock {self.clock} active 1>\n'
-                            f'\thead {self.head} at {self.head.position}\n'
-                            f'\ttail {self.tail} at {self.tail.position}.'
-                        )
-
-            # log the state information
-            logging.info(log_message)
 
             # run one step of an elementary algorithm
             self.compress_agent(async_mode=True)
             # self.move_agent(contr_to_tail=False)
 
             # reset the poisson clock
-            self.active = self._reset_clock(refresh=True)
+            self.active, self.clock = self._reset_clock(refresh=True)
 
             return (self, uint8(1))
 
         else:
             # decrement the clock and get active status
-            self.active = self._reset_clock(refresh=False)
+            self.active, self.clock = self._reset_clock(refresh=False)
 
             return (self, uint8(0))
     

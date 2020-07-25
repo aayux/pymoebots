@@ -4,17 +4,16 @@ from django.shortcuts import render
 import json
 from pathlib import Path
 
-def _fetch_run(filename:str) -> tuple:
+# the hidden file dump
+STORE = './.dumps'
+
+def _fetch_run(dir_name:str) -> tuple:
     r"""
     """
-    # the hidden file dump
-    store = './.dumps'
-    
-    filename = f'{filename}.json'
 
     # complete path to the state files
-    config0file = Path(store) / Path('init0') / Path(filename)
-    tracks_file = Path(store) / Path('tracks') / Path(filename)
+    config0file = Path(STORE) / Path(dir_name) / Path('init0.json')
+    tracks_file = Path(STORE) / Path(dir_name) / Path('tracks.json')
 
     with open(config0file, 'r') as f:
         config0 = json.load(f)
@@ -33,9 +32,9 @@ def history(request:object, run:str) -> object:
     r"""
     """
     if request.method == 'GET':
-        init0, tracks = _fetch_run(run)
+        config0, tracks = _fetch_run(dir_name=run)
         response = dict(
-                        init0=init0,
+                        config0=config0,
                         tracks=tracks
                     )
         return JsonResponse(response)

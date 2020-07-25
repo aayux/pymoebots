@@ -13,7 +13,7 @@ def binary_search(data:list, key:object, lo:int=0, hi:int=None) -> int:
         ShapeError(
             f"`data` has width {dim_w} but `key` is of length {len(key)}"
         )
-    
+
     while lo < hi:
         md = (lo + hi) // 2
         search = data[md].tolist()

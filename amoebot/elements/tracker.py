@@ -6,6 +6,8 @@ from numpy import array, uint8
 
 from ..utils.exceptions import InitializationError
 
+STORE = './.dumps'
+
 class StateTracker(object):
     r""" 
     Keep track of particle states (configurations) in the current execution. 
@@ -14,8 +16,6 @@ class StateTracker(object):
     def __init__(self, config_num:str):
         # identifying number for current run, created by `StateGenerator`
         self.config_num: str = config_num
-
-        self._generate_tracks(save_as=None)
 
     def collect_states(self, state:tuple) -> dict:
         r""" 
@@ -30,7 +30,7 @@ class StateTracker(object):
 
     def update(self, __id:int, state:tuple):
         # complete path to the state file
-        statefile = Path(self.store) / Path(self.save_as)
+        statefile = Path(STORE) / Path(f'run-{self.config_num}/tracks.json')
 
         # read data from json file if it exists
         if statefile.exists():
@@ -55,33 +55,15 @@ class StateTracker(object):
         terminal state of current execution that can be loaded later for 
         re-useability.
         """
-        # create hidden space 
-        term_store = './.dumps/checkpoints'
-        Path(term_store).mkdir(parents=True, exist_ok=True)
-
-        # create a unique file for every run using config_num
-        save_as = f'run-{self.config_num}.json'
-        
         # collect full state information from the amoebot manager
         vec_collector = np.vectorize(self._collect_config)
-
         config = vec_collector(tuple(manager.persistent.values())).tolist()
 
-        statefile = Path(term_store) / Path(save_as)
+        # reference a checkpoint file in the current run
+        statefile = Path(STORE) / Path(f'run-{self.config_num}/chkpt.json')
 
         # append state information to the json file
         with open(statefile, 'w') as f: json.dump(config, f, indent=4)
-
-    def _generate_tracks(self, save_as:str=None):
-        # create hidden space 
-        self.store = './.dumps/tracks'
-        Path(self.store).mkdir(parents=True, exist_ok=True)
-
-        # create a unique file for every run using config_num
-        save_as = f'run-{self.config_num}'
-
-        self.save_as = f'{save_as}.json'
-
 
     def _collect_config(self, state:tuple) -> dict:
         r""" state configuration objects of a single amoebot

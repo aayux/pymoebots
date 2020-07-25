@@ -179,13 +179,13 @@ function initializeTracker() {
     instantiate the amoebot tracker and place particles on the grid
     returns :: -1 on failure, 0 on success
     */
-    if ( JSON.stringify( response.init0 ) == '{}' ) {
+    if ( JSON.stringify( response.config0 ) == '{}' ) {
       console.log( "ERROR: Response string is empty" );
       return -1;
     }
 
     window.vtracker = new AmoebotVizTracker( 
-                                response.init0, response.tracks 
+                                response.config0, response.tracks 
                         );
     [ window.nBots, window.nSteps ] = window.vtracker.getConfigInfo();
 

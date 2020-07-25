@@ -9,14 +9,14 @@ from .bot.manager import AmoebotManager
 from ..utils.exceptions import InitializationError
 from ..utils.algorithms import binary_search
 
-STORE = './.dumps/init0'
+STORE = './.dumps'
 
 def config0_reader(config_num:str) -> list:
-    r""" read a config0 with given config_num
+    r""" read a configuration with given config_num
     """
 
     # complete path to the state file
-    statefile = Path(STORE) / Path(f'run-{config_num}.json')
+    statefile = Path(STORE) / Path(f'run-{config_num}/init0.json')
     try:
         with open(statefile, 'r') as f: config0 = json.load(f)
     
@@ -39,7 +39,7 @@ class StateGenerator(object):
 
         if config_num is None:
             try: 
-                self.config_num = self._generate_init0(save_as=None)
+                self.config_num = self._generate_init0()
                 self.manager, config0 = self._random_placement(kwargs['n_bots'], 
                                                                node_list)
             except KeyError:
@@ -52,7 +52,7 @@ class StateGenerator(object):
         else:
             self.config_num = config_num
             try: 
-                _ = self._generate_init0(save_as=config_num)
+                _ = self._generate_init0(config_num=config_num)
                 self.manager, config0 = self._config0_placement(node_list)
             except KeyError:
                 raise InitializationError(
@@ -61,22 +61,15 @@ class StateGenerator(object):
 
     def write(self, config0:list):
         # complete path to the state file
-        statefile = Path(STORE) / Path(self.save_as)
+        statefile = Path(STORE) / Path(f'run-{self.config_num}/init0.json')
 
         # write state information to the json file
         with open(statefile, 'w') as f: json.dump(config0, f, indent=4)
 
-    def _generate_init0(self, save_as:str=None) -> str:
-        # create hidden space 
-        Path(STORE).mkdir(parents=True, exist_ok=True)
-
+    def _generate_init0(self, config_num:str=None) -> str:
         # create a unique time stamp for every run
-        if save_as is None:
+        if config_num is None:
             config_num = str(time.time())
-        else: config_num = save_as
-        
-        save_as = f'run-{config_num}'
-        self.save_as = f'{save_as}.json'
 
         return config_num
 

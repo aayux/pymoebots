@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 import numpy as np
@@ -10,6 +11,7 @@ from numpy import array, ndarray, uint8
 from .agent import Agent
 from ..manager import Manager
 from ..tracker import StateTracker
+from ...utils.shared_objects import SharedObjects
 
 class AmoebotManager(Manager):
     r""" 
@@ -30,9 +32,6 @@ class AmoebotManager(Manager):
     def exec_async(self, n_cores:int, max_iter:int, buffer_len:int=None):
         r"""
         """
-        # cast list to numpy array type
-        self.amoebots = array(self.amoebots)
-        
 
         # initialise DEBUG level logging
         logger = self._init_logging(to_console=True)
@@ -45,23 +44,11 @@ class AmoebotManager(Manager):
         # create a lock for the shared region
         lock = mp_manager.Lock()
 
-        # System V like shared memory block
-        shared = multiprocessing.shared_memory.SharedMemory(
-                                        create=True, size=self.amoebots.nbytes
-                                    )
-        id_shared = shared.name
+        # binarized SharedObjects data file
+        shared = SharedObjects(self.config_num, datalist=self.amoebots)
 
-        # shared numpy array of amoebot objects
-        sh_amoebots = np.ndarray(self.amoebots.shape, 
-                                dtype=self.amoebots.dtype, 
-                                buffer=shared.buf)
-        sh_amoebots[:] = self.amoebots[:]
-
-        _exec_async(self.tracker, ip_buffr, op_buffr, logger, sh_amoebots,
-                    id_shared, n_cores, max_iter, buffer_len, lock)
-
-        shared.close()
-        shared.unlink()
+        _exec_async(self.tracker, ip_buffr, op_buffr, logger, shared, 
+                    n_cores, max_iter, buffer_len, lock)
 
     def exec_sequential(self, max_iter:int) -> dict:
         r"""
@@ -87,10 +74,10 @@ class AmoebotManager(Manager):
         # create hidden space for logs
         Path(store).mkdir(parents=True, exist_ok=True)
 
-        # set up logging to file
+        # configure generic handler
         logging.basicConfig(
                         level=logging.DEBUG, 
-                        format='[%(levelname)s] %(asctime)s :: %(message)s', 
+                        format='[%(levelname)s %(asctime)s]\t%(message)s', 
                         datefmt='%m-%d %H:%M:%S', 
                         filename=f'{store}/run-{self.config_num}.log', 
                         filemode='w'
@@ -110,14 +97,12 @@ class AmoebotManager(Manager):
 
         return logger
 
-
 def _exec_async(
                 tracker:StateTracker, 
                 ip_buffr:multiprocessing.managers.AutoProxy, 
                 op_buffr:multiprocessing.managers.AutoProxy, 
                 logger:logging.RootLogger, 
-                sh_amoebots:array, 
-                id_shared:str, 
+                shared:SharedObjects, 
                 n_cores:int, 
                 max_iter:int, 
                 buffer_len:int, 
@@ -126,8 +111,6 @@ def _exec_async(
     r"""
     Set up asynchronous calls for bot execution and create a queueing 
     manager for writing the state configuration file.
-
-    returns (dict) : execution status
     """
 
     with multiprocessing.Pool(processes=n_cores) as pool:
@@ -139,7 +122,7 @@ def _exec_async(
                                                 ))
 
         # generate an initial list of jobs to be completed
-        jobs_init = [[__id] for __id, _ in enumerate(sh_amoebots)]
+        jobs_init = [[__id] for __id in range(shared.length)]
         for job in jobs_init: ip_buffr.put(job)
 
         results = list()
@@ -150,8 +133,7 @@ def _exec_async(
                                                         ip_buffr, 
                                                         op_buffr, 
                                                         logger, 
-                                                        sh_amoebots, 
-                                                        id_shared, 
+                                                        shared,
                                                         lock
                                                     )))
 
@@ -171,55 +153,59 @@ def _exec_async(
         log_message = f'{cpname} :: All connections closed. Exiting.'
         logging.info(log_message)
 
-
 def _exec_step(
                 ip_buffr:multiprocessing.managers.AutoProxy=None, 
                 op_buffr:multiprocessing.managers.AutoProxy=None, 
                 logger:logging.RootLogger=None, 
-                sh_amoebots:array=None, 
-                id_shared:str=None, 
+                shared:SharedObjects=None, 
                 lock:multiprocessing.managers.AcquirerProxy=None, 
                 amoebot:Agent=None
-            ):
+            ) -> object:
     r""" execute one step of `elements.bots.core.Amoebot.execute()`
     """
 
     # asynchronous execution mode
-    if ip_buffr is not None:
+    if amoebot is None:
         __id = ip_buffr.get()[0]
 
-        # attach to the existing shared memory block
-        sh_attached = multiprocessing.shared_memory.SharedMemory(name=id_shared)
-
-        _sh_amoebots = np.ndarray(sh_amoebots.shape, 
-                                dtype=sh_amoebots.dtype, 
-                                buffer=sh_attached.buf)
-
-        # execute the amoebot algorithm(s) and update activation status
-        _sh_amoebots__id, actv_status = _sh_amoebots[__id].execute(logger=logger)
-
-        # lock the shared address space for safe write
+        # safely fetch the object at current index position
         lock.acquire(blocking=True)
 
-        try: _sh_amoebots[__id] = _sh_amoebots__id
+        try:
+            _sh_amoebot = shared.ifetch(__id)
         finally: lock.release()
 
+        # reseed in each process to make sure the pseudo-random streams 
+        # are independent of one another
+        np.random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
+
+        # execute the amoebot algorithm(s) and update activation status
+        _sh_amoebot, actv_status = _sh_amoebot.execute(logger=logger)
+
         state = (
-            _sh_amoebots[__id].head, 
-            _sh_amoebots[__id].tail, 
-            _sh_amoebots[__id].clock
+            _sh_amoebot.head, 
+            _sh_amoebot.tail, 
+            _sh_amoebot.clock
         )
 
-        # push to output queue if there was an activation for this amoebot
-        if actv_status: op_buffr.put([state, __id])
+        if actv_status: 
+            # push to output queue if there was an activation for this amoebot
+            op_buffr.put([state, __id])
+
+        # safely write to the shared file
+        lock.acquire(blocking=True)
+        
+        try:
+            shared.iwrite(__id, _sh_amoebot)
+        finally: lock.release()
 
         # get the current process name for logging
         cpname = multiprocessing.current_process().name
 
         # generate a log message
         log_message = (
-                        f'post/{cpname} :: < agent {__id} {_sh_amoebots[__id]} '
-                        f'clock {state[2]} active {actv_status}>\n'
+                        f'post/{cpname} :: < agent {__id} {_sh_amoebot} '
+                        f'clock {state[2]} active {actv_status} >\n'
                         f'\thead {state[0]} at {state[0].position}\n'
                         f'\ttail {state[1]} at {state[1].position}.'
                     )
@@ -232,9 +218,6 @@ def _exec_step(
 
         # push the bot id and status information to the queues
         ip_buffr.put([__id])
-
-        # close access to the shared memory from this instance
-        sh_attached.close()
 
         return (__id, actv_status)
 
@@ -262,7 +245,7 @@ def _queueing_manager(
         # log the state information
         cpname = multiprocessing.current_process().name
         log_message = (
-                        f'track/{cpname} :: < agent {__id} clock {state[2]} >\n'
+                        f'pop/{cpname} :: < agent {__id} clock {state[2]} >\n'
                         f'\thead {state[0]} at {state[0].position}\n'
                         f'\ttail {state[1]} at {state[1].position}.'
                     )
