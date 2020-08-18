@@ -34,8 +34,8 @@ class TriangularGrid(object):
         start_point_y = self.origin[1]
 
         # set the end points
-        end_point_x = self.origin[0] + self.x
-        end_point_y = self.origin[1] + (self.y * 2)
+        end_point_x = self.origin[0] + (self.x * 2)
+        end_point_y = self.origin[1] + self.y
 
         if start_point_x < 0:   # start x is negative
 
@@ -55,8 +55,8 @@ class TriangularGrid(object):
                                     nrows=self.y, component='y', ncols=self.x)
 
         # offset odd columns by one
-        for col in range(self.x): 
-            if col % 2: grid_y[:, col] += 1
+        for row in range(self.y): 
+            if row % 2: grid_x[row] += 1
 
         # zip x and y components together into grid array
         grid = array([array([array([grid_y[ix][jx], 
@@ -68,7 +68,7 @@ class TriangularGrid(object):
         self.grid = grid
 
     @property
-    def get_grid(self): return self.grid
+    def get_grid_points(self): return self.grid
 
     @property
     def get_grid_components(self): return (self.grid_x, self.grid_y)

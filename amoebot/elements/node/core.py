@@ -1,70 +1,94 @@
-from __future__ import annotations
+from numpy import int8, ndarray, array
 
-from numpy import uint8, ndarray, array
 from ..core import Core
 
 class Node(Core):
-    def __init__(self, position:ndarray, node_ix:uint8):
-        # position of node in relation to the grid
-        self.position: ndarray = position
+    def __init__(self, position:ndarray, wall:bool=False):
+        r"""
+        `position`  ::
 
-        # node index in the lookup
-        self.node_ix: uint8 = node_ix
+        `neighbors` :: 
+
+        `occupied`  ::  occupancy status of the current node
+
+                        0   : node is unoccupied, 
+                        1   : occupied by a contracted bot, 
+                        2   : occupied by tail, 
+                        3   : occupied by head, 
+                        4   : trace particle on node, 
+                        5   : node is a wall
+        """
+
+        # position of node in relation to the grid
+        self.position:ndarray = position
 
         # ports labellings of the node
-        self.ports: ndarray = array(['n', 'nw', 'sw', 's', 'se', 'ne'])
+        self.ports:ndarray = array(['n', 'ne', 'se', 
+                                    's', 'sw', 'nw'
+                                ], dtype='<U2')
 
-        # dictionary identifying ports with neighbours
-        self.neighbors: dict = dict(n=None, nw=None, sw=None, 
-                                    s=None, se=None, ne=None)
+        # dictionary identifying neighbouring port locations
+        self.neighbors:dict = dict(n=None, ne=None, se=None, 
+                                   s=None, sw=None, nw=None)
 
-        # 1 if a bot is on the node, 0 otherwise
-        self.occupied: uint8 = None
+        # occupancy status of the current node
+        self.occupied:int8 = int8(5) if wall else int8(0)
 
-        # the bot currently occupying this node
-        self.bot: object = None
-
-    def scan_port(self, port:str) -> object:
-        r"""
-        scan neighbouring ports and create nodes for bots to move into
+    def place_particle(self, particle:str):
+        r""" mark the node occupancy status during initialisation
         """
+        particle_map = dict([
+                            ('amoebot', int8(1)), 
+                            ('amoebot tail', int8(2)), 
+                            ('amoebot head', int8(3))
+                        ])
 
-        node = self.neighbors[port]
+        assert particle in particle_map, \
+            LookupError(
+                f'invalid particle {particle}'
+            )
+
+        self.occupied = particle_map[particle]
+
+    def update_node_status(self, action:str):
+        r""" mark the node occupancy status during amoebot activity
+        """
+        action_map = dict([
+                            ('expand from', int8(2)), 
+                            ('expand to', int8(3)), 
+                            ('contract to', int8(1)), 
+                            ('contract from', int8(0)), 
+                            ('drop trace', int8(4))
+                        ])
+
+        assert action in action_map, \
+            LookupError(
+                f'invalid action {action}'
+            )
         
-        if node is None:
-            
-            # create a spare `Node` object
-            node = Node()
-        
-        return node
+        self.occupied = action_map[action]
 
-    def arrival(self, bot:object):
-        r""" mark bot arrival on node
-        """
-        self.occupied = uint8(1)
-        self.bot = bot
-
-    def departure(self):
-        r""" mark bot departure from node
-        """
-        self.occupied = uint8(0)
-        self.bot = None
-
-    def get_neighbor(self, port:str) -> Node: return self.neighbors[port]
-
-    def set_neighbor(self, port:str, node:Node):
+    def set_neighbor(self, port:str, node_position:ndarray):
         # assign a neighbouring node to port
-        self.neighbors[port] = node
+        self.neighbors[port] = node_position
+
+    def get_neighbor(self, port:str) -> ndarray: return self.neighbors[port]
 
     @property
-    def get_bot(self) -> object: return self.bot
+    def get_occupancy_status(self) -> int8: return self.occupied
+    
+    @property
+    def get_all_ports(self) -> ndarray: return self.ports
 
     @property
-    def get_ix(self) -> uint8: return self.node_ix
+    def is_occupied(self) -> bool:
+        return int8(1) if self.occupied is not 0 else int8(0)
 
     @property
-    def get_ports(self) -> ndarray: return self.ports
+    def is_trace(self) -> bool:
+        return int8(1) if self.occupied is 3 else int8(0)
 
     @property
-    def get_occupied(self) -> uint8: return self.occupied
+    def is_wall(self) -> bool:
+        return int8(1) if self.occupied is 4 else int8(0)
 

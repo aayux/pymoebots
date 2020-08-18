@@ -6,7 +6,6 @@ from collections import UserList, defaultdict
 
 from .exceptions import InitializationError
 
-
 class AnonList(UserList):
     r"""
     Custom container; wraps list object designed so that elements anonimity is
@@ -38,7 +37,7 @@ class AnonList(UserList):
     #     self._copy_data()
     #     random.shuffle(self._data)
     #     return iter(self._data)
-    
+
     def __repr__(self) -> str:
         r""" returns a shuffled string
         """
