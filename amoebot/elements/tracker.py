@@ -1,6 +1,5 @@
 import json
 import numpy as np
-
 from pathlib import Path
 from numpy import array, uint8
 
@@ -28,7 +27,7 @@ class StateTracker(object):
         config = self._collect_config(state)
         return config
 
-    def update(self, __id:int, state:tuple):
+    def update(self, __id:uint8, state:tuple):
         # complete path to the state file
         statefile = Path(STORE) / Path(f'run-{self.config_num}/tracks.json')
 
@@ -42,8 +41,7 @@ class StateTracker(object):
             tracks = list()
 
         config = self._collect_config(state)
-
-        tracks.append(dict(mov_bot=__id, config=config))
+        tracks.append(dict(mov_bot=int(__id), config=config))
 
         # append state information to the json file
         with open(statefile, 'w') as f: 
@@ -55,15 +53,7 @@ class StateTracker(object):
         terminal state of current execution that can be loaded later for 
         re-useability.
         """
-        # collect full state information from the amoebot manager
-        vec_collector = np.vectorize(self._collect_config)
-        config = vec_collector(tuple(manager.persistent.values())).tolist()
-
-        # reference a checkpoint file in the current run
-        statefile = Path(STORE) / Path(f'run-{self.config_num}/chkpt.json')
-
-        # append state information to the json file
-        with open(statefile, 'w') as f: json.dump(config, f, indent=4)
+        raise NotImplementedError
 
     def _collect_config(self, state:tuple) -> dict:
         r""" state configuration objects of a single amoebot
@@ -72,8 +62,8 @@ class StateTracker(object):
         head, tail, _ = state
 
         config = dict(
-                    head_pos=head.position.tolist(), 
-                    tail_pos=tail.position.tolist()
+                    head_pos=head.tolist(), 
+                    tail_pos=tail.tolist()
                 )
 
         return config

@@ -1,11 +1,10 @@
 import collections
 import numpy as np
-
 from numpy import uint8
 
 from .exceptions import ShapeError
 
-def binary_search(data:list, key:object, lo:int=0, hi:int=None) -> int:
+def two_dim_binary_search(data:list, key:object, lo:int=0, hi:int=None) -> int:
     dim_l, dim_w = data.shape
     if hi is None: hi = dim_l - 1
 

@@ -1,131 +1,127 @@
 from numpy import uint8, ndarray, array
+from collections import defaultdict
+
 from .core import Node
-from ...utils.limits import increment_index
 from ..manager import Manager
 
 class NodeManager(Manager):
     def __init__(self, points:ndarray):
 
-        # dictionary of `Node` objects
-        self.node_dict: dict = dict()
+        # [dictionary of dictionary] of nodes
+        self.nmap:defaultdict = defaultdict(dict)
 
         # numpy array of plotted points
-        self.grid_points: ndarray = array(points)
+        self.grid_points:ndarray = array(points)
 
-        # next available index in the lookup
-        self.next_node_ix: uint8 = uint8(0)
+        # call to grid builder
+        self.grid_builder()
 
     def grid_builder(self):
         r""" 
         create nodes at grid positions and link the nodes into a full grid
         """
         # rows and cols in the plotted points on the grid
-        nrows, ncols, _ = self.grid_points.shape
+        nrows, ncols, dim = self.grid_points.shape
+        self.grid_points = self.grid_points.reshape(nrows * ncols, dim)
 
         # place nodes on the grid
-        for ix in range(nrows):
-            for jx in range(ncols):
-                # add node to node manager
-                self._add_node(position=self.grid_points[ix][jx])
+        for point in self.grid_points:
+            # add node to node manager
+            self._add_node(point=point)
 
-        # calls function to link all the created nodes together
-        self._linkup(ncols)
+        # calls function to link adjacent nodes on the hexagonal grid
+        self._hex_connect()
 
-    def _add_node(self, position:ndarray):
+    def _add_node(self, point:array):
         r"""
         add individual nodes to node lookup
         """
         # creates node and assigns it a place in the node dictionary
-        self.node_dict[self.next_node_ix] = Node(position=position, 
-                                                 node_ix=self.next_node_ix)
+        self.nmap[point[0]][point[1]] = Node(position=point)
 
-        # increment the index by one
-        self.next_node_ix = increment_index(self.next_node_ix)
-
-    def _linkup(self, ncols:int):
+    def _hex_connect(self):
         r"""
         """
-        # lookup for visited nodes
-        # keys: column indexes, values: next node index to link
-        visited = dict()
+        # iterate over the rows
+        for ix in self.nmap:
+            for jx in self.nmap[ix]:
+                # current node
+                node = self.nmap[ix][jx]
 
-        # column parity holds True if odd
-        col_parity = True
+                # if data isn't already available
+                if node.neighbors['n'] is None and (jx + 2) in self.nmap[ix]:
+                    # update the node's neighbour to the north
+                    node.neighbors['n'] = array([ix, jx + 2], dtype=uint8)
 
-        # iterate over all points in the current grid
-        for ix in self.node_dict:
+                    # update the neighbour's neighbour to the south
+                    self.nmap[ix][jx + 2].neighbors['s'] = array(
+                                                                    [ix, jx], 
+                                                                    dtype=uint8
+                                                                )
 
-            node = self.node_dict[ix]
+                # also ensure node is in the grid
+                if node.neighbors['ne'] is None and (ix + 1) in self.nmap \
+                                            and (jx + 1) in self.nmap[ix + 1]:
+                    if jx + 1 in self.nmap[ix + 1]:
+                        # update the node's neighbour to the north east
+                        node.neighbors['ne'] = array(
+                                                        [ix + 1, jx + 1], 
+                                                    dtype=uint8)
 
-            # verify next index position is available in current column
-            if ix + 1 in self.node_dict and (ix + 1) % ncols:
+                        # update the neighbour's neighbour to the south west
+                        self.nmap[ix + 1][jx + 1].neighbors['sw'] = \
+                                                array([ix, jx], dtype=uint8)
 
-                next_node = self.node_dict[ix + 1]
+                if node.neighbors['se'] is None and (ix + 1) in self.nmap \
+                                            and (jx - 1) in self.nmap[ix + 1]:
+                        # update the node's neighbour to the south east
+                        node.neighbors['se'] = array(
+                                                        [ix + 1, jx - 1], 
+                                                    dtype=uint8)
 
-                # set node's northern neighbour
-                node.set_neighbor(port='n', node=next_node)
+                        # update the neighbour's neighbour to the north west
+                        self.nmap[ix + 1][jx - 1].neighbors['nw'] = \
+                                                    array([ix, jx], dtype=uint8)
 
-                # set next node's southern neighbour
-                next_node.set_neighbor(port='s', node=node)
+                if node.neighbors['s'] is None and (jx - 2) in self.nmap[ix]:
+                    # update the node's neighbour to the south
+                    node.neighbors['s'] = array([ix, jx - 2], dtype=uint8)
 
-            # flip column parity at every column
-            if not ix % ncols: col_parity = not col_parity
+                    # update the neighbour's neighbour to the north
+                    self.nmap[ix][jx - 2].neighbors['n'] = \
+                                                array([ix, jx], dtype=uint8)
 
-            if col_parity:
+                if node.neighbors['sw'] is None and (ix - 1) in self.nmap \
+                                        and (jx - 1) in self.nmap[ix - 1]:
+                        # update the node's neighbour to the south west
+                        node.neighbors['sw'] = array(
+                                                        [ix - 1, jx - 1], 
+                                                    dtype=uint8)
 
-                # if in the same col
-                if ix % ncols in visited.keys():
+                        # update the neighbour's neighbour to the north east
+                        self.nmap[ix - 1][jx - 1].neighbors['ne'] = \
+                                                array([ix, jx], dtype=uint8)
 
-                    # get the next node from lookup
-                    next_node = visited[ix % ncols]
+                if node.neighbors['nw'] is None and (ix - 1) in self.nmap \
+                                        and (jx + 1) in self.nmap[ix - 1]:
+                        # update the node's neighbour to the north west
+                        node.neighbors['nw'] = array(
+                                                        [ix - 1, jx + 1], 
+                                                    dtype=uint8)
 
-                    # set node's southwestern neighbour as the next node
-                    node.set_neighbor(port='sw', node=next_node)
+                        # update the neighbour's neighbour to the south east
+                        self.nmap[ix - 1][jx + 1].neighbors['se'] = \
+                                                array([ix, jx], dtype=uint8)
 
-                    # set next node's northeastern neighbour
-                    next_node.set_neighbor(port='ne', node=node)
+                self.nmap[ix][jx] = node
 
-                # has the (current column + 1) been visited
-                if (ix % ncols) + 1 in visited.keys():
-                    next_node = visited[(ix % ncols) + 1]
-
-                    # set node's southeastern neighbour as the next node
-                    node.set_neighbor(port='nw', node=next_node)
-
-                    # set next node's northwestern neighbour
-                    next_node.set_neighbor(port='se', node=node)
-            # even column
-            else:
-                if ix % ncols in visited.keys():
-
-                    next_node = visited[ix % ncols]
-
-                    # set node's southeastern neighbour as the next node
-                    node.set_neighbor(port='nw', node=next_node)
-
-                    # set next node's northwestern neighbour
-                    next_node.set_neighbor(port='se', node=node)
-
-                    # set next node to node directly south of current next node
-                    next_node = next_node.get_neighbor(port='s')
-
-                    if next_node:
-
-                        # set node's southeastern neighbour as the next node
-                        node.set_neighbor(port='sw', node=next_node)
-
-                        # set next node's northwestern neighbour
-                        next_node.set_neighbor(port='ne', node=node)
-
-            # update current column's last visited node
-            visited[ix % ncols] = node
-
-    def get_node(self, node_ix:uint8) -> Node: 
-        return self.node_dict[node_ix]
+    def get_node(self, position:array) -> Node: 
+        return self.nmap[position[0]][position[1]]
 
     @property
-    def get_node_dict(self) -> dict: return self.node_dict
+    def get_nmap(self) -> dict: return self.nmap
 
     @property
-    def get_num_nodes(self) -> int: return len(self.node_dict)
-
+    def get_num_nodes(self) -> int: 
+        nrows, ncols, _ = self.grid_points.shape
+        return nrows * ncols

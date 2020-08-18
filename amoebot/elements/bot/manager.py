@@ -3,8 +3,8 @@ import time
 import logging
 import numpy as np
 import multiprocessing
-
 from pathlib import Path
+from collections import defaultdict
 from multiprocessing import managers
 from numpy import array, ndarray, uint8
 
@@ -19,20 +19,41 @@ class AmoebotManager(Manager):
     individual amoebots.
     """
 
-    def __init__(self, config_num:str):
-        # holds all `Amoebot` objects created anonymously
-        self.amoebots: list = list()
+    def __init__(self, nmap:object, config_num:str):
+        # object of the NodeManager
+        self.nmap:defaultdict = nmap
+
+        # map of all `Amoebot` objects
+        self.amoebots:dict = dict()
 
         # object of class `StateTracker`
-        self.tracker: object = StateTracker(config_num)
+        self.tracker:object = StateTracker(config_num)
 
         # configuration identifier for logging
         self.config_num = config_num
 
+    def _add_bot(self, __id:uint8, head:array, tail:array=None):
+        r""" adds individual particles to the (partially anonymous) `AnonList`
+        """
+        agent_of_amoebot = Agent(__id, head=head, tail=tail)
+
+        # update the node map for current particle
+        if np.all(head == tail) or (tail is None):
+            self.nmap[head[0]][head[1]].place_particle('amoebot')
+        else:
+            # place the head and tail on different grid positions
+            self.nmap[tail[0]][tail[1]].place_particle('amoebot tail')
+            self.nmap[head[0]][head[1]].place_particle('amoebot head')
+
+        # call to orient the amoebot
+        # NOTE how nmap is only shared when needed
+        agent_of_amoebot.orient(self.nmap)
+
+        self.amoebots[__id] = agent_of_amoebot.pickled
+
     def exec_async(self, n_cores:int, max_iter:int, buffer_len:int=None):
         r"""
         """
-
         # initialise DEBUG level logging
         logger = self._init_logging(to_console=True)
 
@@ -44,8 +65,12 @@ class AmoebotManager(Manager):
         # create a lock for the shared region
         lock = mp_manager.Lock()
 
-        # binarized SharedObjects data file
-        shared = SharedObjects(self.config_num, datalist=self.amoebots)
+        # shared namespace for the node map and the data dumps
+        shared = mp_manager.Namespace()
+        shared.nmap = self.nmap
+        
+        # dump the amoebot dictionary into the database
+        shared.pickler = SharedObjects(self.config_num, data=self.amoebots)
 
         _exec_async(self.tracker, ip_buffr, op_buffr, logger, shared, 
                     n_cores, max_iter, buffer_len, lock)
@@ -56,12 +81,6 @@ class AmoebotManager(Manager):
         for _ in range(max_iter):
             for __id, _ in enumerate(self.amoebots):
                 self.amoebots[__id] = _exec_step(amoebot=self.amoebots[__id])
-
-    def _add_bot(self, __id:int, node:object):
-        r""" adds individual particles to the (partially anonymous) `AnonList`
-        """
-        agent_of_amoebot = Agent(__id, head=node)
-        self.amoebots.insert(__id, agent_of_amoebot)
 
     def _init_logging(
                         self, 
@@ -102,7 +121,7 @@ def _exec_async(
                 ip_buffr:multiprocessing.managers.AutoProxy, 
                 op_buffr:multiprocessing.managers.AutoProxy, 
                 logger:logging.RootLogger, 
-                shared:SharedObjects, 
+                shared:multiprocessing.managers.NamespaceProxy, 
                 n_cores:int, 
                 max_iter:int, 
                 buffer_len:int, 
@@ -121,8 +140,10 @@ def _exec_async(
                                                     tracker, 
                                                 ))
 
+        
+        
         # generate an initial list of jobs to be completed
-        jobs_init = [[__id] for __id in range(shared.length)]
+        jobs_init = [[__id] for __id in shared.pickler.keys]
         for job in jobs_init: ip_buffr.put(job)
 
         results = list()
@@ -133,7 +154,7 @@ def _exec_async(
                                                         ip_buffr, 
                                                         op_buffr, 
                                                         logger, 
-                                                        shared,
+                                                        shared, 
                                                         lock
                                                     )))
 
@@ -143,7 +164,7 @@ def _exec_async(
             # TODO flush the queue if buffer_len reached
 
         # collect all results from the pool
-        for result in results: result.get()
+        for result in results: _ = result.get()
 
         # exit using the listener process
         op_buffr.put(['ps-kill', 0])
@@ -157,7 +178,7 @@ def _exec_step(
                 ip_buffr:multiprocessing.managers.AutoProxy=None, 
                 op_buffr:multiprocessing.managers.AutoProxy=None, 
                 logger:logging.RootLogger=None, 
-                shared:SharedObjects=None, 
+                shared:multiprocessing.managers.NamespaceProxy=None, 
                 lock:multiprocessing.managers.AcquirerProxy=None, 
                 amoebot:Agent=None
             ) -> object:
@@ -172,7 +193,7 @@ def _exec_step(
         lock.acquire(blocking=True)
 
         try:
-            _sh_amoebot = shared.ifetch(__id)
+            amoebot = Agent.unpickled(shared.pickler.ifetch(__id))
         finally: lock.release()
 
         # reseed in each process to make sure the pseudo-random streams 
@@ -180,46 +201,49 @@ def _exec_step(
         np.random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
 
         # execute the amoebot algorithm(s) and update activation status
-        _sh_amoebot, actv_status = _sh_amoebot.execute(logger=logger)
+        amoebot, nmap = amoebot.execute(shared.nmap, logger=logger)
 
         state = (
-            _sh_amoebot.head, 
-            _sh_amoebot.tail, 
-            _sh_amoebot.clock
+            amoebot.head, 
+            amoebot.tail, 
+            amoebot.clock
         )
-
-        if actv_status: 
-            # push to output queue if there was an activation for this amoebot
-            op_buffr.put([state, __id])
-
-        # safely write to the shared file
-        lock.acquire(blocking=True)
-        
-        try:
-            shared.iwrite(__id, _sh_amoebot)
-        finally: lock.release()
 
         # get the current process name for logging
         cpname = multiprocessing.current_process().name
 
         # generate a log message
         log_message = (
-                        f'post/{cpname} :: < agent {__id} {_sh_amoebot} '
-                        f'clock {state[2]} active {actv_status} >\n'
-                        f'\thead {state[0]} at {state[0].position}\n'
-                        f'\ttail {state[1]} at {state[1].position}.'
+                        f'post/{cpname} :: < agent {__id} '
+                        f'{amoebot} >\n\t\tclock {state[2]} '
+                        f'activated {int(nmap is not None)} '
+                        f'head {state[0]} tail {state[1]}.'
                     )
+
+        if nmap is not None: 
+            # update the shared node map
+            shared.nmap = nmap
+
+            # push to output queue if there was an activation for this amoebot
+            op_buffr.put([state, __id])
+
+        # safely write to the shared file
+        lock.acquire(blocking=True)
+
+        try:
+            shared.pickler.iwrite(__id, amoebot.pickled)
+        finally: lock.release()
 
         # log the state information
         logging.info(log_message)
 
         # give other amoebots a chance to catch up
-        time.sleep(.2)
+        time.sleep(.1)
 
         # push the bot id and status information to the queues
         ip_buffr.put([__id])
 
-        return (__id, actv_status)
+        return __id
 
     # sequential execution mode
     else:
@@ -245,9 +269,8 @@ def _queueing_manager(
         # log the state information
         cpname = multiprocessing.current_process().name
         log_message = (
-                        f'pop/{cpname} :: < agent {__id} clock {state[2]} >\n'
-                        f'\thead {state[0]} at {state[0].position}\n'
-                        f'\ttail {state[1]} at {state[1].position}.'
+                        f'pop/{cpname} :: < agent {__id} >\n'
+                        f'\t\tclock {state[2]} head {state[0]} tail {state[1]}.'
                     )
         logging.info(log_message)
 

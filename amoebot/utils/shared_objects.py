@@ -1,29 +1,30 @@
-import pickle as pkl
+import pickle
+import numpy as np
 from pathlib import Path
 
 STORE = './.dumps'
 
 class SharedObjects(object):
-    def __init__(self, config_num:str, datalist:list=None):
-        # length of the shared list
-        self.length = None
+    def __init__(self, config_num:str, data:dict=None):
+        # keys in the shared dictionary
+        self.keys = None
         
         # complete path to the shared file
-        self.sharedfile = Path(STORE) / Path(f'run-{config_num}/shared.pkl')
+        self.sharedfile = Path(STORE) / Path(f'run-{config_num}/shared.pickle')
 
-        if datalist is not None: self.save(datalist)
+        if data is not None: self.save(data)
 
-    def save(self, datalist:list):
+    def save(self, data:dict):
         r"""
         """
 
         with open(self.sharedfile, 'wb') as f:
-            pkl.dump(datalist, f, protocol=pkl.HIGHEST_PROTOCOL)
+            pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-        self.length = len(datalist)
+        self.keys = list(data.keys())
 
         # mark for garbage collection
-        del datalist
+        del data
 
     def load(self) -> list:
         r"""
@@ -31,7 +32,7 @@ class SharedObjects(object):
 
         try:
             with open(self.sharedfile, 'rb') as f:
-                sh_data = pkl.load(f)
+                sh_data = pickle.load(f)
 
             return sh_data
 
@@ -40,16 +41,16 @@ class SharedObjects(object):
                 f"could not find {self.sharedfile}, call `save` before `load`."
             )
 
-    def iwrite(self, index:int, data:object):
+    def iwrite(self, key:np.uint8, data:object):
         r"""
         """
 
         try:
             with open(self.sharedfile, 'rb') as f:
-                sh_data = pkl.load(f)
-            sh_data[index] = data
+                sh_data = pickle.load(f)
+            sh_data[key] = data
             with open(self.sharedfile, 'wb') as f:
-                pkl.dump(sh_data, f, protocol=pkl.HIGHEST_PROTOCOL)
+                pickle.dump(sh_data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
             # mark for garbage collection
             del sh_data
@@ -59,14 +60,14 @@ class SharedObjects(object):
                 f"could not find {self.sharedfile}, call `save` before `iwrite`."
             )
 
-    def ifetch(self, index:int) -> object:
+    def ifetch(self, key:np.uint8) -> object:
         r"""
         """
         try:
             with open(self.sharedfile, 'rb') as f:
-                sh_data = pkl.load(f)
+                sh_data = pickle.load(f)
 
-            return sh_data[index]
+            return sh_data[key]
         except FileNotFoundError:
             raise FileNotFoundError(
                 f"could not find {self.sharedfile}, call `save` before `iread.`"

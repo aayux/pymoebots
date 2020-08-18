@@ -43,7 +43,7 @@ def test_nodemanager_add_single_node():
     nm = NodeManager(point)
     nm._add_node(point)
     
-    assert ((len(nm.node_dict) == 1) and isinstance(nm.node_dict[0], Node))
+    assert ((len(nm.nmap) == 1) and isinstance(nm.nmap[0], Node))
 
 def test_nodemanager_grid_builder():
     r"""
@@ -57,8 +57,8 @@ def test_nodemanager_grid_builder():
     nm = NodeManager(points)
     nm.grid_builder()
 
-    assert ((len(nm.node_dict) == x * y) and \
-            (not any([not isinstance(v, Node) for _,v in nm.node_dict.items()])))
+    assert ((len(nm.nmap) == x * y) and \
+            (not any([not isinstance(v, Node) for _,v in nm.nmap.items()])))
 
 def test_amoebotmanager_add_single_bot():
     r"""
@@ -89,7 +89,7 @@ def test_agent_random_movement_sequential():
     nm = NodeManager(points)
     nm.grid_builder()
 
-    node_list = list(nm.get_node_dict.values())
+    node_list = list(nm.get_nmap.values())
 
     gen = StateGenerator(node_list, n_bots=n_bots)
     gen.manager.exec_sequential(max_iter=max_iter)
