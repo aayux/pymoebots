@@ -67,9 +67,11 @@ class AmoebotVizElements {
         
         vizElement.setAttribute( 'cx', position.x );
         vizElement.setAttribute( 'cy', position.y );
-        vizElement.setAttribute( 'fill', 'black' );
+        vizElement.setAttribute( 'fill', 'white' );
         vizElement.setAttribute( 'r', `${ pixels }px` );
-        
+        vizElement.setAttribute( 'stroke', 'black' );
+        vizElement.setAttribute( 'stroke-width', `${ pixels / 3 }px` );
+
         // add to SVG group
         this.vizObject.appendChild( vizElement );
         
@@ -99,7 +101,7 @@ class AmoebotVizElements {
         vizElement.setAttribute( 'cx', position.x );
         vizElement.setAttribute( 'cy', position.y );
         vizElement.setAttribute( 'fill', 'black' );
-        vizElement.setAttribute( 'r', `${ pixels }px` );
+        vizElement.setAttribute( 'r', `${ 3 * pixels / 4 }px` );
 
         // add to SVG group
         this.vizObject.appendChild( vizElement );
@@ -168,9 +170,9 @@ class AmoebotVizInit {
     mantains visual information and tracks current position of particles
     */
 
-    constructor( init0, tracks ) {
+    constructor( config0, tracks ) {
         // starting configuration of the system
-        this.init0 = this.init = init0;
+        this.config0 = this.init = config0;
 
         // motion history tracker
         this.tracks = tracks;
@@ -192,8 +194,8 @@ class AmoebotVizInit {
             this.bot_list.push(
                 new AmoebotVizTemplate(
                     bot_id,
-                    this.init0[ bot_id ].head_pos,
-                    this.init0[ bot_id ].tail_pos
+                    this.config0[ bot_id ].head_pos,
+                    this.config0[ bot_id ].tail_pos
                 )
             );
 
@@ -208,7 +210,7 @@ export class AmoebotVizTracker extends AmoebotVizInit{
     */
 
     getConfigInfo() {
-        var nBots = this.init0.length;
+        var nBots = this.config0.length;
         var nSteps = this.tracks.length;
         return([nBots, nSteps]);
     }
