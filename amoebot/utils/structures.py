@@ -1,10 +1,9 @@
+from .exceptions import InitializationError
+
 import random
 import pickle as pkl
-
 from pathlib import Path
 from collections import UserList, defaultdict
-
-from .exceptions import InitializationError
 
 class AnonList(UserList):
     r"""
