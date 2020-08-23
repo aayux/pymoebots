@@ -1,46 +1,70 @@
-from numpy import int8, ndarray, array
+# -*- coding: utf-8 -*-
+
+""" elements/node/core.py
+"""
 
 from ..core import Core
 
+import numpy as np
+
 class Node(Core):
-    def __init__(self, position:ndarray, wall:bool=False):
+    r"""
+    Manages grid connectivity and the node map for fast lookups.
+    
+    Attributes
+
+        position  (numpy.ndarray) :: position of node in relation to the grid.
+        ports  (numpy.ndarray) :: ports labellings of the node.
+        neighbors (dict) :: dictionary identifying neighbouring port locations.
+        occupied  (numpy.uint8)::  occupancy status of the current node
+
+                        0 : node is unoccupied, 
+                        1 : occupied by a contracted bot, 
+                        2 : occupied by head, 
+                        3 : trace particle on node, 
+                        4 : node is a wall.
+    """
+
+    def __init__(self, position:np.ndarray, wall:bool=False):
         r"""
-        `position`  ::
+        Attributes
 
-        `neighbors` :: 
-
-        `occupied`  ::  occupancy status of the current node
-
-                        0   : node is unoccupied, 
-                        1   : occupied by a contracted bot, 
-                        2   : occupied by tail, 
-                        3   : occupied by head, 
-                        4   : trace particle on node, 
-                        5   : node is a wall
+            position (numpy.ndarray) :: position of node in relation to the grid
+                            specified using x and y co-ordinates on the 
+                            hexagonal grid system.
+            wall (bool) default: False :: set to True if the node object is 
+                            blocking, False otherwise.
         """
 
         # position of node in relation to the grid
-        self.position:ndarray = position
+        self.position:np.ndarray = position
 
         # ports labellings of the node
-        self.ports:ndarray = array(['n', 'ne', 'se', 
-                                    's', 'sw', 'nw'
-                                ], dtype='<U2')
+        self.ports:np.ndarray = np.array([
+                                            'n', 'ne', 'se', 's', 'sw', 'nw'
+                                        ], dtype='<U2')
 
         # dictionary identifying neighbouring port locations
         self.neighbors:dict = dict(n=None, ne=None, se=None, 
                                    s=None, sw=None, nw=None)
 
         # occupancy status of the current node
-        self.occupied:int8 = int8(5) if wall else int8(0)
+        self.occupied:np.uint8 = np.uint8(4) if wall else np.uint8(0)
 
     def place_particle(self, particle:str):
-        r""" mark the node occupancy status during initialisation
+        r""" 
+        Place particle (amoebot) on the node and mark the node occupancy status 
+        during initialisation.
+
+        Attributes
+
+            particle (str) :: part of the particle on the node; accepts one of 
+                            "body" or "head".
         """
+
         particle_map = dict([
-                            ('amoebot', int8(1)), 
-                            ('amoebot tail', int8(2)), 
-                            ('amoebot head', int8(3))
+                            ('body', np.uint8(1)), 
+                            ('head', np.uint8(2))
                         ])
 
         assert particle in particle_map, \
@@ -50,45 +74,74 @@ class Node(Core):
 
         self.occupied = particle_map[particle]
 
-    def update_node_status(self, action:str):
-        r""" mark the node occupancy status during amoebot activity
+    def mark_node(self, movement:str):
+        r""" 
+        Mark or update the node occupancy status during amoebot activity.
+
+        Attributes
+
+            movement (str) :: the type of movement that will mark node 
+                            occupancy, one of
+
+                            "e to" : (expand to the current node), 
+                            "c to" : (contract to the current node), 
+                            "c fr" : (contract from the current node).
         """
-        action_map = dict([
-                            ('expand from', int8(2)), 
-                            ('expand to', int8(3)), 
-                            ('contract to', int8(1)), 
-                            ('contract from', int8(0)), 
-                            ('drop trace', int8(4))
+
+        movement_map = dict([ 
+                            ('e to', np.uint8(2)), 
+                            ('c to', np.uint8(1)), 
+                            ('c fr', np.uint8(0)), 
                         ])
 
-        assert action in action_map, \
+        assert movement in movement_map, \
             LookupError(
-                f'invalid action {action}'
+                f'invalid action {movement}'
             )
         
-        self.occupied = action_map[action]
+        self.occupied = movement_map[movement]
+    
+    def drop_trace(self):
+        r""" 
+        drop a trace particle on the inner boundary of a wall
+        """
+        self.occupied = np.uint8(3)
 
-    def set_neighbor(self, port:str, node_position:ndarray):
-        # assign a neighbouring node to port
+    def set_neighbor(self, port:str, node_position:np.ndarray):
+        r""" 
+        Assign a neighbouring node to port.
+
+        Attributes
+            port (str) :: port label to assign neighbour to.
+        """
         self.neighbors[port] = node_position
 
-    def get_neighbor(self, port:str) -> ndarray: return self.neighbors[port]
+    def get_neighbor(self, port:str) -> np.ndarray: 
+        r""" 
+        Assign a neighbouring node to port.
+
+        Attributes
+            port (str) :: port label to assign neighbour to.
+        """
+        return self.neighbors[port]
 
     @property
-    def get_occupancy_status(self) -> int8: return self.occupied
-    
+    def get_occupancy_status(self) -> np.uint8: 
+        return self.occupied
+
     @property
-    def get_all_ports(self) -> ndarray: return self.ports
+    def get_all_ports(self) -> np.ndarray: 
+        return self.ports
 
     @property
     def is_occupied(self) -> bool:
-        return int8(1) if self.occupied is not 0 else int8(0)
+        return np.uint8(1) if self.occupied is not 0 else np.uint8(0)
 
     @property
     def is_trace(self) -> bool:
-        return int8(1) if self.occupied is 3 else int8(0)
+        return np.uint8(1) if self.occupied is 2 else np.uint8(0)
 
     @property
     def is_wall(self) -> bool:
-        return int8(1) if self.occupied is 4 else int8(0)
+        return np.uint8(1) if self.occupied is 3 else np.uint8(0)
 
