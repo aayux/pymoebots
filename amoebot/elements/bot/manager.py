@@ -1,27 +1,55 @@
-import os
-import time
-import logging
-import numpy as np
-import multiprocessing
-from pathlib import Path
-from collections import defaultdict
-from multiprocessing import managers
-from numpy import array, ndarray, uint8
+# -*- coding: utf-8 -*-
+
+""" elements/bot/manager.py
+"""
 
 from .agent import Agent
 from ..manager import Manager
 from ..tracker import StateTracker
 from ...utils.shared_objects import SharedObjects
 
+import os
+import time
+import numpy as np
+from pathlib import Path
+from functools import partial
+from concurrent import futures
+from collections import defaultdict
+
 class AmoebotManager(Manager):
     r""" 
     Manages sequential and/or asynchronous task assignment to agents of 
     individual amoebots.
+
+    Attributes
+
+        __nmap (defaultdict) :: a dictionary of dictionaries used to index nodes
+                        using x and y co-ordinates.
+        amoebots (dict) :: dcitionary of amoebot objects indexed by identifiers.
+                        tracker
+        shared (SharedObjects) :: a custom shared memory object for pickling
+                        and unpickling the data dumps. Useful in true 
+                        multiprocessing implementations.
+        tracker (StateTracker) :: instance of `StateTracker` for data handling. 
+        config_num (str) :: identifier number for the json configuration file,
+                        required here for multiprocessing picklers.
     """
 
-    def __init__(self, nmap:object, config_num:str):
-        # object of the NodeManager
-        self.nmap:defaultdict = nmap
+    def __init__(self, __nmap:object, config_num:str=None):
+        r"""
+        Attributes
+
+            __nmap (defaultdict) :: a dictionary of dictionaries used to index 
+                            nodes using x and y co-ordinates.
+            amoebots (dict) :: dcitionary of amoebot objects indexed by 
+                            identifiers.
+            tracker (StateTracker) :: instance of `StateTracker` for data 
+                            handling. 
+            config_num (str) :: identifier number for the json configuration 
+                            file, required here for multiprocessing picklers.
+        """
+        # `nmap` object of the `NodeManager`
+        self.__nmap:defaultdict = __nmap
 
         # map of all `Amoebot` objects
         self.amoebots:dict = dict()
@@ -32,247 +60,171 @@ class AmoebotManager(Manager):
         # configuration identifier for logging
         self.config_num = config_num
 
-    def _add_bot(self, __id:uint8, head:array, tail:array=None):
-        r""" adds individual particles to the (partially anonymous) `AnonList`
+    def _add_bot(
+                    self, 
+                    __id:np.uint8, 
+                    head:np.ndarray, 
+                    tail:np.ndarray=None
+                ):
+        r""" 
+        Adds individual particles to the dictionary of amoebots.
+
+        Attributes
+
+            __id (numpy.uint8) :: unique particle identifier.
+            head (numpy.ndarray) :: position (x and y co-ordinates) of amoebot 
+                            head.
+            tail (numpy.ndarray) default: None :: position (x and y 
+                            co-ordinates) of amoebot tail.
         """
         agent_of_amoebot = Agent(__id, head=head, tail=tail)
 
         # update the node map for current particle
         if np.all(head == tail) or (tail is None):
-            self.nmap[head[0]][head[1]].place_particle('amoebot')
+            self.__nmap[head[0]][head[1]].place_particle('body')
         else:
             # place the head and tail on different grid positions
-            self.nmap[tail[0]][tail[1]].place_particle('amoebot tail')
-            self.nmap[head[0]][head[1]].place_particle('amoebot head')
+            self.__nmap[tail[0]][tail[1]].place_particle('body')
+            self.__nmap[head[0]][head[1]].place_particle('head')
 
         # call to orient the amoebot
         # NOTE how nmap is only shared when needed
-        agent_of_amoebot.orient(self.nmap)
+        agent_of_amoebot.orient(self.__nmap)
 
+        # store a serialized objects for efficiency
         self.amoebots[__id] = agent_of_amoebot.pickled
 
-    def exec_async(self, n_cores:int, max_iter:int, buffer_len:int=None):
+    def exec_async(
+                    self, 
+                    n_cores:int, 
+                    max_rnds:int, 
+                    buffer_len:int=None,
+                    algorithm:str=None
+                ):
         r"""
+        The function is originally intended as a fully asynchronous, distributed
+        manager for the amoebots. To simplify implementation we put a GIL on the
+        function.
+
+        NOTE a [WIP] is available in branch `mp-test`
+
+        Attributes
+
+            n_cores (int) :: number of processor cores to use.
+            max_rnds (int) :: maximum number of full rounds before termination.
+            buffer_len (int) default: None :: maximum length of the i/o buffer.
+            algorithm (str) default: None :: algorithm being performed in 
+                        current step, one of "random_move", "compress"
         """
-        # initialise DEBUG level logging
-        logger = self._init_logging(to_console=True)
 
-        # create a process safe queue
-        mp_manager = multiprocessing.Manager()
-        ip_buffr = mp_manager.Queue()
-        op_buffr = mp_manager.Queue()
+        # dump the amoebot dictionary into a pickle(d) database
+        self.shared = SharedObjects(self.config_num, data=self.amoebots)
 
-        # create a lock for the shared region
-        lock = mp_manager.Lock()
+        # call the psuedo-async method for execution
+        self._exec_async_with_interpreter_lock(n_cores, max_rnds, 
+                                               buffer_len, algorithm)
 
-        # shared namespace for the node map and the data dumps
-        shared = mp_manager.Namespace()
-        shared.nmap = self.nmap
-        
-        # dump the amoebot dictionary into the database
-        shared.pickler = SharedObjects(self.config_num, data=self.amoebots)
-
-        _exec_async(self.tracker, ip_buffr, op_buffr, logger, shared, 
-                    n_cores, max_iter, buffer_len, lock)
-
-    def exec_sequential(self, max_iter:int) -> dict:
+    def exec_sequential(
+                            self, 
+                            max_rnds:int, 
+                            algorithm:str=None
+                        ):
         r"""
-        """
-        for _ in range(max_iter):
-            for __id, _ in enumerate(self.amoebots):
-                self.amoebots[__id] = _exec_step(amoebot=self.amoebots[__id])
+        Sequentially execute the `algorithm`.
 
-    def _init_logging(
+        Attributes
+
+            shared (SharedObjects) :: a custom shared memory object for pickling
+                        and unpickling the data dumps. Useful in true 
+                        multiprocessing implementations.
+            max_rnds (int) :: maximum number of full rounds before termination.
+            algorithm (str) default: None :: algorithm being performed in 
+                        current step, one of "random_move", "compress" ...
+        """
+
+        # dump the amoebot dictionary into a pickle(d) database
+        self.shared = SharedObjects(self.config_num, data=self.amoebots)
+
+        # iteratively execute the algorithm over each amoebot for fixed rounds
+        for _ in range(max_rnds):
+            exec_seq = list(self.amoebots.keys())
+            np.random.shuffle(exec_seq)
+            for __id in exec_seq:
+                amoebot_t = (__id, self.amoebots[__id])
+                self.amoebots[__id] = self._exec_one_step(amoebot_t, algorithm)
+
+    def _exec_async_with_interpreter_lock(
+                                            self, 
+                                            n_cores:int, 
+                                            max_rnds:int, 
+                                            buffer_len:int=None, 
+                                            algorithm:str=None
+                                        ):
+        r"""
+        Call the "asynchronous" function on the amoebots using 
+        `ThreadPoolExecutor` which uses a global lock on the Python interpreter.
+        The resulting calls are therefore not truly concurrent.
+
+        Attributes
+
+            n_cores (int) :: number of processor cores to use.
+            max_rnds (int) :: maximum number of full rounds before termination.
+            buffer_len (int) default: None :: maximum length of the i/o buffer.
+            algorithm (str) default: None :: algorithm being performed in 
+                        current step, one of "random_move", "compress" ...
+        """
+
+        # define partial function with pre-specified algorithm
+        _exec_one_step_algorithm = partial(
+                                            self._exec_one_step, 
+                                            shared=self.shared, 
+                                            algorithm=algorithm
+                                        )
+
+        # zip identifier to amoebot objects for `map` function
+        amoebots_z = zip(self.amoebots.keys(), self.amoebots.values())
+
+        for _ in range(max_rnds):
+            # set up the asynchronous caller with GIL
+            with futures.ThreadPoolExecutor(max_workers=n_cores) as executor:
+                # map amoebots to the executor function and run asynchronously
+                executor.map(self._exec_one_step, amoebots_z)
+
+    def _exec_one_step(
                         self, 
-                        store:str='./.dumps/logs', 
-                        to_console:bool=False
-                    ) -> logging.RootLogger:
-        r""" set up logging at DEBUG level by default
+                        amoebot_t:tuple, 
+                        algorithm:str=None
+                    ) -> Agent:
+        r""" 
+        Execute one step of `algorithm` for the given agent.
+
+        Attributes
+
+            amoebot_t (tuple) :: a tuple with `Agent` and its respective 
+                        identifier.
+            algorithm (str) default: None :: algorithm being performed in 
+                        current step, one of "random_move" and "compress"...
         """
 
-        # create hidden space for logs
-        Path(store).mkdir(parents=True, exist_ok=True)
+        # unpack the 2-tuple
+        __id, _ = amoebot_t
 
-        # configure generic handler
-        logging.basicConfig(
-                        level=logging.DEBUG, 
-                        format='[%(levelname)s %(asctime)s]\t%(message)s', 
-                        datefmt='%m-%d %H:%M:%S', 
-                        filename=f'{store}/run-{self.config_num}.log', 
-                        filemode='w'
-                    )
-
-        logger = logging.getLogger()
-
-        if to_console:
-            # create a console handler
-            console_logger = logging.StreamHandler()
-
-            # log at the higher ERROR level
-            console_logger.setLevel(logging.ERROR)
-
-            # add the handlers to the logger
-            logger.addHandler(console_logger)
-
-        return logger
-
-def _exec_async(
-                tracker:StateTracker, 
-                ip_buffr:multiprocessing.managers.AutoProxy, 
-                op_buffr:multiprocessing.managers.AutoProxy, 
-                logger:logging.RootLogger, 
-                shared:multiprocessing.managers.NamespaceProxy, 
-                n_cores:int, 
-                max_iter:int, 
-                buffer_len:int, 
-                lock:multiprocessing.managers.AcquirerProxy=None
-            ):
-    r"""
-    Set up asynchronous calls for bot execution and create a queueing 
-    manager for writing the state configuration file.
-    """
-
-    with multiprocessing.Pool(processes=n_cores) as pool:
-        # listener process that handles queued writes
-        _ = pool.apply_async(_queueing_manager, (
-                                                    op_buffr, 
-                                                    logger, 
-                                                    tracker, 
-                                                ))
-
-        
-        
-        # generate an initial list of jobs to be completed
-        jobs_init = [[__id] for __id in shared.pickler.keys]
-        for job in jobs_init: ip_buffr.put(job)
-
-        results = list()
-
-        # execute jobs on agents for fixed number of activations
-        while True:
-            results.append(pool.apply_async(_exec_step, (
-                                                        ip_buffr, 
-                                                        op_buffr, 
-                                                        logger, 
-                                                        shared, 
-                                                        lock
-                                                    )))
-
-            # break if maximum iterations have been reached
-            if len(results) >= max_iter: break
-
-            # TODO flush the queue if buffer_len reached
-
-        # collect all results from the pool
-        for result in results: _ = result.get()
-
-        # exit using the listener process
-        op_buffr.put(['ps-kill', 0])
-
-        # log exit status
-        cpname = multiprocessing.current_process().name
-        log_message = f'{cpname} :: All connections closed. Exiting.'
-        logging.info(log_message)
-
-def _exec_step(
-                ip_buffr:multiprocessing.managers.AutoProxy=None, 
-                op_buffr:multiprocessing.managers.AutoProxy=None, 
-                logger:logging.RootLogger=None, 
-                shared:multiprocessing.managers.NamespaceProxy=None, 
-                lock:multiprocessing.managers.AcquirerProxy=None, 
-                amoebot:Agent=None
-            ) -> object:
-    r""" execute one step of `elements.bots.core.Amoebot.execute()`
-    """
-
-    # asynchronous execution mode
-    if amoebot is None:
-        __id = ip_buffr.get()[0]
-
-        # safely fetch the object at current index position
-        lock.acquire(blocking=True)
-
-        try:
-            amoebot = Agent.unpickled(shared.pickler.ifetch(__id))
-        finally: lock.release()
-
-        # reseed in each process to make sure the pseudo-random streams 
-        # are independent of one another
-        np.random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
+        # fetch and unpickle the instance of amoebot
+        amoebot = Agent.unpickled(self.shared.ifetch(__id))
 
         # execute the amoebot algorithm(s) and update activation status
-        amoebot, nmap = amoebot.execute(shared.nmap, logger=logger)
+        amoebot, self.__nmap = amoebot.execute(self.__nmap, algorithm)
 
+        # write back to data dump
+        self.shared.iwrite(__id, amoebot.pickled)
+
+        # create state tuple if activated in this round
         state = (
-            amoebot.head, 
-            amoebot.tail, 
-            amoebot.clock
-        )
+                    amoebot.head, 
+                    amoebot.tail, 
+                    amoebot.tau
+                )
 
-        # get the current process name for logging
-        cpname = multiprocessing.current_process().name
+        self.tracker.update(__id, state)
 
-        # generate a log message
-        log_message = (
-                        f'post/{cpname} :: < agent {__id} '
-                        f'{amoebot} >\n\t\tclock {state[2]} '
-                        f'activated {int(nmap is not None)} '
-                        f'head {state[0]} tail {state[1]}.'
-                    )
-
-        if nmap is not None: 
-            # update the shared node map
-            shared.nmap = nmap
-
-            # push to output queue if there was an activation for this amoebot
-            op_buffr.put([state, __id])
-
-        # safely write to the shared file
-        lock.acquire(blocking=True)
-
-        try:
-            shared.pickler.iwrite(__id, amoebot.pickled)
-        finally: lock.release()
-
-        # log the state information
-        logging.info(log_message)
-
-        # give other amoebots a chance to catch up
-        time.sleep(.1)
-
-        # push the bot id and status information to the queues
-        ip_buffr.put([__id])
-
-        return __id
-
-    # sequential execution mode
-    else:
-        # execute the amoebot algorithm(s) and update activation status
-        amoebot, _ = amoebot.execute()
         return amoebot
-
-def _queueing_manager(
-                        op_buffr:multiprocessing.managers.AutoProxy, 
-                        logger:logging.RootLogger, 
-                        tracker:StateTracker
-                    ):
-    while True:
-        # pop the leading entry in the queue
-        response = op_buffr.get()
-
-        # reset or exit the listener process
-        if response[0] == 'ps-kill': break
-
-        # colelct information from output buffer
-        state, __id = response
-
-        # log the state information
-        cpname = multiprocessing.current_process().name
-        log_message = (
-                        f'pop/{cpname} :: < agent {__id} >\n'
-                        f'\t\tclock {state[2]} head {state[0]} tail {state[1]}.'
-                    )
-        logging.info(log_message)
-
-        # call `StateTracker.update` to update the configuration
-        tracker.update(__id, state)

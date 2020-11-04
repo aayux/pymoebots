@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
+
+""" elements/tracker.py
+"""
+
+from ..utils.exceptions import InitializationError
+
 import json
 import numpy as np
 from pathlib import Path
-from numpy import array, uint8
-
-from ..utils.exceptions import InitializationError
 
 STORE = './.dumps'
 
@@ -11,8 +15,17 @@ class StateTracker(object):
     r""" 
     Keep track of particle states (configurations) in the current execution. 
     Write state information to JSON file for rendering.
+
+    Attributes
+        config_num (str) :: identifier number for the json configuration file.
     """
     def __init__(self, config_num:str):
+        r"""
+        Attributes
+            config_num (str) :: identifier number for the json configuration 
+                            file.
+        """
+
         # identifying number for current run, created by `StateGenerator`
         self.config_num: str = config_num
 
@@ -22,12 +35,24 @@ class StateTracker(object):
         This function is called asyncronously at the end of each particle 
         activation, the state configuration is pushed into a queue.
 
-        returns (dict) : configuration of the amoebot
+        Attributes
+            state (tuple): state tuple for given `Amoebot` object.
+
+        Return (dict): configuration of the amoebot.
         """
+
         config = self._collect_config(state)
         return config
 
-    def update(self, __id:uint8, state:tuple):
+    def update(self, __id:np.uint8, state:tuple):
+        r"""
+        Update the state tracker file upon particle (amoebot) movement.
+
+        Attributes
+            __id (np.uint8) :: unique particle identifier.
+            state (tuple) :: state tuple for given `Amoebot` object.
+        """
+
         # complete path to the state file
         statefile = Path(STORE) / Path(f'run-{self.config_num}/tracks.json')
 
@@ -47,7 +72,7 @@ class StateTracker(object):
         with open(statefile, 'w') as f: 
             json.dump(tracks, f, indent=4)
 
-    def checkpoint_terminal_state(self, manager:object):
+    def checkpoint_terminal_state(self):
         r"""
         Similar to the `StateGenerator.write`, this function checkpoints the 
         terminal state of current execution that can be loaded later for 
@@ -56,7 +81,13 @@ class StateTracker(object):
         raise NotImplementedError
 
     def _collect_config(self, state:tuple) -> dict:
-        r""" state configuration objects of a single amoebot
+        r""" 
+        State configuration objects of a single amoebot.
+
+        Attributes
+            state (tuple) :: state tuple for given `Amoebot` object.
+        
+        Return (dict): configuration of the amoebot.
         """
 
         head, tail, _ = state
