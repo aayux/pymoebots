@@ -19,7 +19,7 @@ class Node(Core):
         occupied  (numpy.uint8)::  occupancy status of the current node
 
                         0 : node is unoccupied, 
-                        1 : occupied by a contracted bot, 
+                        1 : occupied by a contracted bot (or expanded tail), 
                         2 : occupied by head, 
                         3 : trace particle on node, 
                         4 : node is a wall.
