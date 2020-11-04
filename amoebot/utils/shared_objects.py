@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+
+""" shared_objects.py
+"""
+
 import pickle
 import numpy as np
 from pathlib import Path
@@ -5,7 +10,23 @@ from pathlib import Path
 STORE = './.dumps'
 
 class SharedObjects(object):
+    r"""
+    A class for custom shared memory objects for data dumps that can be indexed, 
+    pickled and unpickled much like Redis. Useful in true multiprocessing 
+    implementations.
+
+    Attributes
+
+        sharedfile (Path) :: path to the shared data dump.
+        keys (list) :: keys of the data dictionary.
+    """
     def __init__(self, config_num:str, data:dict=None):
+        r"""
+        Attributes
+
+            config_num (str) :: identifier number for the configuration.
+            data (dict) :: the data dictionary to be stored.
+        """
         # keys in the shared dictionary
         self.keys = None
         
@@ -16,6 +37,11 @@ class SharedObjects(object):
 
     def save(self, data:dict):
         r"""
+        Save the data dictionary to pre-specified data dump.
+
+        Attributes
+
+            data (dict) :: the data dictionary to be stored.
         """
 
         with open(self.sharedfile, 'wb') as f:
@@ -28,6 +54,7 @@ class SharedObjects(object):
 
     def load(self) -> list:
         r"""
+        Load the data values from the dump as as a list.
         """
 
         try:
@@ -43,6 +70,13 @@ class SharedObjects(object):
 
     def iwrite(self, key:np.uint8, data:object):
         r"""
+        Indexed write to the data.
+
+        Attributes
+
+            key (numpy.uint8) :: the key to index into the data dictionary.
+            data (object) :: object to be written into index position given by
+                            `key`.
         """
 
         try:
@@ -62,6 +96,11 @@ class SharedObjects(object):
 
     def ifetch(self, key:np.uint8) -> object:
         r"""
+        Indexed read from the data.
+
+        Attributes
+
+            key (numpy.uint8) :: the key to index into the data dictionary.
         """
         try:
             with open(self.sharedfile, 'rb') as f:
