@@ -23,17 +23,17 @@ class AmoebotSimulator(object):
     Attributes
 
         generator (StateGenerator) :: object handle for `StateGenerator` class.
-        max_iter (int) default: 1000 :: maximum number of iterations before 
-                        termination.
-        n_cores (int) default: N_CORES :: number of processor cores to use.
+        max_rnds (int) :: maximum number of full rounds before termination.
+        n_cores (int) :: number of processor cores to use.
 
     """
 
     def __init__(
                     self, 
+                    algorithm:str,
                     xdim:int=64, 
                     ydim:int=64, 
-                    max_iter:int=500, 
+                    max_rnds:int=1000, 
                     n_bots:int=2, 
                     n_cores:int=N_CORES, 
                     config_num:str=None
@@ -41,9 +41,11 @@ class AmoebotSimulator(object):
         r"""
         Attributes
 
-            xdim (int) default: 64 :: number of grid points in x-direction
-            ydim (int) default: 64 :: number of grid points in y-direction
-            max_iter (int) default: 1000 :: maximum number of iterations before 
+            algorithm (str) :: algorithm being performed in current step, one 
+                                of "random_move", "compress".
+            xdim (int) default: 64 :: number of grid points in x-direction.
+            ydim (int) default: 64 :: number of grid points in y-direction.
+            max_rnds (int) default: 1000 :: maximum number of full rounds before 
                                 termination.
             n_bots (int) default: 5 :: number of particles on the grid, unused 
                                 if config_num is given.
@@ -66,8 +68,29 @@ class AmoebotSimulator(object):
         else: 
             self.generator = StateGenerator(nm, n_bots=n_bots)
 
-        self.max_iter = max_iter
+        self.algorithm = algorithm
+        self.max_rnds = max_rnds
         self.n_cores = n_cores
+
+    def exec_sequential(self, time_it:bool=True) -> float:
+        r""" 
+        Execute algorithm(s) sequentially.
+
+        Attributes
+
+            time_it (bool) default: True :: set to True if execution is timed.
+        
+        Returns (float): total execution if `time_it` is True.
+        """
+        if time_it: t0 = time.time()
+
+        self.generator.manager.exec_sequential(
+                                                max_rnds=self.max_rnds,
+                                                algorithm=self.algorithm
+                                        )
+
+        if time_it:
+            return time.time() - t0
 
     def exec_async(self, time_it:bool=True) -> float:
         r""" 
@@ -83,7 +106,8 @@ class AmoebotSimulator(object):
         
         self.generator.manager.exec_async(
                                             n_cores=self.n_cores, 
-                                            max_iter=self.max_iter
+                                            max_rnds=self.max_rnds,
+                                            algorithm=self.algorithm
                                         )
 
         if time_it:
@@ -91,7 +115,7 @@ class AmoebotSimulator(object):
 
 if __name__ == '__main__':
 
-    sim = AmoebotSimulator()
-    elapsed = sim.exec_async()
+    sim = AmoebotSimulator('random_move')
+    elapsed = sim.exec_sequential()
 
     print(f"time elapsed: {elapsed: .3f}s")

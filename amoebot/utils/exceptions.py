@@ -1,5 +1,5 @@
 class InitializationError(Exception):
-   r""" raised when the input value is too large
+   r""" raised when the initialisation format is incorrect
    """
    pass
 

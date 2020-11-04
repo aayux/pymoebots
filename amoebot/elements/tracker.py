@@ -35,7 +35,7 @@ class StateTracker(object):
         This function is called asyncronously at the end of each particle 
         activation, the state configuration is pushed into a queue.
 
-        Attribute
+        Attributes
             state (tuple): state tuple for given `Amoebot` object.
 
         Return (dict): configuration of the amoebot.
@@ -48,7 +48,7 @@ class StateTracker(object):
         r"""
         Update the state tracker file upon particle (amoebot) movement.
 
-        Attribute
+        Attributes
             __id (np.uint8) :: unique particle identifier.
             state (tuple) :: state tuple for given `Amoebot` object.
         """

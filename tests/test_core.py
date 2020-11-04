@@ -81,7 +81,7 @@ def test_agent_random_movement_sequential():
 
     x = y = 16
     n_bots = 2
-    max_iter = 5
+    max_rnds = 5
 
     g = TriangularGrid(x, y)
     points = g.get_grid
@@ -92,6 +92,6 @@ def test_agent_random_movement_sequential():
     node_list = list(nm.get_nmap.values())
 
     gen = StateGenerator(node_list, n_bots=n_bots)
-    gen.manager.exec_sequential(max_iter=max_iter)
+    gen.manager.exec_sequential(max_rnds=max_rnds)
 
     assert True
