@@ -39,7 +39,7 @@ class GraphAlgorithms(object):
 
             # mark visited and enqueue
             for u in self.graph_dict[v]:
-                if u not in visited:
+                if visited[u] != np.uint8(1):
                     visited[u] = np.uint8(1)
                     queue.append(u)
 
@@ -64,7 +64,7 @@ class GraphAlgorithms(object):
 
             # mark visited and add to stack
             for u in self.graph_dict[v]:
-                if u not in visited:
+                if visited[u] != np.uint8(1):
                     visited[u] = np.uint8(1)
                     stack.append(u)
 

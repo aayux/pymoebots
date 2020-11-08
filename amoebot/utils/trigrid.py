@@ -3,7 +3,7 @@
 """ trigrid.py
 """
 
-from .utils.limits import int_limits, uint_limits
+from .limits import int_limits, uint_limits
 
 import numpy as np
 

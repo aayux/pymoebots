@@ -151,7 +151,11 @@ class AmoebotManager(Manager):
             np.random.shuffle(exec_seq)
             for __id in exec_seq:
                 amoebot_t = (__id, self.amoebots[__id])
-                self.amoebots[__id] = self._exec_one_step(amoebot_t, algorithm)
+                self.amoebots[__id] = self._exec_one_step(
+                                                            amoebot_t, 
+                                                            algorithm=algorithm, 
+                                                            async_mode=False
+                                                        )
 
     def _exec_async_with_interpreter_lock(
                                             self, 
@@ -177,8 +181,8 @@ class AmoebotManager(Manager):
         # define partial function with pre-specified algorithm
         _exec_one_step_algorithm = partial(
                                             self._exec_one_step, 
-                                            shared=self.shared, 
-                                            algorithm=algorithm
+                                            algorithm=algorithm, 
+                                            async_mode=True
                                         )
 
         # zip identifier to amoebot objects for `map` function
@@ -188,12 +192,13 @@ class AmoebotManager(Manager):
             # set up the asynchronous caller with GIL
             with futures.ThreadPoolExecutor(max_workers=n_cores) as executor:
                 # map amoebots to the executor function and run asynchronously
-                executor.map(self._exec_one_step, amoebots_z)
+                executor.map(_exec_one_step_algorithm, amoebots_z)
 
     def _exec_one_step(
                         self, 
                         amoebot_t:tuple, 
-                        algorithm:str=None
+                        algorithm:str=None, 
+                        async_mode:bool=True
                     ) -> Agent:
         r""" 
         Execute one step of `algorithm` for the given agent.
@@ -204,6 +209,9 @@ class AmoebotManager(Manager):
                         identifier.
             algorithm (str) default: None :: algorithm being performed in 
                         current step, one of "random_move" and "compress"...
+            async_mode (bool) default: True :: if True, execute the local, 
+                        distributed, asynchronous algorithm for compression else
+                        run sequential algorithm.
         """
 
         # unpack the 2-tuple
@@ -213,7 +221,11 @@ class AmoebotManager(Manager):
         amoebot = Agent.unpickled(self.shared.ifetch(__id))
 
         # execute the amoebot algorithm(s) and update activation status
-        amoebot, self.__nmap = amoebot.execute(self.__nmap, algorithm)
+        amoebot, self.__nmap = amoebot.execute(
+                                                self.__nmap, 
+                                                algorithm=algorithm, 
+                                                async_mode=async_mode
+                                            )
 
         # write back to data dump
         self.shared.iwrite(__id, amoebot.pickled)
@@ -222,7 +234,7 @@ class AmoebotManager(Manager):
         state = (
                     amoebot.head, 
                     amoebot.tail, 
-                    amoebot.tau
+                    amoebot.tau0
                 )
 
         self.tracker.update(__id, state)

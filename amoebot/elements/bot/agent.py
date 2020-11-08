@@ -3,9 +3,13 @@
 """ elements/bot/agent.py
 """
 
-import .functional as F
 from .core import Amoebot
+from .functional import compress_agent_sequential
+from .functional import compress_agent_async_contracted
+from .functional import compress_agent_async_expanded
+from .functional import contract_particle, expand_particle
 from ...utils.graphs import GraphAlgorithms
+
 
 import numpy as np
 from collections import defaultdict
@@ -35,7 +39,12 @@ class Agent(Amoebot):
         # does not share id with super class
         self.__id = __id
 
-    def execute(self, __nmap:defaultdict, algorithm:str='random_move') -> tuple:
+    def execute(
+                    self, 
+                    __nmap:defaultdict, 
+                    algorithm:str='random_move',
+                    async_mode:bool=True
+                ) -> tuple:
         r"""
         Worker function for each amoebot. Intended to manage parallelisation 
         between agents and attach algorithmic modules to the amoebot.
@@ -47,6 +56,9 @@ class Agent(Amoebot):
             algorithm (str) default: 'random_move' :: algorithm being performed 
                             in current step, one of "random_move", "compress" 
                             ...
+            async_mode (bool) default: True :: if True, execute the local, 
+                            distributed, asynchronous algorithm for compression 
+                            else run sequential algorithm.
 
         Return (defaultdict): udpated `__nmap` dictionary.
         """
@@ -55,18 +67,18 @@ class Agent(Amoebot):
         assert algorithm in ALGORITHMS, \
                 LookupError(f'{algorithm} not in list of allowed algorithms.')
 
+        self.generate_neighbourhood_map(__nmap)
+
         # get the function handler for `algorithm` from the dictionary
         if algorithm == 'random_move':
-            _algorithm = self._move
+            # run one step of an elementary algorithm
+            __nmap = self._move(__nmap)
 
-        elif _algorithm == 'compress':
-            _algorithm = self._compress
+        elif algorithm == 'compress':
+            __nmap = self._compress(__nmap, async_mode=async_mode)
 
         else:
             return (self, __nmap)
-
-        # run one step of an elementary algorithm
-        __nmap = _algorithm(__nmap)
 
         self.generate_neighbourhood_map(__nmap)
 
@@ -98,19 +110,19 @@ class Agent(Amoebot):
 
         # contract an expanded particle
         if  not self._is_contracted:
-            __nmap = F.contract_particle(self, __nmap, backward)
+            __nmap = contract_particle(self, __nmap, backward)
 
         # expand a contracted particle
         else:
-            __nmap = F.expand_particle(self, __nmap, port)
+            __nmap = expand_particle(self, __nmap, port)
 
         return __nmap
 
-    def compress(
-                self, 
-                __nmap:defaultdict, 
-                async_mode:bool=True
-            ) -> defaultdict:
+    def _compress(
+                    self, 
+                    __nmap:defaultdict, 
+                    async_mode:bool=True
+                ) -> defaultdict:
         r"""
         Compression agorithm for the amoebot model based on 
 
@@ -123,20 +135,20 @@ class Agent(Amoebot):
             agent (Core) :: instance of class `Agent`
             __nmap (defaultdict) :: a dictionary of dictionaries used to index nodes 
                         using x and y co-ordinates.
-            async_mode (bool) :: if True, execute the local, distributed, 
-                        asynchronous algorithm for compression else run sequential 
-                        algorithm.
+            async_mode (bool) default: True :: if True, execute the local, 
+                        distributed, asynchronous algorithm for compression else
+                        run sequential algorithm.
 
         Return (defaultdict): the updated `__nmap` dictionary.
         """
 
         # execute the sequential Markov Chain algorithm M
-        if not async_mode: __nmap = F.compress_agent_sequential()
+        if not async_mode: __nmap = compress_agent_sequential(self, __nmap)
 
         # execute the asynchronous algorithm for compression
         else:
             if self._is_contracted: 
-                __nmap = F.compress_agent_async_contracted(__nmap)
-            else: __nmap = F.compress_agent_async_expanded(__nmap)
+                __nmap = compress_agent_async_contracted(self, __nmap)
+            else: __nmap = compress_agent_async_expanded(self, __nmap)
 
         return __nmap

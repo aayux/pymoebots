@@ -67,7 +67,7 @@ def expand_particle(
     Return (defaultdict): the updated `__nmap` dictionary.
     """
 
-    open_ports = agent.open_ports_head
+    open_ports = agent._open_port_head
     head = agent.head
 
     # select a random direction when none provided
@@ -79,8 +79,11 @@ def expand_particle(
     # move to indicated direction if available
     if port in open_ports:
         head_node = __nmap[head[0]][head[1]]
-        head[:] = head_node.neighbors[agent.labels[port]]
-        __nmap[head[0]][head[1]].mark_node(movement='e to')
+        neigbor_node = head_node.neighbors[agent.labels[port]]
+
+        if neigbor_node is not None:
+            head[:] = neigbor_node
+            __nmap[head[0]][head[1]].mark_node(movement='e to')
 
     return __nmap
 
@@ -104,17 +107,17 @@ def compress_agent_sequential(agent:Core, __nmap:defaultdict):
     # choose a neigbouring location uniformly at random
     port = np.random.randint(6)
 
-    # set head and tail orientations
-    agent.generate_neighbourhood_map(__nmap)
-
     # if port is unoccupied
-    if (port in agent.open_ports_head):
+    if port in agent._open_port_head:
         # expand to occupy port
         __nmap = expand_particle(agent, __nmap, port=port)
 
         # reset head and tail orientations
         agent.generate_neighbourhood_map(__nmap)
-    
+
+    # if particle did not expand
+    if agent._is_contracted: return __nmap
+
     # if compression conditions are satisfied contract to head
     if _verify_compression_conditions(agent, __nmap, async_mode=False):
         return contract_particle(agent, __nmap, backward=False)
@@ -152,7 +155,7 @@ def compress_agent_async_contracted(
     c_h_nbrs = agent._neighborhood_contraction_status(scan_tail=False)
 
     # port is unoccupied and particle has no expanded neighbours
-    if (port in agent.open_ports_head) and np.all(c_h_nbrs):
+    if (port in agent._open_port_head) and np.all(c_h_nbrs):
 
         # reset head and tail orientations
         # TODO we may need these more (or less) frequently
@@ -236,11 +239,10 @@ def _verify_compression_conditions(
     # collect neighbouring positions around head and tail
     h_neighbors, t_neighbors = [set() for _ in range(2)]
 
-    # reset head and tail orientations
-    agent.generate_neighbourhood_map(__nmap)
+    # REQUIRED in async_mode: reset head and tail orientations
+    if async_mode: agent.generate_neighbourhood_map(__nmap)
 
     head, tail = agent.head, agent.tail
-
     for port, status in agent.h_neighbor_status.items():
         # check occupied ports around the head ignore own tail
         if status in [1, 2]:
@@ -263,6 +265,7 @@ def _verify_compression_conditions(
 
     # satisfy property 1 or 2
     common_neighbors = h_neighbors & t_neighbors
+
     if len(common_neighbors) in [1, 2]: 
         conditions[1] = _verify_compression_property_1(
                                                         __nmap, 
@@ -410,3 +413,6 @@ def _verify_compression_property_2(
 
     if connectivity == 2: return np.uint8(1)
     else: return np.uint8(0)
+
+if __name__ == '__main__':
+    pass
