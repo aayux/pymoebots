@@ -31,8 +31,7 @@ class AmoebotSimulator(object):
     def __init__(
                     self, 
                     algorithm:str,
-                    xdim:int=64, 
-                    ydim:int=64, 
+                    shape:tuple=(64, 64), 
                     max_rnds:int=1000, 
                     n_bots:int=2, 
                     n_cores:int=N_CORES, 
@@ -43,8 +42,8 @@ class AmoebotSimulator(object):
 
             algorithm (str) :: algorithm being performed in current step, one 
                                 of "random_move", "compress".
-            xdim (int) default: 64 :: number of grid points in x-direction.
-            ydim (int) default: 64 :: number of grid points in y-direction.
+            shape (tuple) default: (64, 64) :: number of grid points in 
+                                x and y-directions respectively.
             max_rnds (int) default: 1000 :: maximum number of full rounds before 
                                 termination.
             n_bots (int) default: 5 :: number of particles on the grid, unused 
@@ -56,6 +55,8 @@ class AmoebotSimulator(object):
                                 on the grid.
         """
 
+        xdim, ydim = shape
+        
         # generate the triangular grid
         grid = make_triangular_grid(xdim, ydim)
         

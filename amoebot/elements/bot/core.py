@@ -168,7 +168,7 @@ class Amoebot(Core):
         scan = self.t_neighbor_status if scan_tail else self.h_neighbor_status
         return np.array([status != 2 for _, status in scan.items()])
 
-    def open_ports(self, scan_tail:bool=False) -> np.ndarrary:
+    def open_ports(self, scan_tail:bool=False) -> np.ndarray:
         r"""
         Scan the particle neighbourhood for ports to expand into.
 
@@ -176,7 +176,7 @@ class Amoebot(Core):
             scan_tail (bool) default: False :: if true, scan the tail; else scan
                             the particle head.
 
-        Return (numpy.ndarrary): a list of open or available ports.
+        Return (numpy.ndarray): a list of open or available ports.
         """
 
         open_port_list = list()
@@ -184,9 +184,8 @@ class Amoebot(Core):
 
         for port in scan:
             status = scan[port]
-
             # nodes with status 0 are unoccupied
-            if status is np.uint8(0):
+            if status == np.uint8(0):
                 open_port_list.append(port)
 
         return np.array(open_port_list)
