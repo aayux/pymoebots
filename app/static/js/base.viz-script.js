@@ -6,22 +6,6 @@ import {
         AmoebotVizTracker 
     } from './amoebot.viz-objects.js';
 
-function getPlayBackSpeed() {
-    var playback = document.getElementById( 'playback' );
-
-    // update the current slider value
-    playback.oninput = function() {
-        return this.value;
-    }
-
-}
-
-function onClickPlace() {
-    // get click position and save as format of `TriGrid` class
-    var x; var y;
-    addAmoebot( x, y )
-}
-
 async function requestHistory( runId ) {
     /*
     load the state history from JSON source file
@@ -174,6 +158,47 @@ function allowDragMotion() {
   } 
 }
 
+function transformToSVGPoint( coordinate ) {
+    /*
+    take a point and convert to svg coordinates, by applying each parent viewbox
+    */
+
+    var camera = document.getElementById( 'camera' );
+    var svgPoint = camera.createSVGPoint();
+    
+    // DOFIX
+    svgPoint.x = coordinate.clientX + originLoc.x;
+    svgPoint.y = coordinate.clientY + originLoc.y;
+
+    return svgPoint.matrixTransform( camera.getScreenCTM().inverse() );;
+}
+
+function  nearestGridPoint( coordinate ) {
+    /*
+    take an svg point and convert to grid coordinates
+    */
+
+    // DOFIX
+
+    var x = Math.round( coordinate.x / ( unit * Math.sqrt( 3 ) / 2 ) );
+    return { 
+                x : x, 
+                y : Math.round( coordinate.y / unit - x / 2 )
+    };
+}
+
+function onClickPlace() {
+    // get click position and save as format of `TriGrid` class
+    var x; var y;
+    addAmoebot( x, y )
+}
+
+// document.getElementById( 'camera' ).addEventListener( 'click', 
+//     function( point ) {
+//     var gridPoint = nearestGridPoint(transformToSVGPoint(point));
+//     console.log(gridPoint)
+// });
+
 function initializeTracker() {
     /*
     instantiate the amoebot tracker and place particles on the grid
@@ -218,19 +243,40 @@ function onClickPlay() {
     /*
     */
 
+    // unset the pause condition to false
+    var paused = false;
+
     // get the slider value before starting
-    var slider = document.getElementById( 'playback' );
-    // var playback_speed = Math.ceil( 1 / ( 1e-3 + slider.value ) );
+    var slider = document.getElementById( 'playback' )
+    var playbackSpeed = 100 - slider.value;
+    slider.addEventListener( 'change', 
+                             function () {
+                                playbackSpeed = 100 - slider.value;
+                            });
 
-    var playback_speed = 100;
+    // listen for pause events
+    document.getElementById( 'btn-pause' ).addEventListener( 
+                                            'click', 
+                                            function() {
+                                                paused = !paused;
+                                            });
 
-    setInterval( function () {
-                    // updateDisplay();
-                    if ( step < window.nSteps ) {
-                        step += window.vtracker.vizOneStep( step );
-                        updateViz();
-                }
-    }, playback_speed );
+    function timedPlayback () {
+        // updateDisplay();
+        if ( !paused && step < window.nSteps ) {
+            step += window.vtracker.vizOneStep( step );
+            updateViz();
+            setTimeout( timedPlayback, playbackSpeed );
+        }
+        else if (paused) {
+            console.log(' Paused. ')
+        }
+        else {
+            alert(' Finished! ')
+        }
+    }
+ 
+    var playback = setTimeout( timedPlayback, playbackSpeed );
 }
 
 /* global variables */
@@ -244,7 +290,8 @@ var response;
 function onClickStep() {
     /*
     */
-   if ( step < window.nSteps ) {
+
+    if ( step < window.nSteps ) {
         step += window.vtracker.vizOneStep( step );
         updateViz();
         return 1;
@@ -267,7 +314,7 @@ runs.oninput = function() {
                 allowDragMotion();
                 launchEventListener();
             } else {
-                console.log('ERROR: No bot data was receieved.')
+                console.log( 'ERROR: No bot data was receieved.' )
             }
         }
     );

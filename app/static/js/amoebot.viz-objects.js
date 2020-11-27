@@ -199,7 +199,7 @@ class AmoebotVizInit {
                 )
             );
 
-            this.bot_list[bot_id].vizObject.drawElements();
+            this.bot_list[ bot_id ].vizObject.drawElements();
         }
     }
 }
@@ -218,7 +218,7 @@ export class AmoebotVizTracker extends AmoebotVizInit{
     vizOneStep( step ) {
         // one step is one bot movement
         var track = this.tracks[ step ];
-        this.bot_id = String(track.mov_bot);
+        this.bot_id = String( track.mov_bot );
 
         this.init[ this.bot_id ].head_pos = track.config.head_pos;
         this.init[ this.bot_id ].tail_pos = track.config.tail_pos;                                
