@@ -29,28 +29,12 @@ class StateTracker(object):
         # identifying number for current run, created by `StateGenerator`
         self.config_num: str = config_num
 
-    def collect_states(self, state:tuple) -> dict:
-        r""" 
-        Collect a single amoebot's information from the core `Amoebot` class. 
-        This function is called asyncronously at the end of each particle 
-        activation, the state configuration is pushed into a queue.
-
-        Attributes
-            state (tuple): state tuple for given `Amoebot` object.
-
-        Return (dict): configuration of the amoebot.
-        """
-
-        config = self._collect_config(state)
-        return config
-
-    def update(self, __id:np.uint8, state:tuple):
+    def update(self, config:list):
         r"""
-        Update the state tracker file upon particle (amoebot) movement.
+        Update the state tracker file when called.
 
         Attributes
-            __id (np.uint8) :: unique particle identifier.
-            state (tuple) :: state tuple for given `Amoebot` object.
+            config (list[dict]) :: list containing current system configuation.
         """
 
         # complete path to the state file
@@ -65,8 +49,8 @@ class StateTracker(object):
             # tracks the most recent state change in sequential order
             tracks = list()
 
-        config = self._collect_config(state)
-        tracks.append(dict(mov_bot=int(__id), config=config))
+        # insert into the tracks list
+        tracks.append(config)
 
         # append state information to the json file
         with open(statefile, 'w') as f: 
@@ -79,22 +63,3 @@ class StateTracker(object):
         re-useability.
         """
         raise NotImplementedError
-
-    def _collect_config(self, state:tuple) -> dict:
-        r""" 
-        State configuration objects of a single amoebot.
-
-        Attributes
-            state (tuple) :: state tuple for given `Amoebot` object.
-        
-        Return (dict): configuration of the amoebot.
-        """
-
-        head, tail, _ = state
-
-        config = dict(
-                    head_pos=head.tolist(), 
-                    tail_pos=tail.tolist()
-                )
-
-        return config

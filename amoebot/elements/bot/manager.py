@@ -152,10 +152,11 @@ class AmoebotManager(Manager):
             for __id in exec_seq:
                 amoebot_t = (__id, self.amoebots[__id])
                 self.amoebots[__id] = self._exec_one_step(
-                                                            amoebot_t, iter_, 
+                                                            amoebot_t, 
                                                             algorithm=algorithm, 
                                                             async_mode=False
                                                         )
+            self.update_tracker(iter_)
 
     def _exec_async_with_interpreter_lock(
                                             self, 
@@ -197,7 +198,6 @@ class AmoebotManager(Manager):
     def _exec_one_step(
                         self, 
                         amoebot_t:tuple, 
-                        iter_:int=1, 
                         algorithm:str=None, 
                         async_mode:bool=True
                     ) -> Agent:
@@ -208,13 +208,13 @@ class AmoebotManager(Manager):
 
             amoebot_t (tuple) :: a tuple with `Agent` and its respective 
                         identifier.
-            iter_ (int) default: 1 :: the current iteration number,
-                        defaults to 1 when all iterations are saved.
             algorithm (str) default: None :: algorithm being performed in 
                         current step, one of "random_move" and "compress"...
             async_mode (bool) default: True :: if True, execute the local, 
                         distributed, asynchronous algorithm for compression else
                         run sequential algorithm.
+
+        Return (Agent): instance of amoebot.
         """
 
         # unpack the 2-tuple
@@ -233,12 +233,29 @@ class AmoebotManager(Manager):
         # write back to data dump
         self.shared.iwrite(__id, amoebot.pickled)
 
-        # create state tuple if activated in this round
-        state = (
-                    amoebot.head, 
-                    amoebot.tail, 
-                    amoebot.tau0
-                )
-        if iter_ % 1 == 0: self.tracker.update(__id, state)
+        return amoebot.pickled
 
-        return amoebot
+    def update_tracker(self, iter_:int=10):
+        """
+        Update the tracker file with most current state.
+
+        Attributes
+
+            iter_ (int) default: 10 :: the current iteration number,
+                        defaults to 10 when all iterations are saved.
+        """
+
+        config = list()
+
+        # update the tracker file every few iterations
+        if iter_ % 10 == 0:
+            # collect configurations of all particles
+            # TODO: optimize block
+            for __id in self.amoebots.keys():
+                amoebot = Agent.unpickled(self.shared.ifetch(__id))
+                config.append(dict(
+                                    head_pos=amoebot.head.tolist(), 
+                                    tail_pos=amoebot.tail.tolist()
+                            ))
+
+            self.tracker.update(config)
