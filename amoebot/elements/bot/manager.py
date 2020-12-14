@@ -146,13 +146,13 @@ class AmoebotManager(Manager):
         self.shared = SharedObjects(self.config_num, data=self.amoebots)
 
         # iteratively execute the algorithm over each amoebot for fixed rounds
-        for _ in range(max_rnds):
+        for iter_ in range(max_rnds):
             exec_seq = list(self.amoebots.keys())
             np.random.shuffle(exec_seq)
             for __id in exec_seq:
                 amoebot_t = (__id, self.amoebots[__id])
                 self.amoebots[__id] = self._exec_one_step(
-                                                            amoebot_t, 
+                                                            amoebot_t, iter_, 
                                                             algorithm=algorithm, 
                                                             async_mode=False
                                                         )
@@ -197,6 +197,7 @@ class AmoebotManager(Manager):
     def _exec_one_step(
                         self, 
                         amoebot_t:tuple, 
+                        iter_:int=1, 
                         algorithm:str=None, 
                         async_mode:bool=True
                     ) -> Agent:
@@ -207,6 +208,8 @@ class AmoebotManager(Manager):
 
             amoebot_t (tuple) :: a tuple with `Agent` and its respective 
                         identifier.
+            iter_ (int) default: 1 :: the current iteration number,
+                        defaults to 1 when all iterations are saved.
             algorithm (str) default: None :: algorithm being performed in 
                         current step, one of "random_move" and "compress"...
             async_mode (bool) default: True :: if True, execute the local, 
@@ -236,7 +239,6 @@ class AmoebotManager(Manager):
                     amoebot.tail, 
                     amoebot.tau0
                 )
-
-        self.tracker.update(__id, state)
+        if iter_ % 1 == 0: self.tracker.update(__id, state)
 
         return amoebot

@@ -343,13 +343,21 @@ def _verify_compression_property_1(
         G[ix] = [ix_lookup[_n] for _n in node_neighbors \
                                         if _n in neighborhood]
 
+    # an empty list to store visited status for each neighbour
+    connectivity = None
+
     graph = GraphAlgorithms(G)
     for n in common_neighbors:
-        # bfs each common neighbour to find a path in the union
-        connectivity += graph.bfs(root=ix_lookup[n])
+        # dfs each common neighbour to find a path in the union
+        if connectivity is None:
+            connectivity = graph.dfs(root=ix_lookup[n])
+        else:
+            connectivity = np.logical_or(
+                                            connectivity, 
+                                            graph.dfs(root=ix_lookup[n])
+                                        )
 
-    if connectivity == len(common_neighbors): return np.uint8(1)
-    else: return np.uint8(0)
+    return np.uint8(np.all(connectivity))
 
 def _verify_compression_property_2(
                                     nmap:defaultdict, 
@@ -409,7 +417,7 @@ def _verify_compression_property_2(
     graph_h, graph_t = GraphAlgorithms(G_h), GraphAlgorithms(G_t)
     for graph in [graph_h, graph_t]:
         # dfs each subgraph and find a path connecting it
-        connectivity += graph.dfs(root=0)
+        connectivity += np.uint8(np.all(graph.dfs(root=0)))
 
     if connectivity == 2: return np.uint8(1)
     else: return np.uint8(0)
