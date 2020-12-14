@@ -267,11 +267,7 @@ function onClickPlay() {
             step += window.vtracker.vizOneStep( step );
             updateViz();
             setTimeout( timedPlayback, playbackSpeed );
-        }
-        else if (paused) {
-            console.log(' Paused. ')
-        }
-        else {
+        } else {
             alert(' Finished! ')
         }
     }
@@ -295,6 +291,20 @@ function onClickStep() {
         step += window.vtracker.vizOneStep( step );
         updateViz();
         return 1;
+   }
+   return 0;
+}
+
+function onClickBack() {
+    /*
+    */
+
+    if ( step > 0 ) {
+        step -= 1
+        window.vtracker.vizOneStep( step );
+        updateViz();
+        return 1;
+
    }
    return 0;
 }

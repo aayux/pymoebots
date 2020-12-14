@@ -194,8 +194,8 @@ class AmoebotVizInit {
             this.bot_list.push(
                 new AmoebotVizTemplate(
                     bot_id,
-                    this.config0[ bot_id ].head_pos,
-                    this.config0[ bot_id ].tail_pos
+                    this.init[ bot_id ].head_pos,
+                    this.init[ bot_id ].tail_pos
                 )
             );
 
@@ -212,16 +212,12 @@ export class AmoebotVizTracker extends AmoebotVizInit{
     getConfigInfo() {
         var nBots = this.config0.length;
         var nSteps = this.tracks.length;
-        return([nBots, nSteps]);
+        return( [ nBots, nSteps ] );
     }
 
     vizOneStep( step ) {
         // one step is one bot movement
-        var track = this.tracks[ step ];
-        this.bot_id = String( track.mov_bot );
-
-        this.init[ this.bot_id ].head_pos = track.config.head_pos;
-        this.init[ this.bot_id ].tail_pos = track.config.tail_pos;                                
+        this.init = this.tracks[ step ];
 
         this.placeBotsOnGrid();
         // bot.update();
