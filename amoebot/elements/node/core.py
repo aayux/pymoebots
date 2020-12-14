@@ -135,13 +135,13 @@ class Node(Core):
 
     @property
     def is_occupied(self) -> bool:
-        return np.uint8(1) if self.occupied is not 0 else np.uint8(0)
+        return np.uint8(1) if self.occupied != 0 else np.uint8(0)
 
     @property
     def is_trace(self) -> bool:
-        return np.uint8(1) if self.occupied is 2 else np.uint8(0)
+        return np.uint8(1) if self.occupied == 2 else np.uint8(0)
 
     @property
     def is_wall(self) -> bool:
-        return np.uint8(1) if self.occupied is 3 else np.uint8(0)
+        return np.uint8(1) if self.occupied == 3 else np.uint8(0)
 

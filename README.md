@@ -1,8 +1,6 @@
 ## Pymoebots: Stochastic Algorithms Simulator for the Amoebot Model
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![build status](
-  http://img.shields.io/travis/aayux/pymoebots/master.svg?style=flat)](
- https://travis-ci.com/aayux/pymoebots.svg?token=5ykcpxpsSYeM1yqgzqww&branch=master)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.com/aayux/pymoebots.svg?token=5ykcpxpsSYeM1yqgzqww&branch=master)](https://travis-ci.com/aayux/pymoebots)
 
 ### Acknowledgements
 

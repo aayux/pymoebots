@@ -43,8 +43,7 @@ class GraphAlgorithms(object):
                     visited[u] = np.uint8(1)
                     queue.append(u)
 
-        if np.all(visited): return np.uint8(1)
-        return np.uint8(0)
+        return visited
 
     def dfs(self, root:int) -> np.uint8:
         r"""
@@ -68,5 +67,4 @@ class GraphAlgorithms(object):
                     visited[u] = np.uint8(1)
                     stack.append(u)
 
-        if np.all(visited): return np.uint8(1)
-        return np.uint8(0)
+        return visited
