@@ -5,8 +5,11 @@
 
 from .core import Node
 from ..manager import Manager
+from .manager_utils import *
 
 import numpy as np
+import pedantic 
+import typing
 from collections import defaultdict
 
 class NodeManager(Manager):
@@ -181,3 +184,159 @@ class NodeManager(Manager):
     def get_num_nodes(self) -> int: 
         nrows, ncols, _ = self.grid_points.shape
         return nrows * ncols
+
+
+
+
+@pedantic.pedantic_class
+class NodeManagerBitArray:
+    # TODO: Write docstrings for all current methods
+    # TODO: Figure out best way to implement a yield function
+
+    __slots__ = [
+        '__nodes_by_point',
+        '__nodes',
+        '__bot_id',
+        '__working_nodes',
+        '__weakref__',
+        '__pedantic_a42__'
+    ]
+
+    def __init__(
+            self,
+            bot_id: int = -1,
+            points: np.ndarray = np.array([]),
+            nodes: np.ndarray = np.array([]),
+    ) -> None:
+        """
+        The class is used to handle the node space as an numpy.ndarray.
+
+        :param int bot_id:
+        :param ndarray points:
+        :param ndarray nodes:
+        """
+
+        self.nodes_by_point = nodes_by_point ={}
+        if nodes.size == 0:
+            self.nodes = np.zeros([NUMBER_OF_ATTRIBUTES, 1], dtype=np.int8)
+
+        else:
+            self.nodes = nodes
+            # TODO: Create dictionary of nodes
+            map_node_array_ver_0(nodes=nodes, nodes_by_point=nodes_by_point)
+
+        if bot_id != -1:
+            self.working_nodes = get_working_node_index_ver_0(nodes=nodes, bot_id=bot_id)
+            # self.working_node = self.__internal_retrieve_working_node_index()
+        else:
+            self.working_nodes = ()
+
+        self.bot_id = bot_id
+
+        if points.size > 0:
+            self.nodes = add_points_ver_0(nodes=self.nodes,points=points,nodes_by_point=nodes_by_point)
+
+    @property
+    def nodes(self) -> np.ndarray:
+        """
+
+        :return ndarray: returns numpy array of nodes organized attributes x
+         number
+        """
+        return self.__nodes
+
+    @nodes.setter
+    def nodes(self, value: np.ndarray) -> None:
+        """
+        Sets self.__nodes value
+
+        :param ndarray value:
+        """
+        x = value.shape[0]
+        y = value.dtype.type
+        z = NUMPY_INT_LEVELS['ints']
+        if x != NUMBER_OF_ATTRIBUTES:
+            raise ValueError(f'Received {x}, expected {NUMBER_OF_ATTRIBUTES}')
+        elif y not in z:
+            raise TypeError(f"Received {y}, expected one of these {z}")
+        self.__nodes = value
+
+    @nodes.deleter
+    def nodes(self) -> None:
+        """
+        Deletes current nodes by replacing array with an NUMBER_OF_ATTRIBUTES
+         by 1 numpy array.
+
+        """
+        self.nodes = np.zeros((NUMBER_OF_ATTRIBUTES, 1), dtype=np.int8)
+
+    @property
+    def nodes_by_point(self) -> typing.Dict[int, typing.Dict[int, int]]:
+        """
+
+        :return typing.Dict[int, typing.Dict[int, int]]:
+        """
+        return self.__nodes_by_point
+
+    @nodes_by_point.setter
+    def nodes_by_point(self,
+                       value: typing.Dict[int, typing.Dict[int, int]]) -> None:
+        """
+
+        :param typing.Dict[int, typing.Dict[int, int]] value:
+        """
+        self.__nodes_by_point = value
+
+    @nodes_by_point.deleter
+    def nodes_by_point(self) -> None:
+        """
+        deletes all existing nodes
+        """
+        self.nodes_by_point = {}
+
+    @property
+    def bot_id(self) -> int:
+        return self.__bot_id
+
+    @bot_id.setter
+    def bot_id(self, value: int) -> None:
+        if value >= -1:
+            self.__bot_id = value
+        else:
+            raise ValueError("Bot id must be greater than -1")
+
+    @bot_id.deleter
+    def bot_id(self) -> None:
+        self.bot_id = -1
+
+    @property
+    def working_nodes(self):
+        return self.__working_node
+
+    @working_nodes.setter
+    def working_nodes(self, value: typing.Union[tuple, typing.Tuple[int]]) -> None:
+        for i in value:
+            if not isinstance(i, int):
+                x = type(int)
+                raise TypeError(f"working_nodes expected {x}, got {type(i)}")
+
+        self.__working_nodes = value
+
+    @working_nodes.deleter
+    def working_nodes(self):
+        self.working_nodes = (-1,)
+
+    def get_node(
+            self, x: typing.Union[int, float], y: typing.Union[int, float],
+    ) -> np.ndarray:
+        nodes_by_point = self.nodes_by_point
+        f1 = check_points_existence_ver_0
+        exists = f1(nodes_by_point=nodes_by_point, x=x, y=y)
+        if exists:
+            f1 = get_node_index_ver_0
+            index = f1(x=x, y=y, nodes_by_point=nodes_by_point)
+        else:
+            f1 = add_point_ver_1
+            x1, x2 = self.nodes, nodes_by_point
+            index, self.nodes = f1(x=x, y=y, nodes=x1, nodes_by_point=x2)
+        return self.nodes[0:, index:index+1]

@@ -9,6 +9,7 @@
 **runs/
 **.dumps/
 *.vscode/
+*.idea/
 
 # testing file
 main.py
