@@ -340,3 +340,9 @@ class NodeManagerBitArray:
             x1, x2 = self.nodes, nodes_by_point
             index, self.nodes = f1(x=x, y=y, nodes=x1, nodes_by_point=x2)
         return self.nodes[0:, index:index+1]
+
+    def is_occupied(
+            self, x: typing.Union[int, float], y: typing.Union[int, float]
+    ) -> bool:
+        occupied = self.get_node(x=x, y=y)[3]
+        return True if occupied else False
