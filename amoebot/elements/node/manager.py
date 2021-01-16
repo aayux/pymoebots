@@ -346,3 +346,56 @@ class NodeManagerBitArray:
     ) -> bool:
         occupied = self.get_node(x=x, y=y)[3]
         return True if occupied else False
+
+    def move_to(self, port: int, ) -> bool:
+        relative_x, relative_y = NODE_LAYOUT[LAYOUT][port]['relative_point']
+        working_nodes = self.working_nodes
+        if len(working_nodes) == 1:
+            nodes = self.nodes
+            current_node = get_node_via_index_ver_0(nodes, working_nodes[0])
+            current_x = current_node[(1, ), (0, )].item()
+            current_y = current_node[(2, ),  (0, )].item()
+            target_x, target_y = current_x + relative_x, current_y + relative_y
+
+            if self.is_occupied(x=target_x, y=target_y):
+                return False
+
+            target_node = self.get_node(x=target_x, y=target_y)
+
+            target_node[(3, 4), (0, 0)] = 1, current_node[(4,), (0,)]
+            target_node[(17, ), (0, )] = 1
+            current_node[(17, ), (0, )] = 2
+            x1, x2, x3 = target_x, target_y, self.nodes_by_point
+            head_index = get_node_index_ver_0(x=x1, y=x2, nodes_by_point=x3)
+            self.working_nodes = (head_index, working_nodes[0])
+            return True
+        raise ValueError("You are trying to move the head while we are "
+                         "expanded, compress us first")
+
+    def compress_forward(self) -> bool:
+        working_nodes = self.working_nodes
+        if len(working_nodes) == 1:
+            return False
+        elif len(working_nodes) == 2:
+            x1, x2, x3 = self.nodes, working_nodes[0], working_nodes[1]
+            x4, x5 = "forward", compress_ver_0
+            x6 = x5(nodes=x1, head_node_index=x2, tail_node_index=x3, option=x4)
+            self.working_nodes = x6
+            return True
+        else:
+            raise ValueError("Looks like there is in an issue with the number "
+                             "of working nodes")
+
+    def compress_backward(self) -> bool:
+        working_nodes = self.working_nodes
+        if len(working_nodes) == 1:
+            return False
+        elif len(working_nodes) == 2:
+            x1, x2, x3 = self.nodes, working_nodes[0], working_nodes[1]
+            x4, x5 = "backward", compress_ver_0
+            x6 = x5(nodes=x1, head_node_index=x2, tail_node_index=x3, option=x4)
+            self.working_nodes = x6
+            return True
+        else:
+            raise ValueError("Looks like there is in an issue with the number "
+                             "of working nodes")

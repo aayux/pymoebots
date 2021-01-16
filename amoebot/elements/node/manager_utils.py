@@ -34,6 +34,7 @@ NEIGHBOR_RANGE = np.arange(5, 11, dtype=int)
 
 VERTICAL_LAYOUT = False
 
+
 def add_point_ver_0(
         x: typing.Union[int, float],
         y: typing.Union[int, float],
@@ -65,6 +66,7 @@ def add_point_ver_0(
     insert_point_into_dict_ver_0(x=x, y=y, current_index=x1, nodes_by_point=x2)
     return current_index + 1
 
+
 def add_point_ver_1(
         x: typing.Union[int, float],
         y: typing.Union[int, float],
@@ -84,7 +86,7 @@ def add_point_ver_1(
     current_index = get_current_index_ver_0(nodes)
 
     if current_index == -1:
-        nodes = increase_array_size_ver_0(size=nodes[0].size+1, nodes=nodes)
+        nodes = increase_array_size_ver_0(size=nodes[0].size + 1, nodes=nodes)
         current_index = get_current_index_ver_0(nodes)
 
     x1 = current_index
@@ -95,7 +97,10 @@ def add_point_ver_1(
     insert_point_into_dict_ver_0(x=x, y=y, current_index=x1, nodes_by_point=x2)
     return current_index, nodes
 
-def add_points_ver_0(nodes: np.ndarray, points: np.ndarray, nodes_by_point: typing.Dict[int, typing.Dict[int, int]]) -> np.ndarray:
+
+def add_points_ver_0(nodes: np.ndarray, points: np.ndarray,
+                     nodes_by_point: typing.Dict[
+                         int, typing.Dict[int, int]]) -> np.ndarray:
     points_size = points[0].size
 
     current_index = get_current_index_ver_0(nodes=nodes)
@@ -109,9 +114,13 @@ def add_points_ver_0(nodes: np.ndarray, points: np.ndarray, nodes_by_point: typi
     item = points.item
     for i in range(points_size):
         x, y, bot_id = item((0, i)), item((1, i)), i
-        current_index = add_point_ver_0(x=x, y=y, bot_id=bot_id, current_index=current_index, nodes=nodes,nodes_by_point=nodes_by_point)
+        current_index = add_point_ver_0(x=x, y=y, bot_id=bot_id,
+                                        current_index=current_index,
+                                        nodes=nodes,
+                                        nodes_by_point=nodes_by_point)
 
     return nodes
+
 
 def check_points_existence_ver_0(
         nodes_by_point,
@@ -124,6 +133,20 @@ def check_points_existence_ver_0(
     return False
 
 
+def compress_ver_0(nodes, head_node_index, tail_node_index, option):
+    head_node = get_node_via_index_ver_0(nodes, head_node_index)
+    tail_node = get_node_via_index_ver_0(nodes, tail_node_index)
+
+    if option == "forward":
+        tail_node[(3, 4, 17), (0, 0, 0)] = 0, -1, 0
+        head_node[17] = 3
+        return (head_node_index,)
+
+    if option == "backward":
+        head_node[(3, 4, 17), (0, 0, 0)] = 0, -1, 0
+        tail_node[17] = 3
+        return (tail_node_index,)
+
 def create_node_ver_0(
         x: typing.Union[int, float],
         y: typing.Union[int, float],
@@ -135,13 +158,14 @@ def create_node_ver_0(
     new_node[5:11, 0] += -1
     return new_node
 
+
 def create_node_ver_1(
         x: typing.Union[int, float],
         y: typing.Union[int, float],
 ):
     new_node = np.zeros([NUMBER_OF_ATTRIBUTES, 1])
-    new_node[(0, ), (0, )] += 1
-    new_node[(1, 2, ), (0, 0, )] = x, y
+    new_node[(0,), (0,)] += 1
+    new_node[(1, 2,), (0, 0,)] = x, y
     new_node[4:11, 0] += -1
     return new_node
 
@@ -163,6 +187,11 @@ def get_node_index_ver_0(
             return nodes_by_point_x[y]
     return -1
 
+
+def get_node_via_index_ver_0(nodes, index):
+    return nodes[0:, index:index + 1]
+
+
 def get_working_node_index_ver_0(nodes: np.ndarray, bot_id: int) -> tuple:
     index = np.where(nodes[4] == bot_id)[0]
 
@@ -179,6 +208,7 @@ def get_working_node_index_ver_0(nodes: np.ndarray, bot_id: int) -> tuple:
         return (index.item(1), index.item(0))
     else:
         raise ValueError("Bot is located on too many nodes")
+
 
 def increase_array_size_ver_0(nodes: np.ndarray, size: int, ):
     binary_str = len(np.binary_repr(size))
@@ -218,7 +248,9 @@ def link_existing_nodes_ver_0(
             x3, x4 = current_index, neighbor_index
             nodes[(x1, x2), (x3, x4)] = x4, x3
 
-def map_node_array_ver_0(nodes: np.ndarray, nodes_by_point: typing.Dict[int, typing.Dict[int, int]]) -> None:
+
+def map_node_array_ver_0(nodes: np.ndarray, nodes_by_point: typing.Dict[
+    int, typing.Dict[int, int]]) -> None:
     number_of_nodes = get_current_index_ver_0(nodes=nodes)
     if number_of_nodes == -1:
         number_of_nodes = nodes[0].size
