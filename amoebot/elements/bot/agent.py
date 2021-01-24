@@ -10,11 +10,11 @@ from .functional import compress_agent_async_expanded
 from .functional import contract_particle, expand_particle
 from ...utils.graphs import GraphAlgorithms
 
-
 import numpy as np
 from collections import defaultdict
 
 ALGORITHMS = ['random_move', 'compress']
+
 
 class Agent(Amoebot):
     r"""
@@ -22,7 +22,8 @@ class Agent(Amoebot):
     round of activation that performs one step of the desired algorithm.
     """
 
-    def __init__(self, __id:np.uint8, head:np.ndarray, tail:np.ndarray=None):
+    def __init__(self, __id: np.uint8, head: np.ndarray,
+                 tail: np.ndarray = None):
         r"""
         Attributes
 
@@ -40,11 +41,11 @@ class Agent(Amoebot):
         self.__id = __id
 
     def execute(
-                    self, 
-                    __nmap:defaultdict, 
-                    algorithm:str='random_move',
-                    async_mode:bool=True
-                ) -> tuple:
+            self,
+            __nmap: defaultdict,
+            algorithm: str = 'random_move',
+            async_mode: bool = True,
+    ) -> tuple:
         r"""
         Worker function for each amoebot. Intended to manage parallelisation 
         between agents and attach algorithmic modules to the amoebot.
@@ -60,14 +61,16 @@ class Agent(Amoebot):
                             distributed, asynchronous algorithm for compression 
                             else run sequential algorithm.
 
+            nenv (ndarray) default: None :: node environment
+
         Return (defaultdict): udpated `__nmap` dictionary.
         """
 
         # make sure `algorithm` is available
         assert algorithm in ALGORITHMS, \
-                LookupError(f'{algorithm} not in list of allowed algorithms.')
+            LookupError(f'{algorithm} not in list of allowed algorithms.')
 
-        self.generate_neighbourhood_map(__nmap)
+        # self.generate_neighbourhood_map(__nmap)
 
         # get the function handler for `algorithm` from the dictionary
         if algorithm == 'random_move':
@@ -80,16 +83,16 @@ class Agent(Amoebot):
         else:
             return (self, __nmap)
 
-        self.generate_neighbourhood_map(__nmap)
+        # self.generate_neighbourhood_map(__nmap)
 
         return (self, __nmap)
-    
+
     def _move(
-                self, 
-                __nmap:defaultdict, 
-                port:np.uint8=None, 
-                backward:bool=False
-            ):
+            self,
+            __nmap: defaultdict,
+            port: np.uint8 = None,
+            backward: bool = False
+    ):
         r"""
         Simple (random) movement algorithm for the amoebot model.
 
@@ -109,7 +112,7 @@ class Agent(Amoebot):
         """
 
         # contract an expanded particle
-        if  not self._is_contracted:
+        if not self._is_contracted:
             __nmap = contract_particle(self, __nmap, backward)
 
         # expand a contracted particle
@@ -119,10 +122,10 @@ class Agent(Amoebot):
         return __nmap
 
     def _compress(
-                    self, 
-                    __nmap:defaultdict, 
-                    async_mode:bool=True
-                ) -> defaultdict:
+            self,
+            __nmap: defaultdict,
+            async_mode: bool = True,
+    ) -> defaultdict:
         r"""
         Compression agorithm for the amoebot model based on 
 
@@ -143,12 +146,14 @@ class Agent(Amoebot):
         """
 
         # execute the sequential Markov Chain algorithm M
-        if not async_mode: __nmap = compress_agent_sequential(self, __nmap)
+        if not async_mode:
+            __nmap = compress_agent_sequential(self, __nmap, _id=self.__id)
 
         # execute the asynchronous algorithm for compression
         else:
-            if self._is_contracted: 
+            if self._is_contracted:
                 __nmap = compress_agent_async_contracted(self, __nmap)
-            else: __nmap = compress_agent_async_expanded(self, __nmap)
+            else:
+                __nmap = compress_agent_async_expanded(self, __nmap)
 
         return __nmap

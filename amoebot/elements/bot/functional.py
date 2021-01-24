@@ -7,15 +7,17 @@ A generalised functional module for basic SOPS movements and utilities.
 
 from ..core import Core
 from ...utils.graphs import GraphAlgorithms
+from amoebot.elements.node.manager import NodeManagerBitArray
 
 import numpy as np
 from collections import defaultdict
 
+
 def contract_particle(
-                        agent:Core, 
-                        __nmap:defaultdict, 
-                        backward:bool=False
-                    ) -> defaultdict:
+        agent: Core,
+        __nmap: defaultdict,
+        backward: bool = False
+) -> defaultdict:
     r"""
     Contract an expanded particle to head or tail.
 
@@ -48,11 +50,12 @@ def contract_particle(
 
     return __nmap
 
+
 def expand_particle(
-                        agent:Core, 
-                        __nmap:defaultdict, 
-                        port:np.uint8=None
-                    ) -> defaultdict:
+        agent: Core,
+        __nmap: defaultdict,
+        port: np.uint8 = None
+) -> defaultdict:
     r"""
     Contract an expanded particle to head or tail.
 
@@ -74,7 +77,8 @@ def expand_particle(
     if port is None and len(open_ports) > 0:
         port = np.random.randint(6, dtype=np.uint8)
 
-    elif len(open_ports) == 0: return __nmap
+    elif len(open_ports) == 0:
+        return __nmap
 
     # move to indicated direction if available
     if port in open_ports:
@@ -87,7 +91,8 @@ def expand_particle(
 
     return __nmap
 
-def compress_agent_sequential(agent:Core, __nmap:defaultdict):
+
+def compress_agent_sequential(agent: Core, __nmap: defaultdict, _id: int = None):
     r"""
     A centralized Markov chain algorithm for compression in SOPS based on 
     
@@ -104,31 +109,48 @@ def compress_agent_sequential(agent:Core, __nmap:defaultdict):
     Return (defaultdict): the updated `__nmap` dictionary.
     """
 
+    nm = NodeManagerBitArray(bot_id=_id.item(), nodes=__nmap)
+    open_ports_head, open_ports_tail = nm.open_ports()
+
     # choose a neigbouring location uniformly at random
     port = np.random.randint(6)
+    contracted = True
 
-    # if port is unoccupied
-    if port in agent._open_port_head:
-        # expand to occupy port
-        __nmap = expand_particle(agent, __nmap, port=port)
+    if port in open_ports_head:
+        contracted = not nm.move_to(port=port)
+        agent.head, agent.tail = nm.current_position()
 
-        # reset head and tail orientations
-        agent.generate_neighbourhood_map(__nmap)
 
-    # if particle did not expand
-    if agent._is_contracted: return __nmap
+    # # if port is unoccupied
+    # if port in agent._open_port_head:
+    #     # expand to occupy port
+    #     __nmap = expand_particle(agent, __nmap, port=port)
+    #
+    #     # reset head and tail orientations
+    #     agent.generate_neighbourhood_map(__nmap)
+
+    if contracted: return nm.nodes
+
+    # # if particle did not expand
+    # if agent._is_contracted: return __nmap
 
     # if compression conditions are satisfied contract to head
-    if _verify_compression_conditions(agent, __nmap, async_mode=False):
-        return contract_particle(agent, __nmap, backward=False)
-    
+    if _verify_compression_conditions(agent, nm, async_mode=False):
+        nm.contract_forward()
+        # return contract_particle(agent, __nmap, backward=False)
     # else contract back to the tail
-    else: return contract_particle(agent, __nmap, backward=True)
+    else:
+        nm.contract_backward()
+
+    agent.head, agent.tail = nm.current_position()
+    return nm.nodes
+        # return contract_particle(agent, __nmap, backward=True)
+
 
 def compress_agent_async_contracted(
-                                    agent:Core, 
-                                    __nmap:defaultdict
-                                ) -> defaultdict:
+        agent: Core,
+        __nmap: defaultdict
+) -> defaultdict:
     r"""
     A local, distributed, asynchronous Markov chain algorithm for 
     compression in SOPS based on 
@@ -162,7 +184,7 @@ def compress_agent_async_contracted(
         agent.generate_neighbourhood_map(__nmap)
 
         __nmap = expand_particle(agent, __nmap, port=port)
-        
+
         # reset head and tail orientations
         agent.generate_neighbourhood_map(__nmap)
 
@@ -174,9 +196,12 @@ def compress_agent_async_contracted(
             # set the status flag
             return np.uint8(1), __nmap
         # else unset the status flag
-        else: return np.uint8(0), __nmap
+        else:
+            return np.uint8(0), __nmap
 
-def compress_agent_async_expanded(agent:Core, __nmap:defaultdict) -> defaultdict:
+
+def compress_agent_async_expanded(agent: Core,
+                                  __nmap: defaultdict) -> defaultdict:
     r"""
     A local, distributed, asynchronous Markov chain algorithm for 
     compression in SOPS based on 
@@ -202,15 +227,17 @@ def compress_agent_async_expanded(agent:Core, __nmap:defaultdict) -> defaultdict
     # if compression conditions are satisfied contract to head
     if _verify_compression_conditions(agent, __nmap, async_mode=True):
         return contract_particle(agent, __nmap, backward=False)
-    
+
     # else contract back to the tail
-    else: return contract_particle(agent, __nmap, backward=True)
+    else:
+        return contract_particle(agent, __nmap, backward=True)
+
 
 def _verify_compression_conditions(
-                                    agent:Core, 
-                                    __nmap:defaultdict, 
-                                    async_mode:bool=True
-                                ) -> bool:
+        agent: Core,
+        nm,
+        async_mode: bool = True
+) -> bool:
     r"""
     Verify all compression agorithm for the amoebot model based on 
 
@@ -240,23 +267,26 @@ def _verify_compression_conditions(
     h_neighbors, t_neighbors = [set() for _ in range(2)]
 
     # REQUIRED in async_mode: reset head and tail orientations
-    if async_mode: agent.generate_neighbourhood_map(__nmap)
+    # if async_mode: agent.generate_neighbourhood_map(__nmap)
 
-    head, tail = agent.head, agent.tail
-    for port, status in agent.h_neighbor_status.items():
-        # check occupied ports around the head ignore own tail
-        if status in [1, 2]:
-            head_node = __nmap[head[0]][head[1]]
-            n_position = head_node.neighbors[agent.labels[port]]
-            h_neighbors |= {n_position.tostring()}
 
-    # also check occupied ports around the tail
-    for port, status in agent.t_neighbor_status.items():
-        # check occupied ports around the tail ignore own head
-        if status in [1, 2]:
-            tail_node = __nmap[tail[0]][tail[1]]
-            n_position = tail_node.neighbors[agent.labels[port]]
-            t_neighbors |= {n_position.tostring()}
+    h_neighbors, t_neighbors = nm.get_occupied_neighbors()
+
+    # head, tail = agent.head, agent.tail
+    # for port, status in agent.h_neighbor_status.items():
+    #     # check occupied ports around the head ignore own tail
+    #     if status in [1, 2]:
+    #         head_node = __nmap[head[0]][head[1]]
+    #         n_position = head_node.neighbors[agent.labels[port]]
+    #         h_neighbors |= {n_position.tostring()}
+    #
+    # # also check occupied ports around the tail
+    # for port, status in agent.t_neighbor_status.items():
+    #     # check occupied ports around the tail ignore own head
+    #     if status in [1, 2]:
+    #         tail_node = __nmap[tail[0]][tail[1]]
+    #         n_position = tail_node.neighbors[agent.labels[port]]
+    #         t_neighbors |= {n_position.tostring()}
 
     e_head, e_tail = len(h_neighbors), len(t_neighbors)
 
@@ -266,27 +296,27 @@ def _verify_compression_conditions(
     # satisfy property 1 or 2
     common_neighbors = h_neighbors & t_neighbors
 
-    if len(common_neighbors) in [1, 2]: 
+    if len(common_neighbors) in [1, 2]:
         conditions[1] = _verify_compression_property_1(
-                                                        __nmap, 
-                                                        h_neighbors, 
-                                                        t_neighbors
-                                                    )
-    elif len(common_neighbors) == 0: 
+            nm,
+            h_neighbors,
+            t_neighbors
+        )
+    elif len(common_neighbors) == 0:
         conditions[1] = _verify_compression_property_2(
-                                                        __nmap, 
-                                                        h_neighbors, 
-                                                        t_neighbors
-                                                    )
+            nm,
+            h_neighbors,
+            t_neighbors
+        )
     else:
         raise ValueError
 
     # the Metropolis filter
-    if q < np.exp((int(e_head) - int(e_tail)) / agent.tau0): 
+    if q < np.exp((e_head - e_tail) / agent.tau0):
         conditions[2] = np.uint8(1)
 
     # not a condition in async_mode
-    if not async_mode: 
+    if not async_mode:
         conditions[3] = np.uint8(1)
     # in async_mode verify status flag is set
     elif agent.cflag:
@@ -294,11 +324,12 @@ def _verify_compression_conditions(
 
     return np.all(conditions)
 
+
 def _verify_compression_property_1(
-                                    nmap:defaultdict, 
-                                    h_neighbors:set, 
-                                    t_neighbors:set
-                                ) -> np.uint8: 
+        nm,
+        h_neighbors: set,
+        t_neighbors: set
+) -> np.uint8:
     r"""
     |S| ∈ {1, 2} and every particle in N(ℓ ∪ ℓ′) is connected to a particle 
     in S by a path through N(ℓ ∪ ℓ′).
@@ -325,45 +356,63 @@ def _verify_compression_property_1(
     # neighbours in the intersection of head and tail
     common_neighbors = h_neighbors & t_neighbors
 
-    # indexer for the neighbourhood particles
-    ix_lookup = dict([(n, ix) for ix, n in enumerate(neighborhood)])
-
-    # construct a graph dictionary using the indexed lookup
-    for n, ix in ix_lookup.items():
-        # recover the numpy array from the byte-string
-        node = np.frombuffer(n, dtype=np.uint8)
-
-        # neighbors of the current node
-        node_neighbors = list(nmap[node[0]][node[1]].neighbors.values())
-        
-        # cast as byte-strings
-        node_neighbors = [_n.tostring() for _n in node_neighbors]
-
-        # construct the graph dictionary
-        G[ix] = [ix_lookup[_n] for _n in node_neighbors \
-                                        if _n in neighborhood]
-
-    # an empty list to store visited status for each neighbour
-    connectivity = None
+    # Grabs occupied neighbors of neighboring nodes
+    for neighbor_index in neighborhood:
+        node_neighbors_set = nm.get_occupied_neighbors_of(
+            node_index=neighbor_index.item())
+        G[neighbor_index] = {j for j in node_neighbors_set if j in neighborhood}
 
     graph = GraphAlgorithms(G)
+    connectivity = {k: 0 for k in G}
     for n in common_neighbors:
-        # dfs each common neighbour to find a path in the union
-        if connectivity is None:
-            connectivity = graph.dfs(root=ix_lookup[n])
-        else:
-            connectivity = np.logical_or(
-                                            connectivity, 
-                                            graph.dfs(root=ix_lookup[n])
-                                        )
+        connection_check = graph.dfs(n)
+        for k,v in connection_check.items():
+            if v:
+                connectivity[k] = 1
 
-    return np.uint8(np.all(connectivity))
+    return int(all(connectivity.values()))
+
+
+    # # indexer for the neighbourhood particles
+    # ix_lookup = dict([(n, ix) for ix, n in enumerate(neighborhood)])
+    #
+    # # construct a graph dictionary using the indexed lookup
+    # for n, ix in ix_lookup.items():
+    #     # recover the numpy array from the byte-string
+    #     node = np.frombuffer(n, dtype=np.uint8)
+    #
+    #     # neighbors of the current node
+    #     node_neighbors = list(nmap[node[0]][node[1]].neighbors.values())
+    #
+    #     # cast as byte-strings
+    #     node_neighbors = [_n.tostring() for _n in node_neighbors]
+    #
+    #     # construct the graph dictionary
+    #     G[ix] = [ix_lookup[_n] for _n in node_neighbors \
+    #              if _n in neighborhood]
+    #
+    # # an empty list to store visited status for each neighbour
+    # connectivity = None
+    #
+    # graph = GraphAlgorithms(G)
+    # for n in common_neighbors:
+    #     # dfs each common neighbour to find a path in the union
+    #     if connectivity is None:
+    #         connectivity = graph.dfs(root=ix_lookup[n])
+    #     else:
+    #         connectivity = np.logical_or(
+    #             connectivity,
+    #             graph.dfs(root=ix_lookup[n])
+    #         )
+    #
+    # return np.uint8(np.all(connectivity))
+
 
 def _verify_compression_property_2(
-                                    nmap:defaultdict, 
-                                    h_neighbors:set, 
-                                    t_neighbors:set
-                                ) -> np.uint8:
+        nm,
+        h_neighbors: set,
+        t_neighbors: set
+) -> np.uint8:
     r"""
     |S| = 0, ℓ and ℓ′ each have at least one neighbor, all particles in 
     N(ℓ)\{ℓ′} are connected by paths within this set, and all particles in
@@ -385,42 +434,69 @@ def _verify_compression_property_2(
     # graph dictionaries
     G_h, G_t = [dict() for _ in range(2)]
 
-    # common connectivity counter for head and tail
-    connectivity = np.uint8(0)
+    for neighbor_index in h_neighbors:
+        node_neighbors_set = nm.get_occupied_neighbors_of(
+            node_index=neighbor_index.item())
+        G_h[neighbor_index] = {j for j in node_neighbors_set if j in h_neighbors}
 
-    # indexer for the neighbourhood of head and tail particles
-    ix_lookup_h = dict([(n, ix) for ix, n in enumerate(h_neighbors)])
-    ix_lookup_t = dict([(n, ix) for ix, n in enumerate(t_neighbors)])
+    for neighbor_index in t_neighbors:
+        node_neighbors_set = nm.get_occupied_neighbors_of(
+            node_index=neighbor_index.item())
+        G_t[neighbor_index] = {j for j in node_neighbors_set if j in t_neighbors}
 
-    # construct a graph dictionary using the indexed lookup
-    for n, ix in ix_lookup_h.items():
-        # recover the numpy array from the byte-string
-        node = np.frombuffer(n, dtype=np.uint8)
-
-        # neighbors of the current node
-        node_neighbors = list(nmap[node[0]][node[1]].neighbors.values())
-        
-        # cast as byte-strings
-        node_neighbors = [_n.tostring() for _n in node_neighbors]
-
-        # construct the graph dictionary
-        G_h[ix] = [ix_lookup_h[_n] for _n in node_neighbors \
-                                        if _n in h_neighbors]
-
-    for n, ix in ix_lookup_t.items():
-        node = np.frombuffer(n, dtype=np.uint8)
-        node_neighbors = list(nmap[node[0]][node[1]].neighbors.values())
-        node_neighbors = [_n.tostring() for _n in node_neighbors]
-        G_t[ix] = [ix_lookup_t[_n] for _n in node_neighbors \
-                                        if _n in t_neighbors]
-
-    graph_h, graph_t = GraphAlgorithms(G_h), GraphAlgorithms(G_t)
-    for graph in [graph_h, graph_t]:
+    connectivity = 0
+    check_g = [{k: 0 for k in G_h}, {k: 0 for k in G_t}]
+    # graph_h, graph_t = GraphAlgorithms(G_h), GraphAlgorithms(G_t)
+    for i, graph in enumerate([GraphAlgorithms(G_h), GraphAlgorithms(G_t)]):
         # dfs each subgraph and find a path connecting it
-        connectivity += np.uint8(np.all(graph.dfs(root=0)))
+        # connectivity += np.uint8(all())
+        connection_check = graph.dfs(root=list(graph.graph_dict.keys())[0])
+        for k,v in connection_check.items():
+            if v:
+                check_g[i][k]=1
+        connectivity += int(all(check_g[i].values()))
 
-    if connectivity == 2: return np.uint8(1)
-    else: return np.uint8(0)
+    # graph_h, graph_t = GraphAlgorithms(G_h), GraphAlgorithms(G_t)
+    #
+    # # common connectivity counter for head and tail
+    # connectivity = np.uint8(0)
+    #
+    # # indexer for the neighbourhood of head and tail particles
+    # ix_lookup_h = dict([(n, ix) for ix, n in enumerate(h_neighbors)])
+    # ix_lookup_t = dict([(n, ix) for ix, n in enumerate(t_neighbors)])
+    #
+    # # construct a graph dictionary using the indexed lookup
+    # for n, ix in ix_lookup_h.items():
+    #     # recover the numpy array from the byte-string
+    #     node = np.frombuffer(n, dtype=np.uint8)
+    #
+    #     # neighbors of the current node
+    #     node_neighbors = list(nmap[node[0]][node[1]].neighbors.values())
+    #
+    #     # cast as byte-strings
+    #     node_neighbors = [_n.tostring() for _n in node_neighbors]
+    #
+    #     # construct the graph dictionary
+    #     G_h[ix] = [ix_lookup_h[_n] for _n in node_neighbors \
+    #                if _n in h_neighbors]
+    #
+    # for n, ix in ix_lookup_t.items():
+    #     node = np.frombuffer(n, dtype=np.uint8)
+    #     node_neighbors = list(nmap[node[0]][node[1]].neighbors.values())
+    #     node_neighbors = [_n.tostring() for _n in node_neighbors]
+    #     G_t[ix] = [ix_lookup_t[_n] for _n in node_neighbors \
+    #                if _n in t_neighbors]
+    #
+    # graph_h, graph_t = GraphAlgorithms(G_h), GraphAlgorithms(G_t)
+    # for graph in [graph_h, graph_t]:
+    #     # dfs each subgraph and find a path connecting it
+    #     connectivity += np.uint8(np.all(graph.dfs(root=0)))
+
+    if connectivity == 2:
+        return np.uint8(1)
+    else:
+        return np.uint8(0)
+
 
 if __name__ == '__main__':
     pass

@@ -9,7 +9,7 @@ NUMPY_INT_LEVELS = {
 }
 
 NUMBER_OF_ATTRIBUTES = 18
-LAYOUT = 0
+LAYOUT = 1
 NODE_LAYOUT = {
     0: {  # Horizontal Layout
         0: {'relative_point': (-2, 0), 'direction': 'w'},
@@ -113,14 +113,43 @@ def add_points_ver_0(nodes: np.ndarray, points: np.ndarray,
 
     item = points.item
     for i in range(points_size):
-        x, y, bot_id = item((0, i)), item((1, i)), i
-        current_index = add_point_ver_0(x=x, y=y, bot_id=bot_id,
-                                        current_index=current_index,
-                                        nodes=nodes,
-                                        nodes_by_point=nodes_by_point)
+        head_x, head_y = item((0, i)), item((1, i))
+        tail_x, tail_y, bot_id = item((2, i)), item((3, i)), i
+
+        if head_x == tail_x and head_y == tail_y:
+            current_index = add_point_ver_0(
+                x=head_x,
+                y=head_y,
+                bot_id=bot_id,
+                current_index=current_index,
+                nodes=nodes,
+                nodes_by_point=nodes_by_point
+            )
+        else:
+            current_index = add_point_ver_0(
+                x=head_x,
+                y=head_y,
+                bot_id=bot_id,
+                current_index=current_index,
+                nodes=nodes,
+                nodes_by_point=nodes_by_point
+            )
+            current_index = add_point_ver_0(
+                x=tail_x,
+                y=tail_y,
+                bot_id=bot_id,
+                current_index=current_index,
+                nodes=nodes,
+                nodes_by_point=nodes_by_point
+            )
 
     return nodes
 
+def check_for_null_space_ver_0(working_node, nodes):
+    neighbors = nodes[NEIGHBOR_RANGE, working_node]
+    null_spaces = np.where(neighbors == -1)[0]
+
+    return null_spaces
 
 def check_points_existence_ver_0(
         nodes_by_point,
@@ -133,7 +162,7 @@ def check_points_existence_ver_0(
     return False
 
 
-def compress_ver_0(nodes, head_node_index, tail_node_index, option):
+def contract_ver_0(nodes, head_node_index, tail_node_index, option):
     head_node = get_node_via_index_ver_0(nodes, head_node_index)
     tail_node = get_node_via_index_ver_0(nodes, tail_node_index)
 
@@ -154,7 +183,7 @@ def create_node_ver_0(
 ):
     new_node = np.zeros([NUMBER_OF_ATTRIBUTES, 1])
     new_node[(0, 3), (0, 0)] += 1
-    new_node[(1, 2, 4), (0, 0, 0)] = x, y, bot_id
+    new_node[(1, 2, 4, 17), (0, 0, 0, 0)] = x, y, bot_id, 3
     new_node[5:11, 0] += -1
     return new_node
 
@@ -192,6 +221,24 @@ def get_node_via_index_ver_0(nodes, index):
     return nodes[0:, index:index + 1]
 
 
+def get_occupied_neighbors_ver_0(
+        working_node, nodes, nodes_by_point, do_not_count=None):
+    null_spaces = check_for_null_space_ver_0(
+        working_node=working_node, nodes=nodes)
+    if null_spaces.size != 0:
+        nodes = fill_null_space_ver_0(
+            null_spaces=null_spaces,
+            nodes=nodes,
+            working_node=working_node,
+            nodes_by_point=nodes_by_point)
+    neighbors = nodes[NEIGHBOR_RANGE, working_node]
+    occupied = neighbors[np.where(nodes[3, neighbors] == 1)]
+    neighbors_set = set(occupied)
+    if do_not_count is not None:
+        neighbors_set.remove(do_not_count)
+    return neighbors_set, nodes
+
+
 def get_working_node_index_ver_0(nodes: np.ndarray, bot_id: int) -> tuple:
     index = np.where(nodes[4] == bot_id)[0]
 
@@ -209,11 +256,19 @@ def get_working_node_index_ver_0(nodes: np.ndarray, bot_id: int) -> tuple:
     else:
         raise ValueError("Bot is located on too many nodes")
 
+def fill_null_space_ver_0(null_spaces, nodes, working_node, nodes_by_point):
+    node = nodes[0:, working_node]
+    for i in range(null_spaces.size):
+        r_x, r_y = NODE_LAYOUT[LAYOUT][null_spaces.item(i)]['relative_point']
+        x, y = node.item(1)+r_x, node.item(2)+r_y
+        _, nodes = add_point_ver_1(
+            x=x, y=y, nodes=nodes, nodes_by_point=nodes_by_point)
+    return nodes
 
 def increase_array_size_ver_0(nodes: np.ndarray, size: int, ):
     binary_str = len(np.binary_repr(size))
     twod_size = [NUMBER_OF_ATTRIBUTES, 2 ** binary_str]
-    new_array = np.zeros(twod_size, dtype=nodes.dtype)
+    new_array = np.zeros(twod_size, dtype=np.int16)
     new_array[4:11, 0:] -= 1
 
     new_array[0:, 0:nodes[0].size] = nodes
@@ -230,6 +285,22 @@ def insert_point_into_dict_ver_0(
         nodes_by_point[x][y] = current_index
     else:
         nodes_by_point[x] = {y: current_index}
+
+
+def is_neighbor_occupied(nodes, empty_ports, i, neighbors, is_occupied):
+    if i not in empty_ports:
+
+        # grab existing node
+        neighbor_index = neighbors.item(i)
+        neighbor_node = nodes[
+                        0:, neighbor_index:neighbor_index + 1
+                        ]
+        neighbor_x = neighbor_node.item(1)
+        neighbor_y = neighbor_node.item(2)
+
+        # check if neighbor node is occupided
+        if not is_occupied(x=neighbor_x, y=neighbor_y):
+            empty_ports.add(i)
 
 
 def link_existing_nodes_ver_0(

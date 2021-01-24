@@ -3,14 +3,15 @@
 """ elements/node/manager.py
 """
 
-from .core import Node
-from ..manager import Manager
-from .manager_utils import *
+from amoebot.elements.node.core import Node
+from amoebot.elements.manager import Manager
+from amoebot.elements.node.manager_utils import *
 
 import numpy as np
-import pedantic 
+import pedantic
 import typing
 from collections import defaultdict
+
 
 class NodeManager(Manager):
     r"""
@@ -23,7 +24,7 @@ class NodeManager(Manager):
         grid_points (numpy.ndarray) :: "matrix" of the points on the grid.
     """
 
-    def __init__(self, points:np.ndarray):
+    def __init__(self, points: np.ndarray):
         r"""
         Attributes
 
@@ -31,10 +32,10 @@ class NodeManager(Manager):
                                 `make_triangular_grid`.
         """
         # [dictionary of dictionary] of nodes
-        self.__nmap:defaultdict = defaultdict(dict)
+        self.__nmap: defaultdict = defaultdict(dict)
 
         # numpy array of plotted points
-        self.grid_points:np.ndarray = np.array(points)
+        self.grid_points: np.ndarray = np.array(points)
 
         # call to grid builder
         self.grid_builder()
@@ -56,7 +57,7 @@ class NodeManager(Manager):
         # calls function to link adjacent nodes on the hexagonal grid
         self._hex_connect()
 
-    def _add_node(self, point:np.ndarray):
+    def _add_node(self, point: np.ndarray):
         r"""
         Add individual nodes to node lookup.
 
@@ -85,84 +86,91 @@ class NodeManager(Manager):
                 if node.neighbors['n'] is None and (jx + 2) in self.__nmap[ix]:
                     # link the node's neighbour to the north
                     node.set_neighbor('n', np.array([
-                                                        ix, jx + 2
-                                                    ], dtype=np.uint8)
-                                    )
+                        ix, jx + 2
+                    ], dtype=np.uint8)
+                                      )
 
                     # back link to the current node
-                    self.__nmap[ix][jx + 2].set_neighbor('s', 
-                                        np.array([ix, jx], dtype=np.uint8)
-                                    )
+                    self.__nmap[ix][jx + 2].set_neighbor('s',
+                                                         np.array([ix, jx],
+                                                                  dtype=np.uint8)
+                                                         )
 
                 # also ensure node is in the grid systems
                 if node.neighbors['ne'] is None and (ix + 1) in self.__nmap \
-                                        and (jx + 1) in self.__nmap[ix + 1]:
+                        and (jx + 1) in self.__nmap[ix + 1]:
                     if (jx + 1) in self.__nmap[ix + 1]:
                         # link the node's neighbour to the north east
                         node.set_neighbor('ne', np.array([
-                                                            ix + 1, jx + 1
-                                                        ], dtype=np.uint8)
-                                    )
+                            ix + 1, jx + 1
+                        ], dtype=np.uint8)
+                                          )
 
                         # back link to the current node
-                        self.__nmap[ix + 1][jx + 1].set_neighbor('sw', 
-                                        np.array([ix, jx], dtype=np.uint8)
-                                    )
+                        self.__nmap[ix + 1][jx + 1].set_neighbor('sw',
+                                                                 np.array(
+                                                                     [ix, jx],
+                                                                     dtype=np.uint8)
+                                                                 )
 
                 if node.neighbors['se'] is None and (ix + 1) in self.__nmap \
-                                        and (jx - 1) in self.__nmap[ix + 1]:
-                        # link the node's neighbour to the south east
-                        node.set_neighbor('se', np.array([
-                                                            ix + 1, jx - 1
-                                                        ], dtype=np.uint8)
-                                    )
+                        and (jx - 1) in self.__nmap[ix + 1]:
+                    # link the node's neighbour to the south east
+                    node.set_neighbor('se', np.array([
+                        ix + 1, jx - 1
+                    ], dtype=np.uint8)
+                                      )
 
-                        # back link to the current node
-                        self.__nmap[ix + 1][jx - 1].set_neighbor('nw', 
-                                        np.array([ix, jx], dtype=np.uint8)
-                                    )
+                    # back link to the current node
+                    self.__nmap[ix + 1][jx - 1].set_neighbor('nw',
+                                                             np.array([ix, jx],
+                                                                      dtype=np.uint8)
+                                                             )
 
                 if node.neighbors['s'] is None and (jx - 2) in self.__nmap[ix]:
                     # link the node's neighbour to the south
                     node.set_neighbor('s', np.array([
-                                                        ix, jx - 2
-                                                    ], dtype=np.uint8)
-                                    )
+                        ix, jx - 2
+                    ], dtype=np.uint8)
+                                      )
 
                     # back link to the current node
-                    self.__nmap[ix][jx - 2].set_neighbor('n', 
-                                        np.array([ix, jx], dtype=np.uint8)
-                                    )
+                    self.__nmap[ix][jx - 2].set_neighbor('n',
+                                                         np.array([ix, jx],
+                                                                  dtype=np.uint8)
+                                                         )
 
                 if node.neighbors['sw'] is None and (ix - 1) in self.__nmap \
-                                        and (jx - 1) in self.__nmap[ix - 1]:
-                        # link the node's neighbour to the south west
-                        node.set_neighbor('sw', np.array([
-                                                            ix - 1, jx - 1
-                                                        ], dtype=np.uint8)
-                                    )
+                        and (jx - 1) in self.__nmap[ix - 1]:
+                    # link the node's neighbour to the south west
+                    node.set_neighbor('sw', np.array([
+                        ix - 1, jx - 1
+                    ], dtype=np.uint8)
+                                      )
 
-                        # back link to the current node
-                        self.__nmap[ix - 1][jx - 1].set_neighbor('ne', 
-                                        np.array([ix, jx], dtype=np.uint8)
-                                    )
+                    # back link to the current node
+                    self.__nmap[ix - 1][jx - 1].set_neighbor('ne',
+                                                             np.array([ix, jx],
+                                                                      dtype=np.uint8)
+                                                             )
 
                 if node.neighbors['nw'] is None and (ix - 1) in self.__nmap \
-                                        and (jx + 1) in self.__nmap[ix - 1]:
-                        # link the node's neighbour to the north west
-                        node.set_neighbor('nw', np.array([
-                                                            ix - 1, jx + 1
-                                                        ], dtype=np.uint8)
-                                    )
+                        and (jx + 1) in self.__nmap[ix - 1]:
+                    # link the node's neighbour to the north west
+                    node.set_neighbor('nw', np.array([
+                        ix - 1, jx + 1
+                    ], dtype=np.uint8)
+                                      )
 
-                        # back link to the current node
-                        self.__nmap[ix - 1][jx + 1].set_neighbor('se', 
-                                            np.array([ix, jx], dtype=np.uint8)
-                                    )
+                    # back link to the current node
+                    self.__nmap[ix - 1][jx + 1].set_neighbor('se',
+                                                             np.array([ix, jx],
+                                                                      dtype=np.uint8)
+                                                             )
 
                 self.__nmap[ix][jx] = node
 
-    def get_node(self, position:np.ndarray) -> Node: 
+    def get_node(self, position: np.ndarray) -> Node:
         r"""
         Get `Node` object at `position`.
 
@@ -177,18 +185,16 @@ class NodeManager(Manager):
         return self.__nmap[position[0]][position[1]]
 
     @property
-    def get_nmap(self) -> dict: 
+    def get_nmap(self) -> dict:
         return self.__nmap
 
     @property
-    def get_num_nodes(self) -> int: 
+    def get_num_nodes(self) -> int:
         nrows, ncols, _ = self.grid_points.shape
         return nrows * ncols
 
 
-
-
-@pedantic.pedantic_class
+# @pedantic.pedantic_class
 class NodeManagerBitArray:
     # TODO: Write docstrings for all current methods
     # TODO: Figure out best way to implement a yield function
@@ -216,7 +222,7 @@ class NodeManagerBitArray:
         :param ndarray nodes:
         """
 
-        self.nodes_by_point = nodes_by_point ={}
+        self.nodes_by_point = nodes_by_point = {}
         if nodes.size == 0:
             self.nodes = np.zeros([NUMBER_OF_ATTRIBUTES, 1], dtype=np.int8)
 
@@ -226,7 +232,8 @@ class NodeManagerBitArray:
             map_node_array_ver_0(nodes=nodes, nodes_by_point=nodes_by_point)
 
         if bot_id != -1:
-            self.working_nodes = get_working_node_index_ver_0(nodes=nodes, bot_id=bot_id)
+            self.working_nodes = get_working_node_index_ver_0(nodes=nodes,
+                                                              bot_id=bot_id)
             # self.working_node = self.__internal_retrieve_working_node_index()
         else:
             self.working_nodes = ()
@@ -234,7 +241,8 @@ class NodeManagerBitArray:
         self.bot_id = bot_id
 
         if points.size > 0:
-            self.nodes = add_points_ver_0(nodes=self.nodes,points=points,nodes_by_point=nodes_by_point)
+            self.nodes = add_points_ver_0(nodes=self.nodes, points=points,
+                                          nodes_by_point=nodes_by_point)
 
     @property
     def nodes(self) -> np.ndarray:
@@ -310,11 +318,12 @@ class NodeManagerBitArray:
         self.bot_id = -1
 
     @property
-    def working_nodes(self):
-        return self.__working_node
+    def working_nodes(self) -> typing.Union[tuple, typing.Tuple[int]]:
+        return self.__working_nodes
 
     @working_nodes.setter
-    def working_nodes(self, value: typing.Union[tuple, typing.Tuple[int]]) -> None:
+    def working_nodes(self,
+                      value: typing.Union[tuple, typing.Tuple[int]]) -> None:
         for i in value:
             if not isinstance(i, int):
                 x = type(int)
@@ -323,7 +332,7 @@ class NodeManagerBitArray:
         self.__working_nodes = value
 
     @working_nodes.deleter
-    def working_nodes(self):
+    def working_nodes(self) -> None:
         self.working_nodes = (-1,)
 
     def get_node(
@@ -339,7 +348,7 @@ class NodeManagerBitArray:
             f1 = add_point_ver_1
             x1, x2 = self.nodes, nodes_by_point
             index, self.nodes = f1(x=x, y=y, nodes=x1, nodes_by_point=x2)
-        return self.nodes[0:, index:index+1]
+        return self.nodes[0:, index:index + 1]
 
     def is_occupied(
             self, x: typing.Union[int, float], y: typing.Union[int, float]
@@ -353,8 +362,8 @@ class NodeManagerBitArray:
         if len(working_nodes) == 1:
             nodes = self.nodes
             current_node = get_node_via_index_ver_0(nodes, working_nodes[0])
-            current_x = current_node[(1, ), (0, )].item()
-            current_y = current_node[(2, ),  (0, )].item()
+            current_x = current_node[(1,), (0,)].item()
+            current_y = current_node[(2,), (0,)].item()
             target_x, target_y = current_x + relative_x, current_y + relative_y
 
             if self.is_occupied(x=target_x, y=target_y):
@@ -363,22 +372,23 @@ class NodeManagerBitArray:
             target_node = self.get_node(x=target_x, y=target_y)
 
             target_node[(3, 4), (0, 0)] = 1, current_node[(4,), (0,)]
-            target_node[(17, ), (0, )] = 1
-            current_node[(17, ), (0, )] = 2
+            target_node[(17,), (0,)] = 1
+            current_node[(17,), (0,)] = 2
             x1, x2, x3 = target_x, target_y, self.nodes_by_point
             head_index = get_node_index_ver_0(x=x1, y=x2, nodes_by_point=x3)
             self.working_nodes = (head_index, working_nodes[0])
             return True
-        raise ValueError("You are trying to move the head while we are "
-                         "expanded, compress us first")
+        raise ValueError("You are trying to move the head while bot is "
+                         "expanded, compress this bot first")
 
-    def compress_forward(self) -> bool:
+
+    def contract_forward(self) -> bool:
         working_nodes = self.working_nodes
         if len(working_nodes) == 1:
             return False
         elif len(working_nodes) == 2:
             x1, x2, x3 = self.nodes, working_nodes[0], working_nodes[1]
-            x4, x5 = "forward", compress_ver_0
+            x4, x5 = "forward", contract_ver_0
             x6 = x5(nodes=x1, head_node_index=x2, tail_node_index=x3, option=x4)
             self.working_nodes = x6
             return True
@@ -386,16 +396,142 @@ class NodeManagerBitArray:
             raise ValueError("Looks like there is in an issue with the number "
                              "of working nodes")
 
-    def compress_backward(self) -> bool:
+    def contract_backward(self) -> bool:
         working_nodes = self.working_nodes
         if len(working_nodes) == 1:
             return False
         elif len(working_nodes) == 2:
             x1, x2, x3 = self.nodes, working_nodes[0], working_nodes[1]
-            x4, x5 = "backward", compress_ver_0
+            x4, x5 = "backward", contract_ver_0
             x6 = x5(nodes=x1, head_node_index=x2, tail_node_index=x3, option=x4)
             self.working_nodes = x6
             return True
         else:
             raise ValueError("Looks like there is in an issue with the number "
                              "of working nodes")
+
+    def open_ports(self) -> typing.Union[list, typing.List[typing.Set[int]]]:
+        # Check compression
+        working_nodes = self.working_nodes
+        nodes = self.nodes
+        is_occupied = self.is_occupied
+        contracted = len(working_nodes) == 1
+        head_tail_empty_ports = list()
+
+        # grab neighbor attributes of associated working nodes
+        if contracted:
+
+            # grabs completely empty uncreated node positions
+            neighbors = self.nodes[NEIGHBOR_RANGE, self.working_nodes[0]]
+            empty_ports = set(np.where(neighbors == -1)[0])
+
+            # check whether or not existing nodes are empty
+            for i in range(6):
+                is_neighbor_occupied(nodes, empty_ports, i, neighbors,
+                                     is_occupied)
+            # add to return value
+            head_tail_empty_ports.append(empty_ports)
+            head_tail_empty_ports.append(set())
+
+        else:
+            head_neighbors = self.nodes[NEIGHBOR_RANGE, self.working_nodes[0]]
+            head_empty_ports = set(np.where(head_neighbors == -1)[0])
+            tail_neighbors = self.nodes[NEIGHBOR_RANGE, self.working_nodes[1]]
+            tail_empty_ports = set(np.where(tail_neighbors == -1)[0])
+
+            for i in range(6):
+                is_neighbor_occupied(nodes, head_empty_ports, i, head_neighbors,
+                                     is_occupied)
+                is_neighbor_occupied(nodes, tail_empty_ports, i, tail_neighbors,
+                                     is_occupied)
+
+            head_tail_empty_ports.append(head_empty_ports)
+            head_tail_empty_ports.append(tail_empty_ports)
+
+        return head_tail_empty_ports
+
+    def current_position(self) -> np.ndarray:
+        working_nodes = self.working_nodes
+        nodes = self.nodes
+
+        if len(working_nodes) == 1:
+            node = nodes[0:, working_nodes[0]]
+
+            return np.array(
+                [[node[1], node[2]], [node[1], node[2]]]
+            )
+        elif len(working_nodes) == 2:
+            head_node = nodes[0:, working_nodes[0]]
+            tail_node = nodes[0:, working_nodes[1]]
+            return np.array(
+                [
+                    [head_node[1], head_node[2]],
+                    [tail_node[1], tail_node[2]]
+                ]
+            )
+
+    def get_occupied_neighbors(self) -> np.ndarray:
+        working_nodes = self.working_nodes
+        nodes = self.nodes
+        nodes_by_points = self.nodes_by_point
+        contracted = len(working_nodes) == 1
+
+        if contracted:
+            neighbors_set, nodes = get_occupied_neighbors_ver_0(
+                working_node=working_nodes[0],
+                nodes=nodes,
+                nodes_by_point=nodes_by_points)
+            self.nodes = nodes
+            return np.array([neighbors_set, set()])
+        else:
+            head_neighbors_set, nodes = get_occupied_neighbors_ver_0(
+                working_node=working_nodes[0],
+                nodes=nodes,
+                nodes_by_point=nodes_by_points,
+                do_not_count=working_nodes[1],
+            )
+            tail_neighbors_set, nodes = get_occupied_neighbors_ver_0(
+                working_node=working_nodes[1],
+                nodes=nodes,
+                nodes_by_point=nodes_by_points,
+                do_not_count=working_nodes[0],
+            )
+
+            self.nodes = nodes
+            return np.array([head_neighbors_set, tail_neighbors_set])
+
+    def get_occupied_neighbors_of(self, node_index: int) -> typing.Union[set, typing.Set[int]]:
+        nodes = self.nodes
+        nodes_by_point = self.nodes_by_point
+        neighbors_set, nodes = get_occupied_neighbors_ver_0(
+            working_node=node_index,
+            nodes=nodes,
+            nodes_by_point=nodes_by_point)
+        self.nodes = nodes
+        return neighbors_set
+
+
+
+if __name__ == '__main__':
+    x1 = np.array(
+        [[0, 2, 4, 6, 8], [0, 0, 0, 0, 0], [0, 2, 4, 6, 8], [0, 0, 0, 0, 0]])
+
+    x2 = NodeManagerBitArray(points=x1)
+    print(x2.is_occupied_ver_1(node_index=0))
+    print(x2.is_occupied_ver_1(node_index=6))
+    # x3 = x2.nodes
+    # x2 = NodeManagerBitArray(bot_id=0, nodes=x3)
+    # x2.move_to(port=2)
+    # x3 = x2.get_occupied_neighbors()
+    # x3 = x3[0] | x3[1]
+    # x4 = set()
+    # for i in x3:
+    #     x4 |= x2.get_occupied_neighbors_of(node_index=i.item())
+    # print(x3)
+    # print(x4)
+    # print(x2.nodes)
+
+
+    # x2.move_to(port=2)
+    # x3 = x2.get_occupied_neighbors()
+    # print(x3)

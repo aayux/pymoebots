@@ -102,7 +102,7 @@ class Amoebot(Core):
             self.labels[ix] = node_ports[choice_ix % 6]
             choice_ix += 1
 
-        if __nmap is not None: self.generate_neighbourhood_map(__nmap)
+        # if __nmap is not None: self.generate_neighbourhood_map(__nmap)
 
     def generate_neighbourhood_map(self, __nmap:defaultdict):
         r""" 
