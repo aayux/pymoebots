@@ -9,9 +9,11 @@
 **runs/
 **.dumps/
 *.vscode/
+*.idea/
 
 # testing file
 main.py
+
 
 # notetaking
 todo.txt
