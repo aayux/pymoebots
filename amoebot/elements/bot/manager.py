@@ -35,7 +35,7 @@ class AmoebotManager(Manager):
                         required here for multiprocessing picklers.
     """
 
-    def __init__(self, __nmap:object, config_num:str=None):
+    def __init__(self, __nmap:object=None, config_num:str=None):
         r"""
         Attributes
 
@@ -79,13 +79,13 @@ class AmoebotManager(Manager):
         """
         agent_of_amoebot = Agent(__id, head=head, tail=tail)
 
-        # update the node map for current particle
-        if np.all(head == tail) or (tail is None):
-            self.__nmap[head[0]][head[1]].place_particle('body')
-        else:
-            # place the head and tail on different grid positions
-            self.__nmap[tail[0]][tail[1]].place_particle('body')
-            self.__nmap[head[0]][head[1]].place_particle('head')
+        # # update the node map for current particle
+        # if np.all(head == tail) or (tail is None):
+        #     self.__nmap[head[0]][head[1]].place_particle('body')
+        # else:
+        #     # place the head and tail on different grid positions
+        #     self.__nmap[tail[0]][tail[1]].place_particle('body')
+        #     self.__nmap[head[0]][head[1]].place_particle('head')
 
         # call to orient the amoebot
         # NOTE how nmap is only shared when needed
@@ -227,8 +227,8 @@ class AmoebotManager(Manager):
         amoebot, self.__nmap = amoebot.execute(
                                                 self.__nmap, 
                                                 algorithm=algorithm, 
-                                                async_mode=async_mode
-                                            )
+                                                async_mode=async_mode,
+                                             )
 
         # write back to data dump
         self.shared.iwrite(__id, amoebot.pickled)
@@ -259,3 +259,6 @@ class AmoebotManager(Manager):
                             ))
 
             self.tracker.update(config)
+
+    def load_env(self, value):
+        self.__nmap = value
