@@ -5,9 +5,6 @@
 
 from .core import Amoebot
 from .functional import compress_agent_sequential
-from .functional import compress_agent_async_contracted
-from .functional import compress_agent_async_expanded
-from .functional import contract_particle, expand_particle
 from ...utils.graphs import GraphAlgorithms
 
 import numpy as np
@@ -22,8 +19,7 @@ class Agent(Amoebot):
     round of activation that performs one step of the desired algorithm.
     """
 
-    def __init__(self, __id: np.uint8, head: np.ndarray,
-                 tail: np.ndarray = None):
+    def __init__(self, __id:np.uint8, head:np.ndarray, tail: np.ndarray=None):
         r"""
         Attributes
 
@@ -41,19 +37,18 @@ class Agent(Amoebot):
         self.__id = __id
 
     def execute(
-            self,
-            __nmap: defaultdict,
-            algorithm: str = 'random_move',
-            async_mode: bool = True,
-    ) -> tuple:
+                    self,
+                    __node_array:defaultdict,
+                    algorithm:str='random_move',
+                    async_mode:bool=True,
+                ) -> tuple:
         r"""
         Worker function for each amoebot. Intended to manage parallelisation 
         between agents and attach algorithmic modules to the amoebot.
 
         Attributes
 
-            __nmap (defaultdict) :: a dictionary of dictionaries used to index 
-                            nodes using x and y co-ordinates.
+            __node_array (numpy.ndarray) ::
             algorithm (str) default: 'random_move' :: algorithm being performed 
                             in current step, one of "random_move", "compress" 
                             ...
@@ -61,45 +56,42 @@ class Agent(Amoebot):
                             distributed, asynchronous algorithm for compression 
                             else run sequential algorithm.
 
-            nenv (ndarray) default: None :: node environment
-
-        Return (defaultdict): udpated `__nmap` dictionary.
+        Return (numpy.ndarray): 
         """
 
         # make sure `algorithm` is available
         assert algorithm in ALGORITHMS, \
             LookupError(f'{algorithm} not in list of allowed algorithms.')
 
-        # self.generate_neighbourhood_map(__nmap)
+        # self.generate_neighbourhood_map(__node_array)
 
         # get the function handler for `algorithm` from the dictionary
         if algorithm == 'random_move':
             # run one step of an elementary algorithm
-            __nmap = self._move(__nmap)
+            __node_array = self._move(__node_array)
 
         elif algorithm == 'compress':
-            __nmap = self._compress(__nmap, async_mode=async_mode)
+            __node_array = self._compress(__node_array, async_mode=async_mode)
 
         else:
-            return (self, __nmap)
+            return (self, __node_array)
 
-        # self.generate_neighbourhood_map(__nmap)
+        # self.generate_neighbourhood_map(__node_array)
 
-        return (self, __nmap)
+        return (self, __node_array)
 
     def _move(
-            self,
-            __nmap: defaultdict,
-            port: np.uint8 = None,
-            backward: bool = False
-    ):
+                self,
+                __node_array:np.ndarray,
+                port:np.uint8=None,
+                backward:bool=False
+            ) -> np.ndarray:
         r"""
         Simple (random) movement algorithm for the amoebot model.
 
         Attributes
 
-            __nmap (defaultdict) :: a dictionary of dictionaries used to index 
-                                    nodes using x and y co-ordinates.
+            __node_array (numpy.ndarray) :: 
             port (numpy.uint8) default: None :: port number to move to; if no 
                             value provided, one of two things can happen:
 
@@ -109,23 +101,17 @@ class Agent(Amoebot):
                                                 depending on `backward` flag.
             backward (bool) default: False :: contract to tail if true, else 
                             contract to head.
+
+        Returns (numpy.ndarray): 
         """
 
-        # contract an expanded particle
-        if not self._is_contracted:
-            __nmap = contract_particle(self, __nmap, backward)
-
-        # expand a contracted particle
-        else:
-            __nmap = expand_particle(self, __nmap, port)
-
-        return __nmap
+        raise NotImplementedError
 
     def _compress(
-            self,
-            __nmap: defaultdict,
-            async_mode: bool = True,
-    ) -> defaultdict:
+                    self,
+                    __node_array:np.ndarray, 
+                    async_mode:bool=True,
+                ) -> np.ndarray:
         r"""
         Compression agorithm for the amoebot model based on 
 
@@ -136,24 +122,34 @@ class Agent(Amoebot):
         Attributes
 
             agent (Core) :: instance of class `Agent`
-            __nmap (defaultdict) :: a dictionary of dictionaries used to index nodes 
-                        using x and y co-ordinates.
+            __node_array (numpy.ndarray) :: 
+            points_dict (dict) :: 
             async_mode (bool) default: True :: if True, execute the local, 
                         distributed, asynchronous algorithm for compression else
                         run sequential algorithm.
 
-        Return (defaultdict): the updated `__nmap` dictionary.
+        Returns (numpy.ndarray): 
         """
 
         # execute the sequential Markov Chain algorithm M
         if not async_mode:
-            __nmap = compress_agent_sequential(self, __nmap, _id=self.__id)
+            __node_array = compress_agent_sequential(
+                                                        self, 
+                                                        __node_array, 
+                                                        __id=self.__id
+                                                    )
 
         # execute the asynchronous algorithm for compression
         else:
             if self._is_contracted:
-                __nmap = compress_agent_async_contracted(self, __nmap)
+                __node_array = compress_agent_async_contracted(
+                                                                self, 
+                                                                __node_array
+                                                            )
             else:
-                __nmap = compress_agent_async_expanded(self, __nmap)
+                __node_array = compress_agent_async_expanded(
+                                                                self, 
+                                                                __node_array
+                                                            )
 
-        return __nmap
+        return __node_array

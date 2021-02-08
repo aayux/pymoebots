@@ -23,7 +23,7 @@ class AmoebotManager(Manager):
 
     Attributes
 
-        __nmap (defaultdict) :: a dictionary of dictionaries used to index nodes
+        __node_array (defaultdict) :: a dictionary of dictionaries used to index nodes
                         using x and y co-ordinates.
         amoebots (dict) :: dcitionary of amoebot objects indexed by identifiers.
                         tracker
@@ -35,12 +35,11 @@ class AmoebotManager(Manager):
                         required here for multiprocessing picklers.
     """
 
-    def __init__(self, __nmap:object=None, config_num:str=None):
+    def __init__(self, config_num:str=None):
         r"""
         Attributes
 
-            __nmap (defaultdict) :: a dictionary of dictionaries used to index 
-                            nodes using x and y co-ordinates.
+            __node_array (np.ndarray) ::
             amoebots (dict) :: dcitionary of amoebot objects indexed by 
                             identifiers.
             tracker (StateTracker) :: instance of `StateTracker` for data 
@@ -48,8 +47,8 @@ class AmoebotManager(Manager):
             config_num (str) :: identifier number for the json configuration 
                             file, required here for multiprocessing picklers.
         """
-        # `nmap` object of the `NodeManager`
-        self.__nmap:defaultdict = __nmap
+        # `node_array` object of the `NodeEnvManager`
+        self.__node_array:np.ndarray = np.array([])
 
         # map of all `Amoebot` objects
         self.amoebots:dict = dict()
@@ -63,8 +62,7 @@ class AmoebotManager(Manager):
     def _add_bot(
                     self, 
                     __id:np.uint8, 
-                    head:np.ndarray, 
-                    tail:np.ndarray=None
+                    point:np.ndarray, 
                 ):
         r""" 
         Adds individual particles to the dictionary of amoebots.
@@ -72,24 +70,15 @@ class AmoebotManager(Manager):
         Attributes
 
             __id (numpy.uint8) :: unique particle identifier.
-            head (numpy.ndarray) :: position (x and y co-ordinates) of amoebot 
-                            head.
-            tail (numpy.ndarray) default: None :: position (x and y 
-                            co-ordinates) of amoebot tail.
+            head (numpy.ndarray) :: position (x and y co-ordinates) of amoebot.
         """
-        agent_of_amoebot = Agent(__id, head=head, tail=tail)
 
-        # # update the node map for current particle
-        # if np.all(head == tail) or (tail is None):
-        #     self.__nmap[head[0]][head[1]].place_particle('body')
-        # else:
-        #     # place the head and tail on different grid positions
-        #     self.__nmap[tail[0]][tail[1]].place_particle('body')
-        #     self.__nmap[head[0]][head[1]].place_particle('head')
+        head = tail = point
+        agent_of_amoebot = Agent(__id, head=head, tail=tail)
 
         # call to orient the amoebot
         # NOTE how nmap is only shared when needed
-        agent_of_amoebot.orient(self.__nmap)
+        agent_of_amoebot.orient(self.__node_array)
 
         # store a serialized objects for efficiency
         self.amoebots[__id] = agent_of_amoebot.pickled
@@ -127,6 +116,7 @@ class AmoebotManager(Manager):
     def exec_sequential(
                             self, 
                             max_rnds:int, 
+                            write_every:int, 
                             algorithm:str=None
                         ):
         r"""
@@ -134,12 +124,10 @@ class AmoebotManager(Manager):
 
         Attributes
 
-            shared (SharedObjects) :: a custom shared memory object for pickling
-                        and unpickling the data dumps. Useful in true 
-                        multiprocessing implementations.
             max_rnds (int) :: maximum number of full rounds before termination.
             algorithm (str) default: None :: algorithm being performed in 
                         current step, one of "random_move", "compress" ...
+            write_every (int) :: 
         """
 
         # dump the amoebot dictionary into a pickle(d) database
@@ -156,7 +144,9 @@ class AmoebotManager(Manager):
                                                             algorithm=algorithm, 
                                                             async_mode=False
                                                         )
-            self.update_tracker(iter_)
+
+            # update the tracker file every few iterations
+            if iter_ % write_every == 0: self._update_tracker()
 
     def _exec_async_with_interpreter_lock(
                                             self, 
@@ -224,8 +214,8 @@ class AmoebotManager(Manager):
         amoebot = Agent.unpickled(self.shared.ifetch(__id))
 
         # execute the amoebot algorithm(s) and update activation status
-        amoebot, self.__nmap = amoebot.execute(
-                                                self.__nmap, 
+        amoebot, self.__node_array = amoebot.execute(
+                                                self.__node_array, 
                                                 algorithm=algorithm, 
                                                 async_mode=async_mode,
                                              )
@@ -235,30 +225,22 @@ class AmoebotManager(Manager):
 
         return amoebot.pickled
 
-    def update_tracker(self, iter_:int=10):
-        """
-        Update the tracker file with most current state.
-
-        Attributes
-
-            iter_ (int) default: 10 :: the current iteration number,
-                        defaults to 10 when all iterations are saved.
+    def _update_tracker(self):
+        r""" update the tracker file with most current state
         """
 
         config = list()
 
-        # update the tracker file every few iterations
-        if iter_ % 10 == 0:
-            # collect configurations of all particles
-            # TODO: optimize block
-            for __id in self.amoebots.keys():
-                amoebot = Agent.unpickled(self.shared.ifetch(__id))
-                config.append(dict(
-                                    head_pos=amoebot.head.tolist(), 
-                                    tail_pos=amoebot.tail.tolist()
-                            ))
+        # collect configurations of all particles
+        # TODO optimize block
+        for __id in self.amoebots.keys():
+            amoebot = Agent.unpickled(self.shared.ifetch(__id))
+            config.append(dict(
+                                head_pos=amoebot.head.tolist(), 
+                                tail_pos=amoebot.tail.tolist()
+                        ))
 
-            self.tracker.update(config)
+        self.tracker.update(config)
 
-    def load_env(self, value):
-        self.__nmap = value
+    def _copy_node_array(self, node_array:np.ndarray):
+        self.__node_array = node_array
