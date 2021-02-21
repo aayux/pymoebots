@@ -1,5 +1,10 @@
 import numpy as np
 import typing
+from numpy import iinfo, int8, int16, int32, int64, uint8, uint16, uint32, \
+    uint64
+from typing import Union
+
+UNSIGNED_INT = Union[uint8, uint16, uint32, uint64]
 
 NUMPY_INT_LEVELS = {
     'ints': {np.int8, np.int16, np.int32, np.int64},
@@ -12,20 +17,20 @@ NUMBER_OF_ATTRIBUTES = 18
 LAYOUT = 1
 NODE_LAYOUT = {
     0: {  # Horizontal Layout
-        0: {'relative_point': (-2, 0), 'direction': 'w'},
-        1: {'relative_point': (-1, 1), 'direction': 'nw'},
-        2: {'relative_point': (1, 1), 'direction': 'ne'},
-        3: {'relative_point': (2, 0), 'direction': 'e'},
-        4: {'relative_point': (1, -1), 'direction': 'se'},
-        5: {'relative_point': (-1, -1), 'direction': 'sw'},
+        0: {'relative_point': (int8(-2), uint8(0)), 'direction': 'w'},
+        1: {'relative_point': (int8(-1), uint8(1)), 'direction': 'nw'},
+        2: {'relative_point': (uint8(1), uint8(1)), 'direction': 'ne'},
+        3: {'relative_point': (uint8(2), uint8(0)), 'direction': 'e'},
+        4: {'relative_point': (uint8(1), int8(-1)), 'direction': 'se'},
+        5: {'relative_point': (int8(-1), int8(-1)), 'direction': 'sw'},
     },
     1: {  # Vertical Layout
-        0: {'relative_point': (-1, 1), 'direction': 'nw'},
-        1: {'relative_point': (0, 2), 'direction': 'n'},
-        2: {'relative_point': (1, 1), 'direction': 'ne'},
-        3: {'relative_point': (1, -1), 'direction': 'se'},
-        4: {'relative_point': (0, -2), 'direction': 'se'},
-        5: {'relative_point': (-1, -1), 'direction': 'sw'},
+        0: {'relative_point': (int8(-1), uint8(1)), 'direction': 'nw'},
+        1: {'relative_point': (uint8(0), uint8(2)), 'direction': 'n'},
+        2: {'relative_point': (uint8(1), uint8(1)), 'direction': 'ne'},
+        3: {'relative_point': (uint8(1), int8(-1)), 'direction': 'se'},
+        4: {'relative_point': (uint8(0), int8(-2)), 'direction': 'se'},
+        5: {'relative_point': (int8(-1), int8(-1)), 'direction': 'sw'},
     },
 
 }
@@ -145,11 +150,13 @@ def add_points_ver_0(nodes: np.ndarray, points: np.ndarray,
 
     return nodes
 
+
 def check_for_null_space_ver_0(working_node, nodes):
     neighbors = nodes[NEIGHBOR_RANGE, working_node]
     null_spaces = np.where(neighbors == -1)[0]
 
     return null_spaces
+
 
 def check_points_existence_ver_0(
         nodes_by_point,
@@ -175,6 +182,7 @@ def contract_ver_0(nodes, head_node_index, tail_node_index, option):
         head_node[(3, 4, 17), (0, 0, 0)] = 0, -1, 0
         tail_node[17] = 3
         return (tail_node_index,)
+
 
 def create_node_ver_0(
         x: typing.Union[int, float],
@@ -239,6 +247,21 @@ def get_occupied_neighbors_ver_0(
     return neighbors_set, nodes
 
 
+def get_relative_points_direction(port: uint8):
+    return NODE_LAYOUT[LAYOUT][port]['relative_point']
+
+def get_relative_point_existence_dict():
+    relative_point_existence_dict = {}
+    true = uint8(1)
+    for k, v in NODE_LAYOUT[LAYOUT].items():
+        x, y = v['relative_point']
+        if x not in relative_point_existence_dict:
+            relative_point_existence_dict[x] = {y: true}
+        else:
+            relative_point_existence_dict[x][y] = true
+    return relative_point_existence_dict
+
+
 def get_working_node_index_ver_0(nodes: np.ndarray, bot_id: int) -> tuple:
     index = np.where(nodes[4] == bot_id)[0]
 
@@ -256,14 +279,16 @@ def get_working_node_index_ver_0(nodes: np.ndarray, bot_id: int) -> tuple:
     else:
         raise ValueError("Bot is located on too many nodes")
 
+
 def fill_null_space_ver_0(null_spaces, nodes, working_node, nodes_by_point):
     node = nodes[0:, working_node]
     for i in range(null_spaces.size):
         r_x, r_y = NODE_LAYOUT[LAYOUT][null_spaces.item(i)]['relative_point']
-        x, y = node.item(1)+r_x, node.item(2)+r_y
+        x, y = node.item(1) + r_x, node.item(2) + r_y
         _, nodes = add_point_ver_1(
             x=x, y=y, nodes=nodes, nodes_by_point=nodes_by_point)
     return nodes
+
 
 def increase_array_size_ver_0(nodes: np.ndarray, size: int, ):
     binary_str = len(np.binary_repr(size))
@@ -285,6 +310,32 @@ def insert_point_into_dict_ver_0(
         nodes_by_point[x][y] = current_index
     else:
         nodes_by_point[x] = {y: current_index}
+
+
+def int_primitive_to_numpy_dtype(value: int):
+    if iinfo(uint8).min <= value <= iinfo(uint8).max:
+        return uint8(value)
+
+    if iinfo(int8).min <= value <= iinfo(int8).max:
+        return int8(value)
+
+    if iinfo(uint16).min <= value <= iinfo(uint16).max:
+        return uint16(value)
+
+    if iinfo(int16).min <= value <= iinfo(int16).max:
+        return int16(value)
+
+    if iinfo(uint32).min <= value <= iinfo(uint32).max:
+        return uint32(value)
+
+    if iinfo(int32).min <= value <= iinfo(int32).max:
+        return int32(value)
+
+    if iinfo(uint64).min <= value <= iinfo(uint64).max:
+        return uint64(value)
+
+    if iinfo(int64).min <= value <= iinfo(int64).max:
+        return int64(value)
 
 
 def is_neighbor_occupied(nodes, empty_ports, i, neighbors, is_occupied):
