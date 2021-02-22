@@ -7,8 +7,9 @@ from amoebot.elements.node.core import Node
 from amoebot.elements.manager import Manager
 from amoebot.elements.node.manager_utils import *
 
+from numpy import ndarray
+
 import numpy as np
-import pedantic
 import typing
 from collections import defaultdict
 
@@ -509,6 +510,36 @@ class NodeManagerBitArray:
             nodes_by_point=nodes_by_point)
         self.nodes = nodes
         return neighbors_set
+
+    def add_walls(self, points: ndarray) -> None:
+        """
+        Adds given points as walls (2) type objects in the node space.
+
+        :param ndarray points: A 2d array with x and y values in their own array
+        :returns: nothing
+        """
+
+        # localize required function.
+        get_node = self.get_node
+
+        # split points to separate x and y values.
+        x_values, y_values = points
+
+        # loop through values
+        for i in range(x_values.size):
+
+            # Using point (x, y) data, we pull the associated node data and
+            # creates node a node object from it.
+            node = Node(get_node(x=x_values[i], y=y_values[i]))
+
+            # if the node is occupied, we can't place a wall here, so we
+            # through up an error stating this.
+            if node.occupied:
+                raise Exception(f"Unable to place wall because point "
+                                f"({node.get_point()}) is occupied.")
+
+            # makes current node a wall.
+            node.toggle_wall()
 
 
 
