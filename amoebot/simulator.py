@@ -6,7 +6,9 @@
 import time
 import psutil
 
-from .elements.stategen import StateGenerator
+from amoebot.utils.trigrid import make_triangular_grid
+from amoebot.elements.node.manager import NodeManager, NodeManagerBitArray
+from amoebot.elements.stategen import StateGenerator
 
 # number of cpu cores available
 N_CORES = psutil.cpu_count(logical=True)
@@ -29,6 +31,7 @@ class AmoebotSimulator(object):
     def __init__(
                     self, 
                     algorithm:str,
+                    shape:tuple=(64, 64), 
                     max_rnds:int=1000, 
                     n_bots:int=2, 
                     n_cores:int=N_CORES, 
@@ -39,6 +42,8 @@ class AmoebotSimulator(object):
 
             algorithm (str) :: algorithm being performed in current step, one 
                                 of "random_move", "compress".
+            shape (tuple) default: (64, 64) :: number of grid points in 
+                                x and y-directions respectively.
             max_rnds (int) default: 1000 :: maximum number of full rounds before 
                                 termination.
             n_bots (int) default: 5 :: number of particles on the grid, unused 
@@ -50,34 +55,38 @@ class AmoebotSimulator(object):
                                 on the grid.
         """
 
+        xdim, ydim = shape
+        
+        # generate the triangular grid
+        grid = make_triangular_grid(xdim, ydim)
+        
+        # launch a node manager instance
+        nm = NodeManager(grid)
+
         # generate the amoebot states and create storage dumps
         if config_num:
             self.generator = StateGenerator(config_num=config_num)
         else: 
-            self.generator = StateGenerator(n_bots=n_bots)
+            self.generator = StateGenerator(nm, n_bots=n_bots)
 
         self.algorithm = algorithm
         self.max_rnds = max_rnds
         self.n_cores = n_cores
 
-    def exec_sequential(self, write_every:int=1, time_it:bool=True) -> float:
+    def exec_sequential(self, time_it:bool=True) -> float:
         r""" 
         Execute algorithm(s) sequentially.
 
         Attributes
-            write_every (int) :: 
+
             time_it (bool) default: True :: set to True if execution is timed.
         
         Returns (float): total execution if `time_it` is True.
         """
         if time_it: t0 = time.time()
 
-        max_rnds, algorithm = self.max_rnds, self.algorithm
-        self.generator.manager.exec_sequential(
-                                                max_rnds=max_rnds, 
-                                                write_every=write_every, 
-                                                algorithm=algorithm
-                                            )
+        x1, x2 = self.max_rnds, self.algorithm
+        self.generator.manager.exec_sequential(max_rnds=x1, algorithm=x2)
 
         if time_it:
             return time.time() - t0

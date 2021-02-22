@@ -5,8 +5,8 @@
 
 from .bot.agent import Agent
 from .bot.manager import AmoebotManager
-from .nodenv import NodeEnvManager
 from ..utils.exceptions import InitializationError
+from amoebot.elements.node.manager import NodeManagerBitArray
 
 import time
 import json
@@ -16,7 +16,7 @@ from pathlib import Path
 STORE = './.dumps'
 
 
-def config0_reader(config_num:str) -> list:
+def config0_reader(config_num: str) -> list:
     r""" 
     Read a configuration with given config_num.
 
@@ -57,9 +57,12 @@ class StateGenerator(object):
 
     """
 
-    def __init__(self, config_num:str=None, **kwargs):
+    def __init__(self, node_manager: object = None, config_num: str = None,
+                 **kwargs):
         r"""
         Attributes
+            node_manager (NodeManager) :: object of class `NodeManager`.
+
             config_num (str) default: None :: identifier number for the json 
                             configuration file.
         """
@@ -68,20 +71,20 @@ class StateGenerator(object):
         if config_num is None:
             try:
                 self.config_num = self._generate_init0()
-                # currently throws `NotImplementedError`
-                self._random_placement(kwargs['n_bots'])
-
+                self.manager, config0 = self._random_placement(kwargs['n_bots'],
+                                                               node_manager)
             except KeyError:
                 raise InitializationError(
                     f"Randomly placed bots require argument `n_bots`."
                 )
 
-            # self.write(config0)
+            self.write(config0)
 
         # place bots in configuration written in config_num
         else:
             self.config_num = config_num
-            self.manager = self._config0_placement()
+            # _ = self._generate_init0(config_num=config_num)
+            self.manager, config0 = self._config0_placement(node_manager)
 
     def write(self, config0: list):
         r"""
@@ -93,9 +96,9 @@ class StateGenerator(object):
 
         # create a working directory
         (Path(STORE) / Path(f'run-{self.config_num}')).mkdir(
-                                                                parents=True, 
-                                                                exist_ok=True
-                                                            )
+            parents=True,
+            exist_ok=True
+        )
 
         # complete path to the state file
         statefile = Path(STORE) / Path(f'run-{self.config_num}/init0.json')
@@ -103,7 +106,7 @@ class StateGenerator(object):
         # write state information to the json file
         with open(statefile, 'w') as f: json.dump(config0, f, indent=4)
 
-    def _generate_init0(self, config_num:str = None) -> str:
+    def _generate_init0(self, config_num: str = None) -> str:
         r"""
         Initialise the configuration essentials.
 
@@ -132,31 +135,48 @@ class StateGenerator(object):
         bot = Agent.unpickled(bot)
 
         state = dict(
-                        head_pos=bot.head.tolist(),
-                        tail_pos=bot.tail.tolist()
-                )
+            head_pos=bot.head.tolist(),
+            tail_pos=bot.tail.tolist()
+        )
 
         return state
 
-    def _random_placement(self, n_bots:int) -> (AmoebotManager, list):
+    def _random_placement(self, n_bots: int,
+                          node_manager: object) -> (AmoebotManager, list):
         r"""
         Place bots on an instance of `elements.node.core.Node` of the 
         triangular graph randomly.
 
         Attributes
             n_bots (int) :: number of particles (amoebots) to place.
-
+            node_manager (NodeManager) :: reference to `NodeManager` object.
+        
         Return (tuple): a tuple with reference to `AmoebotManager` and a list of
                         the `config0` object.
-        
-        TODO rewrite this function for NodeManagerBitArray update
         """
 
-        raise NotImplementedError
+        manager = AmoebotManager(node_manager.get_nmap, self.config_num)
 
-    def _config0_placement(self) -> AmoebotManager:
+        n_points, _ = node_manager.grid_points.shape
+        rand_ixs = np.random.choice(range(n_points), size=n_bots)
+
+        # add bot to the list at random node position
+        for ix, position in enumerate(node_manager.grid_points[rand_ixs]):
+            manager._add_bot(np.uint8(ix), head=position)
+
+        # collect state information from the amoebot manager
+        vec_collector = np.vectorize(self._collect_amoebot_states)
+        config0 = vec_collector(list(manager.amoebots.values()))
+
+        return manager, config0.tolist()
+
+    def _config0_placement(self, node_manager: object) -> (
+    AmoebotManager, list):
         r"""
         Collect state information from source place bots on the grid. 
+
+        Attributes
+            node_manager (NodeManager) :: reference to `NodeManager` object.
 
         Return (AmoebotManager): object handler for manager class
         """
@@ -168,36 +188,26 @@ class StateGenerator(object):
 
         except FileNotFoundError:
             raise InitializationError(
-                f"Configuration file not found."
+                f"Configuration file looks incorrect."
             )
 
-        # creates a placeholder for the particle position
-        points = np.zeros([len(config0), 4])
+        # creates a placeholder for the head and tail positions
+        points = np.zeros([4, len(config0)])
 
-        # add bot ix to the list at known position
-        for ix, bot in enumerate(config0):
-            h_point = bot['head_pos']
-            t_point = bot['tail_pos']
-
-            # ...
-            assert np.all(h_point == t_point), \
-                InitializationError(
-                                "Ensure head and tail coordinates are the same "
-                                "in configuration file.")
-
-            x, y = h_point
-
-
+        # add bot to the list at known position
+        for ix, bot in enumerate(config0):  # ix corresponds to bot_id
+            head_x, head_y = bot['head_pos']
+            tail_x, tail_y = bot['tail_pos']
             manager._add_bot(
-                                np.uint8(ix),
-                                point=np.array([x, y], dtype=np.uint8),
+                np.uint8(ix),
+                head=np.array([head_x, head_y], dtype=np.uint8),
+                tail=np.array([head_x, head_y], dtype=np.uint8)
             )
 
-            # populate points array with the correct head and tail co-ordinates
-            points[ix, :] = (x, y, x, y)
+            # Adds head and tail position to corresponding point positions
+            positions = (head_x, head_y, tail_x, tail_y)
+            points[(0, 1, 2, 3), (ix, ix, ix, ix)] = positions
 
-        # intialise the node environment and set up points
-        nenvm = NodeEnvManager(points=points)
-        manager._copy_node_array(node_array=nenvm.node_array)
+        manager.load_env(value=NodeManagerBitArray(points=points).nodes)
 
-        return manager
+        return manager, config0

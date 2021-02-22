@@ -3,9 +3,7 @@
 """ elements/core.py
 """
 
-from abc import ABC
-
-class Core(ABC):
+class Core(object):
     r""" abstract base class for core element objects.
     """
     def __init__(self): pass
