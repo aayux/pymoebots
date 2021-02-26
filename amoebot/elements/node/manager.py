@@ -7,7 +7,8 @@ from amoebot.elements.node.core import Node
 from amoebot.elements.manager import Manager
 from amoebot.elements.node.manager_utils import *
 
-from numpy import ndarray
+from numpy import ndarray, where, uint8
+from typing import List, Tuple
 
 import numpy as np
 import typing
@@ -520,7 +521,7 @@ class NodeManagerBitArray:
         """
 
         # localize required function.
-        get_node = self.get_node
+        get_node = self.get_node  # TODO: rewrite method to utilize node class.
 
         # split points to separate x and y values.
         x_values, y_values = points
@@ -541,28 +542,166 @@ class NodeManagerBitArray:
             # makes current node a wall.
             node.toggle_wall()
 
+    def ping_for_wall(self, port: uint8, depth: uint8) -> uint8:
+        """
+        Sends a ping in a specified directions that travels across head
+        objects in the same direction for a limited distance.
 
+        :param uint8 port: Specified direction to use
+        :param uint8 depth: Number of nodes to travel before signal dies.
+        :returns: uint8 0 - false or 1 - true
+        """
+        # localize necessary components
+        get_node = self.get_node  # TODO: rewrite method to utilize node class.
+        get_node_data = self.__get_node_data
 
-if __name__ == '__main__':
-    x1 = np.array(
-        [[0, 2, 4, 6, 8], [0, 0, 0, 0, 0], [0, 2, 4, 6, 8], [0, 0, 0, 0, 0]])
+        # Grab the node associated with the head position
+        head = self.__get_working_nodes()[0]
 
-    x2 = NodeManagerBitArray(points=x1)
-    print(x2.is_occupied_ver_1(node_index=0))
-    print(x2.is_occupied_ver_1(node_index=6))
-    # x3 = x2.nodes
-    # x2 = NodeManagerBitArray(bot_id=0, nodes=x3)
-    # x2.move_to(port=2)
-    # x3 = x2.get_occupied_neighbors()
-    # x3 = x3[0] | x3[1]
-    # x4 = set()
-    # for i in x3:
-    #     x4 |= x2.get_occupied_neighbors_of(node_index=i.item())
-    # print(x3)
-    # print(x4)
-    # print(x2.nodes)
+        # Grab directional points relative to origin.
+        relative_x, relative_y = get_relative_points_direction(port)
 
+        # Initialize signals of readability
+        nothing = 0
+        wall = 1
+        signal = 2
 
-    # x2.move_to(port=2)
-    # x3 = x2.get_occupied_neighbors()
-    # print(x3)
+        # Flag to signal that a wall was found during search or a signal was
+        # felt.
+        found_something = nothing
+
+        # Used to travel backwards and update nodes if wall was found.
+        node_stack = []
+
+        # Walks through the specified number of nodes (depth) from origin in the
+        # direction specified (port).
+        for _ in range(depth):
+            # Add current position to stack.
+            node_stack.append(head)
+
+            # Grab neighbor index associated with the port.
+            neighbor_index = head.get_neighbor_index(port=port)
+
+            # Initialize signals of readability.
+            node_not_created = -1
+
+            # Check if the node at the neighbor index has been created.
+            if neighbor_index == node_not_created:
+                # Since the node has not been created, we create the node by
+                # using get_node.
+
+                # create the neighbor node x value
+                next_x = head.x + relative_x
+
+                # create the neighbor node y value
+                next_y = head.y + relative_y
+
+                # create node by using get_node with updated x and y values. We
+                # then covert the node data provided by get_node to create a
+                # Node object.
+                head = Node(node_data=get_node(x=next_x, y=next_y))
+            else:
+                # Since the neighbor has been created, we just grab the
+                # neighbor's node data and create a Node object.
+                head = Node(node_data=get_node_data(index=neighbor_index))
+
+            # Check if current node already has a signal coming from our
+            # specified direction.
+            if head.get_signal_status(port=port):
+                # Marks that we found a signal and breaks search.
+                found_something = signal
+                break
+
+            # Checks if current node is a wall.
+            if head.is_wall():
+                # Marks that we found a wall and breaks search.
+                found_something = wall
+                break
+
+        # If what we found was a wall, go back through the stack and set the
+        # signal variable in the specified direction as true (1).
+        if found_something == wall:
+
+            # Initialize signals of readability.
+            on = uint8(1)
+
+            # localize calls to pop for the same stack
+            pop = node_stack.pop
+
+            # While there are still nodes in the stack continue.
+            while node_stack:
+                # Pops node off node_stack and sets the signal in the specified
+                # direction as true (1).
+                pop().set_signal_on_port(value=on, port=port)
+
+        # If we found something return true (1) else false (0).
+        return uint8(1) if found_something else uint8(0)
+
+    def __get_node_data(
+            self, index: UNSIGNED_INT) -> ndarray:
+        """
+        Grabs all node data at a specified index.
+
+        :param Union[uint8, uint16, uint32, uint64] index: Column in the node
+            ndarray where the node is found.
+        :returns: ndarray filled with node data.
+        """
+        return self.__nodes[0:, index:index + 1]
+
+    def __get_working_nodes(self) -> List[Node]:
+        """
+        Gets node objects from node indices
+
+        :returns: List of Node objects
+        """
+        # localize necessary components
+        get_node_data = self.__get_node_data
+
+        # Grab indices associated with bot id
+        indices = self.__get_working_nodes_indices()
+
+        # Create array of Node objects and return it.
+        return [Node(node_data=get_node_data(index=i)) for i in indices]
+
+    def __get_working_nodes_indices(self) -> Tuple[UNSIGNED_INT, UNSIGNED_INT]:
+        """
+        Find indices in node array associated with bot id
+
+        :returns: Pair of ints as a tuple.
+        """
+        # localize necessary components
+        nodes = self.nodes
+        bot_id = self.bot_id
+
+        # Grab positions (indices) where the bot id appears in the bot id field
+        indices = where(nodes[4] == bot_id)[0]
+
+        # Check if no indices are returned because this means a bot with that
+        # particular id is not present in the environment
+        if indices.size == 0:
+            raise Exception("Bot does not appear to be on any existing node")
+
+        # If the bot is contracted only one index should be preset.
+        elif indices.size == 1:
+            return indices[0], indices[0]
+
+        # If the bot is expanded the number of nodes occupied should be two,
+        # therefore the number of indices should be two.
+        elif indices.size == 2:
+            # Grab the head/tail/contracted flag in the nodes at the indices
+            # given
+            head_or_tail_statuses = nodes[17][indices]
+
+            # Check if the first number in the head/tail array is head (1)
+            if head_or_tail_statuses[0] == 1:
+                # return head and tail in current order
+                return indices[0], indices[1]
+
+            # Check failed, so the first index belongs to the tail.
+            # Return flip-flop version of indices.
+            return indices[1], indices[0]
+
+        # If none of the previous conditions were hit, then the bot recorded to
+        # be spread across too many nodes.
+        else:
+            raise Exception("Bot is located on too many nodes")

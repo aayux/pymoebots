@@ -1,6 +1,12 @@
 import numpy as np
 import typing
 
+from numpy import iinfo, int8, int16, int32, int64, uint8, uint16, uint32, \
+    uint64
+from typing import Union
+
+UNSIGNED_INT = Union[uint8, uint16, uint32, uint64]
+
 NUMPY_INT_LEVELS = {
     'ints': {np.int8, np.int16, np.int32, np.int64},
     'int8': (-128, 127),
@@ -145,11 +151,13 @@ def add_points_ver_0(nodes: np.ndarray, points: np.ndarray,
 
     return nodes
 
+
 def check_for_null_space_ver_0(working_node, nodes):
     neighbors = nodes[NEIGHBOR_RANGE, working_node]
     null_spaces = np.where(neighbors == -1)[0]
 
     return null_spaces
+
 
 def check_points_existence_ver_0(
         nodes_by_point,
@@ -175,6 +183,7 @@ def contract_ver_0(nodes, head_node_index, tail_node_index, option):
         head_node[(3, 4, 17), (0, 0, 0)] = 0, -1, 0
         tail_node[17] = 3
         return (tail_node_index,)
+
 
 def create_node_ver_0(
         x: typing.Union[int, float],
@@ -239,6 +248,15 @@ def get_occupied_neighbors_ver_0(
     return neighbors_set, nodes
 
 
+def get_relative_points_direction(port: uint8):
+    """
+    "param uint8 port: The direction that we want to obtain the relative point
+        from.
+    :returns: Relative point corresponding to the given direction
+    """
+    return NODE_LAYOUT[LAYOUT][port]['relative_point']
+
+
 def get_working_node_index_ver_0(nodes: np.ndarray, bot_id: int) -> tuple:
     index = np.where(nodes[4] == bot_id)[0]
 
@@ -256,14 +274,16 @@ def get_working_node_index_ver_0(nodes: np.ndarray, bot_id: int) -> tuple:
     else:
         raise ValueError("Bot is located on too many nodes")
 
+
 def fill_null_space_ver_0(null_spaces, nodes, working_node, nodes_by_point):
     node = nodes[0:, working_node]
     for i in range(null_spaces.size):
         r_x, r_y = NODE_LAYOUT[LAYOUT][null_spaces.item(i)]['relative_point']
-        x, y = node.item(1)+r_x, node.item(2)+r_y
+        x, y = node.item(1) + r_x, node.item(2) + r_y
         _, nodes = add_point_ver_1(
             x=x, y=y, nodes=nodes, nodes_by_point=nodes_by_point)
     return nodes
+
 
 def increase_array_size_ver_0(nodes: np.ndarray, size: int, ):
     binary_str = len(np.binary_repr(size))
