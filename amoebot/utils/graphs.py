@@ -65,19 +65,3 @@ class GraphAlgorithms(object):
                     stack.append(u)
         return visited
 
-        # visited = np.zeros(len(self.graph_dict), dtype=np.uint8)
-        # stack = collections.deque([root])
-        # visited[root] = np.uint8(1)
-        #
-        # while stack:
-        #
-        #     # pop a vertex from stack
-        #     v = stack.pop()
-        #
-        #     # mark visited and add to stack
-        #     for u in self.graph_dict[v]:
-        #         if visited[u] != np.uint8(1):
-        #             visited[u] = np.uint8(1)
-        #             stack.append(u)
-        #
-        # return visited

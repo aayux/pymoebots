@@ -84,7 +84,7 @@ class StateGenerator(object):
         else:
             self.config_num = config_num
             # _ = self._generate_init0(config_num=config_num)
-            self.manager, config0 = self._config0_placement(node_manager)
+            self.manager, config0 = self._config0_placement()
 
     def write(self, config0: list):
         r"""
@@ -170,8 +170,7 @@ class StateGenerator(object):
 
         return manager, config0.tolist()
 
-    def _config0_placement(self, node_manager: object) -> (
-    AmoebotManager, list):
+    def _config0_placement(self) -> (AmoebotManager, list):
         r"""
         Collect state information from source place bots on the grid. 
 
@@ -192,12 +191,12 @@ class StateGenerator(object):
             )
 
         # creates a placeholder for the head and tail positions
-        points = np.zeros([4, len(config0)])
+        points = np.zeros([4, len(config0['bots'])])
 
         # add bot to the list at known position
-        for ix, bot in enumerate(config0):  # ix corresponds to bot_id
-            head_x, head_y = bot['head_pos']
-            tail_x, tail_y = bot['tail_pos']
+        for ix, bot in enumerate(config0['bots']):  # ix corresponds to bot_id
+            head_x, head_y = bot
+            
             manager._add_bot(
                 np.uint8(ix),
                 head=np.array([head_x, head_y], dtype=np.uint8),
@@ -205,9 +204,15 @@ class StateGenerator(object):
             )
 
             # Adds head and tail position to corresponding point positions
-            positions = (head_x, head_y, tail_x, tail_y)
+            positions = (head_x, head_y, head_x, head_y)
             points[(0, 1, 2, 3), (ix, ix, ix, ix)] = positions
 
-        manager.load_env(value=NodeManagerBitArray(points=points).nodes)
+        nm = NodeManagerBitArray(points=points)
+
+        for wall in config0['walls']:
+            wall_x, wall_y = wall
+            nm.add_wall(point=(wall_x, wall_y))
+
+        manager.load_env(value=nm.nodes)
 
         return manager, config0

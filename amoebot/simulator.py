@@ -7,7 +7,7 @@ import time
 import psutil
 
 from amoebot.utils.trigrid import make_triangular_grid
-from amoebot.elements.node.manager import NodeManager, NodeManagerBitArray
+from amoebot.elements.node.manager import NodeManagerBitArray
 from amoebot.elements.stategen import StateGenerator
 
 # number of cpu cores available
@@ -55,19 +55,10 @@ class AmoebotSimulator(object):
                                 on the grid.
         """
 
-        xdim, ydim = shape
-        
-        # generate the triangular grid
-        grid = make_triangular_grid(xdim, ydim)
-        
-        # launch a node manager instance
-        nm = NodeManager(grid)
-
         # generate the amoebot states and create storage dumps
         if config_num:
             self.generator = StateGenerator(config_num=config_num)
-        else: 
-            self.generator = StateGenerator(nm, n_bots=n_bots)
+        else: raise NotImplementedError
 
         self.algorithm = algorithm
         self.max_rnds = max_rnds

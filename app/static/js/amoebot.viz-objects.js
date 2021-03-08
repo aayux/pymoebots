@@ -23,6 +23,58 @@ export function addAmoebot( x, y , i) {
 
 }
 
+class WallVizElements {
+    /*
+    <g> SVG elements for visualising the particles on the grid
+    */
+   constructor( data ) {
+        // object of class AmoebotVizTemplate 
+        this.wall_data = data
+        this.wall = data.wall
+
+        // SVG element group
+        this.vizObject = document.createElementNS( nameSpaceURI, 'g' );
+        this.vizObject.setAttribute( 'class', 'wall' );
+    }
+
+    drawElements() {
+        // ...
+        this.vizWall = this.drawWall();
+        camera.getElementById( 'amoebots' ).appendChild( this.vizObject );
+    }
+
+    drawWall() {
+        /*
+        draw a standard particle head element to stand on a point
+
+        : returns : reference to the new element object
+        */
+        var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
+        vizElement.setAttribute( 'name', `W${ this.wall }` );
+
+        // locate on the triangualr grid
+        const position = shearPoint(
+                            {
+                                x : this.wall_data.x, 
+                                y : this.wall_data.y
+                            }
+                        );
+        
+        vizElement.setAttribute( 'cx', position.x );
+        vizElement.setAttribute( 'cy', position.y );
+        vizElement.setAttribute( 'fill', 'red' );
+        vizElement.setAttribute( 'r', `${ pixels }px` );
+        vizElement.setAttribute( 'stroke', 'black' );
+        vizElement.setAttribute( 'stroke-width', `${ pixels / 3 }px` );
+
+        // add to SVG group
+        this.vizObject.appendChild( vizElement );
+        
+        // return a reference
+        return vizElement;
+    }
+}
+
 class AmoebotVizElements {
     /*
     <g> SVG elements for visualising the particles on the grid
@@ -127,15 +179,24 @@ class AmoebotVizElements {
        // return a reference
        return vizElement;
     }
+}
 
-    drawTrace() {
-        /*
-        draw a standard particle trace element as needed to stand on a point
+class WallVizTemplate {
+    /*
+    template representation for current state, contains reference to the SVG 
+    elements object
+    */
 
-        : returns : reference to the new element object
-        */
-        var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
-        return;
+    constructor( wall, point) {
+        // unique identifier usefuol for vizualisation
+        this.wall = wall
+
+        // correct for skew in tri-grid layout
+        this.x = point[ 0 ], 
+        this.y = (point[ 1 ] % 2 == 0 ) ? point[ 1 ] / 2 : ( point[ 1 ] - 1 ) / 2
+
+        // visualisation object
+        this.vizObject = new WallVizElements( this );
     }
 }
 
@@ -172,14 +233,15 @@ class AmoebotVizInit {
 
     constructor( config0, tracks ) {
         // starting configuration of the system
-        this.config0 = this.init = config0;
+        this.config0_bots = this.init_b = config0[ 'bots' ];
+        this.config0_walls = this.init_w = config0[ 'walls' ];
 
         // motion history tracker
         this.tracks = tracks;
 
         this.placeBotsOnGrid();
+        this.placeWallsOnGrid();
 
-        return this;
     }
 
     placeBotsOnGrid() {
@@ -190,16 +252,53 @@ class AmoebotVizInit {
         // clear all svg objects
         amoebotsDOM.innerHTML = '';
 
-        for( let bot_id in this.init ) {
+        for( let bot_id in this.init_b ) {
             this.bot_list.push(
                 new AmoebotVizTemplate(
                     bot_id,
-                    this.init[ bot_id ].head_pos,
-                    this.init[ bot_id ].tail_pos
+                    this.init_b[ bot_id ], 
+                    this.init_b[ bot_id ]
                 )
             );
 
             this.bot_list[ bot_id ].vizObject.drawElements();
+        }
+    }
+
+    moveBotsOnGrid() {
+
+        // list of particle positions on triangular grid
+        this.bot_list = [];
+
+        // clear all svg objects
+        amoebotsDOM.innerHTML = '';
+
+        for( let bot_id in this.init_b ) {
+            this.bot_list.push(
+                new AmoebotVizTemplate(
+                    bot_id,
+                    this.init_b[ bot_id ].head_pos, 
+                    this.init_b[ bot_id ].tail_pos
+                )
+            );
+
+            this.bot_list[ bot_id ].vizObject.drawElements();
+        }
+    }
+
+    placeWallsOnGrid() {
+        // 
+        this.wall_list = [];
+
+        for( let wall in this.init_w ) {
+            this.wall_list.push(
+                new WallVizTemplate(
+                    wall,
+                    this.init_w[ wall ]
+                )
+            );
+
+            this.wall_list[ wall ].vizObject.drawElements();
         }
     }
 }
@@ -210,16 +309,18 @@ export class AmoebotVizTracker extends AmoebotVizInit{
     */
 
     getConfigInfo() {
-        var nBots = this.config0.length;
+        var nBots = this.config0_bots.length;
+        var nWalls = this.config0_walls.length;
         var nSteps = this.tracks.length;
         return( [ nBots, nSteps ] );
     }
 
     vizOneStep( step ) {
         // one step is one bot movement
-        this.init = this.tracks[ step ];
+        this.init_b = this.tracks[ step ];
 
-        this.placeBotsOnGrid();
+        this.moveBotsOnGrid();
+        this.placeWallsOnGrid();
         // bot.update();
         // updateViz();
         return 1;
