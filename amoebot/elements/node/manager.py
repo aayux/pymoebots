@@ -14,188 +14,6 @@ import numpy as np
 import typing
 from collections import defaultdict
 
-
-class NodeManager(Manager):
-    r"""
-    Manages grid connectivity and the node map for fast lookups.
-    
-    Attributes
-
-        __nmap (defaultdict) :: a dictionary of dictionaries used to index nodes
-                        using x and y co-odrinates.
-        grid_points (numpy.ndarray) :: "matrix" of the points on the grid.
-    """
-
-    def __init__(self, points: np.ndarray):
-        r"""
-        Attributes
-
-            points (numpy.ndarray) :: list of grid points returned by 
-                                `make_triangular_grid`.
-        """
-        # [dictionary of dictionary] of nodes
-        self.__nmap: defaultdict = defaultdict(dict)
-
-        # numpy array of plotted points
-        self.grid_points: np.ndarray = np.array(points)
-
-        # call to grid builder
-        self.grid_builder()
-
-    def grid_builder(self):
-        r"""
-        Create nodes at grid positions and link the nodes into a full grid.
-        """
-
-        # rows and cols in the plotted points on the grid
-        nrows, ncols, dim = self.grid_points.shape
-        self.grid_points = self.grid_points.reshape(nrows * ncols, dim)
-
-        # place nodes on the grid
-        for point in self.grid_points:
-            # add node to node manager
-            self._add_node(point=point)
-
-        # calls function to link adjacent nodes on the hexagonal grid
-        self._hex_connect()
-
-    def _add_node(self, point: np.ndarray):
-        r"""
-        Add individual nodes to node lookup.
-
-        Attributes:
-            points (numpy.arrray) :: list containing the x and y grid 
-                                co-ordinates.
-        """
-
-        # creates node and assigns it a place in the node dictionary
-        self.__nmap[point[0]][point[1]] = Node(position=point)
-
-    def _hex_connect(self):
-        r"""
-        Link adjacent nodes on the hexagonal grid.
-        """
-
-        # TODO dynamically optimise this function
-
-        # iterate over the rows
-        for ix in self.__nmap:
-            for jx in self.__nmap[ix]:
-                # current node
-                node = self.__nmap[ix][jx]
-
-                # if data isn't already available
-                if node.neighbors['n'] is None and (jx + 2) in self.__nmap[ix]:
-                    # link the node's neighbour to the north
-                    node.set_neighbor('n', np.array([
-                        ix, jx + 2
-                    ], dtype=np.uint8)
-                                      )
-
-                    # back link to the current node
-                    self.__nmap[ix][jx + 2].set_neighbor('s',
-                                                         np.array([ix, jx],
-                                                                  dtype=np.uint8)
-                                                         )
-
-                # also ensure node is in the grid systems
-                if node.neighbors['ne'] is None and (ix + 1) in self.__nmap \
-                        and (jx + 1) in self.__nmap[ix + 1]:
-                    if (jx + 1) in self.__nmap[ix + 1]:
-                        # link the node's neighbour to the north east
-                        node.set_neighbor('ne', np.array([
-                            ix + 1, jx + 1
-                        ], dtype=np.uint8)
-                                          )
-
-                        # back link to the current node
-                        self.__nmap[ix + 1][jx + 1].set_neighbor('sw',
-                                                                 np.array(
-                                                                     [ix, jx],
-                                                                     dtype=np.uint8)
-                                                                 )
-
-                if node.neighbors['se'] is None and (ix + 1) in self.__nmap \
-                        and (jx - 1) in self.__nmap[ix + 1]:
-                    # link the node's neighbour to the south east
-                    node.set_neighbor('se', np.array([
-                        ix + 1, jx - 1
-                    ], dtype=np.uint8)
-                                      )
-
-                    # back link to the current node
-                    self.__nmap[ix + 1][jx - 1].set_neighbor('nw',
-                                                             np.array([ix, jx],
-                                                                      dtype=np.uint8)
-                                                             )
-
-                if node.neighbors['s'] is None and (jx - 2) in self.__nmap[ix]:
-                    # link the node's neighbour to the south
-                    node.set_neighbor('s', np.array([
-                        ix, jx - 2
-                    ], dtype=np.uint8)
-                                      )
-
-                    # back link to the current node
-                    self.__nmap[ix][jx - 2].set_neighbor('n',
-                                                         np.array([ix, jx],
-                                                                  dtype=np.uint8)
-                                                         )
-
-                if node.neighbors['sw'] is None and (ix - 1) in self.__nmap \
-                        and (jx - 1) in self.__nmap[ix - 1]:
-                    # link the node's neighbour to the south west
-                    node.set_neighbor('sw', np.array([
-                        ix - 1, jx - 1
-                    ], dtype=np.uint8)
-                                      )
-
-                    # back link to the current node
-                    self.__nmap[ix - 1][jx - 1].set_neighbor('ne',
-                                                             np.array([ix, jx],
-                                                                      dtype=np.uint8)
-                                                             )
-
-                if node.neighbors['nw'] is None and (ix - 1) in self.__nmap \
-                        and (jx + 1) in self.__nmap[ix - 1]:
-                    # link the node's neighbour to the north west
-                    node.set_neighbor('nw', np.array([
-                        ix - 1, jx + 1
-                    ], dtype=np.uint8)
-                                      )
-
-                    # back link to the current node
-                    self.__nmap[ix - 1][jx + 1].set_neighbor('se',
-                                                             np.array([ix, jx],
-                                                                      dtype=np.uint8)
-                                                             )
-
-                self.__nmap[ix][jx] = node
-
-    def get_node(self, position: np.ndarray) -> Node:
-        r"""
-        Get `Node` object at `position`.
-
-        Atrributes:
-            position (numpy.ndarray) :: list containing x and y co-ordinates of 
-                            node to look up in the `__nmap` dictionary.
-
-        Return (Node): object of class `Node` at the specified lookup 
-                        `position`.
-        """
-
-        return self.__nmap[position[0]][position[1]]
-
-    @property
-    def get_nmap(self) -> dict:
-        return self.__nmap
-
-    @property
-    def get_num_nodes(self) -> int:
-        nrows, ncols, _ = self.grid_points.shape
-        return nrows * ncols
-
-
 # @pedantic.pedantic_class
 class NodeManagerBitArray:
     # TODO: Write docstrings for all current methods
@@ -355,8 +173,8 @@ class NodeManagerBitArray:
     def is_occupied(
             self, x: typing.Union[int, float], y: typing.Union[int, float]
     ) -> bool:
-        occupied = self.get_node(x=x, y=y)[3]
-        return True if occupied else False
+        node = self.get_node(x=x, y=y)
+        return True if node[0] == 2 or node[3] else False 
 
     def move_to(self, port: int, ) -> bool:
         relative_x, relative_y = NODE_LAYOUT[LAYOUT][port]['relative_point']
@@ -512,35 +330,32 @@ class NodeManagerBitArray:
         self.nodes = nodes
         return neighbors_set
 
-    def add_walls(self, points: ndarray) -> None:
+    def add_wall(self, point: tuple) -> None:
         """
         Adds given points as walls (2) type objects in the node space.
 
-        :param ndarray points: A 2d array with x and y values in their own array
+        :param ndarray points: A tuple with x and y co-ordinates
         :returns: nothing
         """
 
         # localize required function.
         get_node = self.get_node  # TODO: rewrite method to utilize node class.
 
-        # split points to separate x and y values.
-        x_values, y_values = points
+        # split points to separate x and y values
+        wall_x, wall_y = point
 
-        # loop through values
-        for i in range(x_values.size):
+        # Using point (x, y) data, we pull the associated node data and
+        # creates node a node object from it.
+        node = Node(get_node(x=wall_x, y=wall_y))
 
-            # Using point (x, y) data, we pull the associated node data and
-            # creates node a node object from it.
-            node = Node(get_node(x=x_values[i], y=y_values[i]))
+        # if the node is occupied, we can't place a wall here, so we
+        # through up an error stating this.
+        if node.occupied:
+            raise Exception(f"Unable to place wall because point "
+                            f"({node.get_point()}) is occupied.")
 
-            # if the node is occupied, we can't place a wall here, so we
-            # through up an error stating this.
-            if node.occupied:
-                raise Exception(f"Unable to place wall because point "
-                                f"({node.get_point()}) is occupied.")
-
-            # makes current node a wall.
-            node.toggle_wall()
+        # makes current node a wall.
+        node.toggle_wall()
 
     def ping_for_wall(self, port: uint8, depth: uint8) -> uint8:
         """
@@ -575,7 +390,7 @@ class NodeManagerBitArray:
 
         # Walks through the specified number of nodes (depth) from origin in the
         # direction specified (port).
-        for _ in range(depth):
+        for k in range(depth):
             # Add current position to stack.
             node_stack.append(head)
 
@@ -605,37 +420,14 @@ class NodeManagerBitArray:
                 # neighbor's node data and create a Node object.
                 head = Node(node_data=get_node_data(index=neighbor_index))
 
-            # Check if current node already has a signal coming from our
-            # specified direction.
-            if head.get_signal_status(port=port):
-                # Marks that we found a signal and breaks search.
-                found_something = signal
-                break
-
             # Checks if current node is a wall.
             if head.is_wall():
                 # Marks that we found a wall and breaks search.
                 found_something = wall
                 break
 
-        # If what we found was a wall, go back through the stack and set the
-        # signal variable in the specified direction as true (1).
-        if found_something == wall:
-
-            # Initialize signals of readability.
-            on = uint8(1)
-
-            # localize calls to pop for the same stack
-            pop = node_stack.pop
-
-            # While there are still nodes in the stack continue.
-            while node_stack:
-                # Pops node off node_stack and sets the signal in the specified
-                # direction as true (1).
-                pop().set_signal_on_port(value=on, port=port)
-
-        # If we found something return true (1) else false (0).
-        return uint8(1) if found_something else uint8(0)
+        # ...
+        return k
 
     def __get_node_data(
             self, index: UNSIGNED_INT) -> ndarray:

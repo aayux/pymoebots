@@ -8,12 +8,13 @@ from .functional import compress_agent_sequential
 from .functional import compress_agent_async_contracted
 from .functional import compress_agent_async_expanded
 from .functional import contract_particle, expand_particle
+from .functional import maze_solve_sequential
 from ...utils.graphs import GraphAlgorithms
 
 import numpy as np
 from collections import defaultdict
 
-ALGORITHMS = ['random_move', 'compress']
+ALGORITHMS = ['random_move', 'compress', 'mzsolve']
 
 
 class Agent(Amoebot):
@@ -79,6 +80,9 @@ class Agent(Amoebot):
 
         elif algorithm == 'compress':
             __nmap = self._compress(__nmap, async_mode=async_mode)
+
+        elif algorithm == 'mzsolve':
+            __nmap = self._maze_solver(__nmap, async_mode=async_mode)
 
         else:
             return (self, __nmap)
@@ -155,5 +159,37 @@ class Agent(Amoebot):
                 __nmap = compress_agent_async_contracted(self, __nmap)
             else:
                 __nmap = compress_agent_async_expanded(self, __nmap)
+
+        return __nmap
+    
+    def _maze_solver(
+            self,
+            __nmap: defaultdict,
+            async_mode: bool = True,
+    ) -> defaultdict:
+        r"""
+        Compression agorithm for the amoebot model based on 
+
+        Sarah Cannon, Joshua J. Daymude, Dana Randall, and Andréa W. Richa
+        A Markov chain algorithm for compressionin self-organizing particle 
+        systems (2016); full text at arxiv.org/abs/1603.07991
+
+        Attributes
+
+            agent (Core) :: instance of class `Agent`
+            __nmap (defaultdict) :: a dictionary of dictionaries used to index nodes 
+                        using x and y co-ordinates.
+            async_mode (bool) default: True :: if True, execute the local, 
+                        distributed, asynchronous algorithm for compression else
+                        run sequential algorithm.
+
+        Return (defaultdict): the updated `__nmap` dictionary.
+        """
+
+        # execute the sequential Markov Chain algorithm M
+        if not async_mode:
+            __nmap = maze_solve_sequential(self, __nmap, _id=self.__id)
+
+        else: raise NotImplementedError
 
         return __nmap

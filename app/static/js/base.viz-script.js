@@ -36,6 +36,7 @@ function updateViz() {
     ( function updateAmoebots() {
         /* update bots positions relative to the origin */
         var bot_list = window.vtracker.bot_list;
+        
         for( let i = 0; i < bot_list.length; i++ ) {
             var botViz = bot_list[i].vizObject;
             var tailPosition = shearPoint(bot_list[i].tail);
@@ -60,6 +61,21 @@ function updateViz() {
                 botViz.lineElement.setAttribute( 'y2', yHead );
                 botViz.vizObject.appendChild( botViz.lineElement );
             }
+        }
+    })();
+
+    ( function updateWalls() {
+        /* update bots positions relative to the origin */
+        var wall_list = window.vtracker.wall_list;
+        for( let i = 0; i < wall_list.length; i++ ) {
+            var wallViz = wall_list[i].vizObject;
+            var wallPosition = shearPoint( wall_list[ i ] );
+
+            var x = originLoc.x + wallPosition.x;
+            var y = originLoc.y + wallPosition.y;
+
+            wallViz.vizWall.setAttribute( 'cx', x );
+            wallViz.vizWall.setAttribute( 'cy', y );
         }
     })();
 
