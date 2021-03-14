@@ -59,7 +59,7 @@
     appearance: none;
     cursor: pointer; /* cursor on hover */
   }
-  
+
 .slider::-moz-range-thumb {
     cursor: pointer; /* cursor on hover */
   }

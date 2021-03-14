@@ -1,247 +1,42 @@
-import { nameSpaceURI, cameraDim, unit, originLoc } from './config.js';
-import { getRequest } from './apis.request-handler.js';
-import { 
-        shearPoint, 
-        addAmoebot, 
-        AmoebotVizTracker 
-    } from './amoebot.viz-objects.js';
+//import { nameSpaceURI, cameraDim, unit, originLoc } from './config.js';
+import { nameSpaceURI, cameraDim, unit} from './config.js';
+//import { getRequest } from './apis.request-handler.js';
+import { sendRequest } from './apis.request-handler.js';
+/*import {
+        shearPoint,
+        addAmoebot,
+        AmoebotVizTracker
+    } from './amoebot.viz-objects.js';*/
+import {tri2Euclid, Amoebot, Wall} from './viz-objects.js';
 
-async function requestHistory( runId ) {
-    /*
-    load the state history from JSON source file
-    returns :: 200 on success, 400 on failure
-    */
-    // GET request to fetch configuration and tracker data
-    const requestStatus = await getRequest( 'history/' + runId )
-                        .then( requestStatus => requestStatus )
-                        .then( reqResponse => response = reqResponse )
-                        .then( () => { return 200; } )
-                        .catch( () => { return 400; } );
-    return requestStatus;
-}
 
-function updateViz() {
-    /*
-    the primary visual update function, changes grid, particle and maze 
-    positions relative to the origin calculated on drag
-    */
+const camera = document.getElementById("camera")
+const amoebotsDOM = camera.getElementById("amoebots");
 
-    ( function updateOrigin() {
-        // update the anchored origin
-        var origin = document.getElementById( 'origin' );
-        origin.setAttribute( 'cx', originLoc.x );
-        origin.setAttribute( 'cy', originLoc.y );
-    })();
-
-    ( function updateAmoebots() {
-        /* update bots positions relative to the origin */
-        var bot_list = window.vtracker.bot_list;
-        
-        for( let i = 0; i < bot_list.length; i++ ) {
-            var botViz = bot_list[i].vizObject;
-            var tailPosition = shearPoint(bot_list[i].tail);
-            var headPosition = shearPoint(bot_list[i].head);
-
-            var xHead = originLoc.x + headPosition.x;
-            var yHead = originLoc.y + headPosition.y;
-
-            var xTail = originLoc.x + tailPosition.x;
-            var yTail = originLoc.y + tailPosition.y;
-
-            botViz.vizBotH.setAttribute( 'cx', xHead );
-            botViz.vizBotH.setAttribute( 'cy', yHead );
-
-            botViz.vizBotT.setAttribute( 'cx', xTail );
-            botViz.vizBotT.setAttribute( 'cy', yTail );
-
-            if ( xHead != xTail || yHead != yTail ) {
-                botViz.lineElement.setAttribute( 'x1', xTail );
-                botViz.lineElement.setAttribute( 'x2', xHead );
-                botViz.lineElement.setAttribute( 'y1', yTail );
-                botViz.lineElement.setAttribute( 'y2', yHead );
-                botViz.vizObject.appendChild( botViz.lineElement );
-            }
-        }
-    })();
-
-    ( function updateWalls() {
-        /* update bots positions relative to the origin */
-        var wall_list = window.vtracker.wall_list;
-        for( let i = 0; i < wall_list.length; i++ ) {
-            var wallViz = wall_list[i].vizObject;
-            var wallPosition = shearPoint( wall_list[ i ] );
-
-            var x = originLoc.x + wallPosition.x;
-            var y = originLoc.y + wallPosition.y;
-
-            wallViz.vizWall.setAttribute( 'cx', x );
-            wallViz.vizWall.setAttribute( 'cy', y );
-        }
-    })();
-
-    ( function updateGrid() {
-        // update grid lines
-        var gridViz = document.getElementById( 'grid' );
-        var moduloX = originLoc.x % ( unit * Math.sqrt( 3 ) );
-        var moduloY = originLoc.y % unit;
-        gridViz.setAttribute('transform',
-        'translate(' + moduloX + ', ' + moduloY + ')'
-        );
-    })();
-}
-
-function drawGrid() {
-    var camera = document.getElementById( 'camera' );
-    camera.setAttribute( 'width', cameraDim.w );
-    camera.setAttribute( 'height', cameraDim.h );
-
-    var gridLines = [];
-
-    // horizontal distance between grid lines
-    var hGridDist = unit * Math.sqrt(3);
-
-    // get points for longitudanal lines
-    for( let i = - hGridDist; i <= cameraDim.w + hGridDist; i += hGridDist / 2 ) {
-        gridLines.push({
-            p1: {x: i, y: - 2 *  unit }, 
-            p2: {x: i, y: cameraDim.h + ( 2 * unit ) }
-        });
-    }
-
-    // vertical offsets on the grid
-    var vGridOffset = ( Math.floor( cameraDim.h / ( 2 * unit ) ) + 1 ) * unit * 3;
-    for( let i = -vGridOffset; i <= cameraDim.h + vGridOffset; i += unit ) {
-        // right sheared diagonal
-        gridLines.push({
-            p1: { x : -2 * hGridDist, y : i },
-            p2: { 
-                    x : cameraDim.w + ( 2 * hGridDist ), 
-                    y : i - ( cameraDim.w + 4 * hGridDist ) / Math.sqrt( 3 )
-            }
-        });
-        
-        // left sheared diagonal
-        // TIP :: swap x and y for p2 to see cool folds in the grid!
-        gridLines.push({
-            p1: {x : -2 * unit * Math.sqrt(3), y : i },
-            p2: {
-                    x : cameraDim.w + ( 2 * hGridDist ), 
-                    y : i + (cameraDim.w + 4 * hGridDist) / Math.sqrt(3) 
-                }
-        });
-    }
-
-    // draw the grid
-    for( let gridLine of gridLines ) {
-        var newLine = document.createElementNS( nameSpaceURI, 'line' );
-        newLine.setAttribute( 'stroke', 'black' );
-        newLine.setAttribute( 'stroke-width', '.25' );
-        newLine.setAttribute( 'x1', gridLine.p1.x );
-        newLine.setAttribute( 'x2', gridLine.p2.x );
-        newLine.setAttribute( 'y1', gridLine.p1.y );
-        newLine.setAttribute( 'y2', gridLine.p2.y );
-        camera.getElementById( 'grid' ).appendChild(newLine);
-    }
-}
-
-function allowDragMotion() {
-    /* 
-    allow drag across the grid
-    */
-    var camera = document.getElementById( 'camera' );
-    var dragLoc = { x : 0, y : 0 };
-
-    camera.onmousedown = function( event ) {
-        camera.onmousemove = gridDrag;
-        camera.onmouseup = endDrag;
-        camera.onmouseleave = endDrag;
-        dragLoc.x = event.clientX;
-        dragLoc.y = event.clientY;
-    }
-
-    function gridDrag( event ) {
-        originLoc.x += event.clientX - dragLoc.x;
-        originLoc.y += event.clientY - dragLoc.y;
-        updateViz();
-        dragLoc.x = event.clientX;
-        dragLoc.y = event.clientY;
-    }
-
-    function endDrag() {
-        camera.onmousemove = null;
-        camera.onmouseup = null;
-        camera.onmouseleave = null;
-  } 
-}
 
 function transformToSVGPoint( coordinate ) {
     /*
     take a point and convert to svg coordinates, by applying each parent viewbox
     */
-
     var camera = document.getElementById( 'camera' );
     var svgPoint = camera.createSVGPoint();
-    
-    // DOFIX
-    svgPoint.x = coordinate.clientX + originLoc.x;
-    svgPoint.y = coordinate.clientY + originLoc.y;
-
+    svgPoint.x = coordinate.clientX;
+    svgPoint.y = coordinate.clientY;
     return svgPoint.matrixTransform( camera.getScreenCTM().inverse() );;
 }
 
-function  nearestGridPoint( coordinate ) {
+function  nearestGridPoint(point) {
     /*
     take an svg point and convert to grid coordinates
     */
-
-    // DOFIX
-
     var x = Math.round( coordinate.x / ( unit * Math.sqrt( 3 ) / 2 ) );
-    return { 
-                x : x, 
-                y : Math.round( coordinate.y / unit - x / 2 )
-    };
+    return {x : x, y : Math.round( coordinate.y / unit - x / 2 )};
 }
 
 function onClickPlace() {
     // get click position and save as format of `TriGrid` class
     var x; var y;
     addAmoebot( x, y )
-}
-
-// document.getElementById( 'camera' ).addEventListener( 'click', 
-//     function( point ) {
-//     var gridPoint = nearestGridPoint(transformToSVGPoint(point));
-//     console.log(gridPoint)
-// });
-
-function initializeTracker() {
-    /*
-    instantiate the amoebot tracker and place particles on the grid
-    returns :: -1 on failure, 0 on success
-    */
-    if ( JSON.stringify( response.config0 ) == '{}' ) {
-      console.log( "ERROR: Response string is empty" );
-      return -1;
-    }
-
-    window.vtracker = new AmoebotVizTracker( 
-                                response.config0, response.tracks 
-                        );
-    [ window.nBots, window.nSteps ] = window.vtracker.getConfigInfo();
-
-    updateViz();
-    return 0;
-}
-
-function launchEventListener() {
-
-    document.getElementById( 'btn-step' ).addEventListener( 'click', 
-                                                            onClickStep 
-                                                        );
-    document.getElementById( 'btn-play' ).addEventListener( 'click', 
-                                                            onClickPlay
-                                                        );
 }
 
 function updateDisplay() {
@@ -265,14 +60,14 @@ function onClickPlay() {
     // get the slider value before starting
     var slider = document.getElementById( 'playback' )
     var playbackSpeed = 100 - slider.value;
-    slider.addEventListener( 'change', 
+    slider.addEventListener( 'change',
                              function () {
                                 playbackSpeed = 100 - slider.value;
                             });
 
     // listen for pause events
-    document.getElementById( 'btn-pause' ).addEventListener( 
-                                            'click', 
+    document.getElementById( 'btn-pause' ).addEventListener(
+                                            'click',
                                             function() {
                                                 paused = !paused;
                                             });
@@ -284,10 +79,10 @@ function onClickPlay() {
             updateViz();
             setTimeout( timedPlayback, playbackSpeed );
         } else {
-            alert(' Finished! ')
+            alert(' Finished! ');
         }
     }
- 
+
     var playback = setTimeout( timedPlayback, playbackSpeed );
 }
 
@@ -295,9 +90,6 @@ function onClickPlay() {
 
 // step counter
 var step = 0;
-
-// json response variable
-var response;
 
 function onClickStep() {
     /*
@@ -325,23 +117,217 @@ function onClickBack() {
    return 0;
 }
 
+
+
+
+
+
+class directorController {
+  constructor(sVG) {
+    this.sVGDirector = new sVGDirector(sVG);
+    this.objectDirector = null;
+  }
+  createObjectDirector(config0, tracks) {
+    this.objectDirector = new objectDirector(config0, tracks);
+  }
+}
+
+
+class sVGDirector {
+  constructor(sVG) {
+    this.sVG = sVG;
+    this.sVG.setAttribute("viewBox", `0 0 ${cameraDim.w} ${cameraDim.h}`);
+    this.gridGroup = this.createGrid();
+    this._viewBox = this.sVG.viewBox.baseVal;
+    this._moveDisplacement = {x:0, y:0};
+    this._zoomDisplacement = {x:0, y:0};//In case ya want zoom.
+    this.allowDragMotion();
+  }
+  moveBy(vectorX, vectorY) {
+    this._moveDisplacement.x += vectorX;
+    this._moveDisplacement.y += vectorY;
+    this._viewBox.x = this._moveDisplacement.x + this._zoomDisplacement.x;
+    this._viewBox.y = this._moveDisplacement.y + this._zoomDisplacement.y;
+    this.updateVisuals();
+  }
+  allowDragMotion() {
+    var self = this;
+    var dragLoc = { x : 0, y : 0 };
+    self.sVG.onmousedown = function( event ) {
+      self.sVG.onmousemove = gridDrag;
+      self.sVG.onmouseup = endDrag;
+      self.sVG.onmouseleave = endDrag;
+      dragLoc.x = event.clientX;
+      dragLoc.y = event.clientY;
+    }
+    function gridDrag( event ) {
+      self.moveBy(dragLoc.x - event.clientX, dragLoc.y - event.clientY);
+      dragLoc.x = event.clientX;
+      dragLoc.y = event.clientY;
+    }
+    function endDrag() {
+      self.sVG.onmousemove = null;
+      self.sVG.onmouseup = null;
+      self.sVG.onmouseleave = null;
+    }
+  }
+  createGrid() {
+    var camera = document.getElementById( 'camera' );
+    camera.setAttribute( 'width', cameraDim.w );
+    camera.setAttribute( 'height', cameraDim.h );
+    var gridLines = [];
+    // horizontal distance between grid lines
+    var hGridDist = unit * Math.sqrt(3);
+    // get points for longitudanal lines
+    for( let i = - hGridDist; i <= cameraDim.w + hGridDist; i += hGridDist / 2 ) {
+      gridLines.push({
+        p1: {x: i, y: - 2 *  unit },
+        p2: {x: i, y: cameraDim.h + ( 2 * unit ) }
+      });
+    }
+    // vertical offsets on the grid
+    var vGridOffset = ( Math.floor( cameraDim.h / ( 2 * unit ) ) + 1 ) * unit * 3;
+    for( let i = -vGridOffset; i <= cameraDim.h + vGridOffset; i += unit ) {
+        // right sheared diagonal
+      gridLines.push({
+        p1: {x : -2 * hGridDist, y : i },
+        p2: {x : cameraDim.w + ( 2 * hGridDist ),
+           y : i - ( cameraDim.w + 4 * hGridDist ) / Math.sqrt( 3 )
+        }
+      });
+        // left sheared diagonal
+        // TIP :: swap x and y for p2 to see cool folds in the grid!
+      gridLines.push({
+        p1: {x : -2 * unit * Math.sqrt(3), y : i },
+        p2: {x : cameraDim.w + ( 2 * hGridDist ),
+           y : i + (cameraDim.w + 4 * hGridDist) / Math.sqrt(3)
+        }
+      });
+    }
+    var gridGroup = camera.getElementById( 'grid' );
+    // draw the grid
+    for( let gridLine of gridLines ) {
+      var newLine = document.createElementNS( nameSpaceURI, 'line' );
+      newLine.setAttribute( 'stroke', 'black' );
+      newLine.setAttribute( 'stroke-width', '.25' );
+      newLine.setAttribute( 'x1', gridLine.p1.x );
+      newLine.setAttribute( 'x2', gridLine.p2.x );
+      newLine.setAttribute( 'y1', gridLine.p1.y );
+      newLine.setAttribute( 'y2', gridLine.p2.y );
+      gridGroup.appendChild(newLine);
+    }
+    return gridGroup;
+  }
+  updateVisuals() {
+    var wholeX = Math.floor(this._viewBox.x / (unit * Math.sqrt(3)));
+    var wholeY = Math.floor(this._viewBox.y / unit);
+    this.gridGroup.setAttribute('transform',
+      `translate(${(unit * Math.sqrt(3)) * wholeX}, ${unit * wholeY})`
+    );
+  }
+}
+
+
+class objectDirector {
+  constructor(config0, tracks) {
+    // starting configuration of the system
+    this.init_b = config0[ 'bots' ];
+    this.init_w = config0[ 'walls' ];
+
+    // motion history tracker
+    this.tracks = tracks;
+
+    this.amoebots = this.createAmoebots();
+    this.walls = this.createWalls();
+  }
+  createAmoebots() {
+    if(this.init_b.length == 0) return;
+    allAmoebots = [];
+    for(let amoebot in this.init_b) {
+      allAmoebots.push(new Amoebot(amoebot, this.init_b[amoebot]));
+    }
+  }
+  createWalls() {
+    if(this.init_w.length == 0) return;
+    allWalls = [];
+    for(let wall in this.init_w) {
+      allWalls.push(new Wall(wall, this.init_w[wall]));
+    }
+  }
+  updateVisuals() {
+    for(amoebot of this.amoebots) {
+      amoebot.updateVisuals();
+    }
+    for(wall of this.walls) {
+      wall.updateVisuals();
+    }
+  }
+}
+
+
+// json response variable
+var response;
+var controller = new directorController(camera);
+
 /*
-driver code; load history, draw the grid and set up visualiser
+  driver code; load history, draw the grid and set up visualiser
 */
-
-drawGrid();
-
 var runs = document.getElementById( 'config-files' )
 runs.oninput = function() {
     requestHistory( this.files[0].name ).then(
         ( requestStatus ) => {
             if ( requestStatus == 200 ) {
-                initializeTracker();
-                allowDragMotion();
+                controller.createObjectDirector(response.config0, response.tracks);
                 launchEventListener();
             } else {
-                console.log( 'ERROR: No bot data was receieved.' )
+                console.log( 'ERROR: No bot data was receieved.' );
             }
         }
     );
+}
+
+
+async function requestHistory( runId ) {
+    /*
+    load the state history from JSON source file
+    returns :: 200 on success, 400 on failure
+    */
+    // GET request to fetch configuration and tracker data
+    //const requestStatus = await getRequest( 'history/' + runId )
+    const requestStatus = await sendRequest( 'history/' + runId )
+                        .then( requestStatus => requestStatus )
+                        .then( reqResponse => response = reqResponse )
+                        .then( () => { return 200; } )
+                        .catch( () => { return 400; } );
+    return requestStatus;
+}
+
+/*
+function initializeTracker() {
+
+    instantiate the amoebot tracker and place particles on the grid
+    returns :: -1 on failure, 0 on success
+
+    if ( JSON.stringify( response.config0 ) == '{}' ) {
+      console.log( "ERROR: Response string is empty" );
+      return -1;
+    }
+    window.vtracker = new AmoebotVizTracker(
+                                response.config0, response.tracks
+                        );
+    //FIX THIS PLEASE SELF
+    window.vtracker = new directorController(sVG, response.config0, response.tracks);
+    [ window.nBots, window.nSteps ] = window.vtracker.getConfigInfo();
+    updateViz();
+    return 0;
+}
+*/
+
+function launchEventListener() {
+    document.getElementById( 'btn-step' ).addEventListener( 'click',
+                                                            onClickStep
+                                                        );
+    document.getElementById( 'btn-play' ).addEventListener( 'click',
+                                                            onClickPlay
+                                                        );
 }
