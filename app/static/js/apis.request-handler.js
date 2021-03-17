@@ -33,7 +33,7 @@ function objectToQueryString( obj ) {
 const legalMethods = new Set(["GET", "POST", "PUT", "DELETE"])
 
 //Request url with parameter and legal method
-export function sendRequest(url, params, method) {
+export function sendRequest(url, params, method="GET") {
   if(legalMethods.has(method)) {
     return request(url, params, method);
   }

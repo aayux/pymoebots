@@ -2,54 +2,61 @@ import { nameSpaceURI, unit, radius } from './config.js';
 
 
 export function tri2Euclid(point) {
-  return { x: point.x * unit * Math.sqrt(3) / 2, y: unit * (point.y + point.x / 2)};
+  return { x: point[0] * unit * Math.sqrt(3) / 2, y: unit * (point[1] - point[0] / 2)};
+}
+
+export function shearPoint( point ) {
+    // shear points from the Euclidean plane into the triangular grid
+    var newPoint = { x : 0, y : 0 };
+    newPoint.y += point[1] * unit;
+    if ( point[0] % 2 == 1 ) { newPoint.y += ( 1 / 2 ) * unit; }
+    newPoint.x += ( point[0] * Math.sqrt( 3 ) / 2 ) * unit;
+    return( newPoint );
 }
 
 
 export class Amoebot {
-  constructor(name, data) {
+  constructor(name, data, parentVisual) {
     this.name = name;
-    this.segment = {
-      head : {x:data[0], y:data[1]},
-      tail : {x:data[0], y:data[1]}
-    }
+    this.parentVisual = parentVisual;
+    this.location = data;
     this.visual = {
-      head : this.createCircle(`H-B${ this.name }`),
-      tail : this.createCircle(`T-B${ this.name }`),
+      head : this.createCircle(`H-B${ this.name }`, "head_pos"),
+      tail : this.createCircle(`T-B${ this.name }`, "tail_pos"),
       body : this.createLine()
     }
   }
 
   createLine() {
-    lineElement = document.createElementNS(nameSpaceURI, 'line');
-    const headPosition = tri2Euclid(this.segment.head)
-    const tailPosition = tri2Euclid(this.segment.tail)
+    var lineElement = document.createElementNS(nameSpaceURI, 'line');
+    const headPosition = tri2Euclid(this.location.head_pos)
+    const tailPosition = tri2Euclid(this.location.tail_pos)
     lineElement.setAttribute('stroke', 'black' );
     lineElement.setAttribute('stroke-width', `${ radius / 2 }px`);
     lineElement.setAttribute('x1', headPosition.x);
     lineElement.setAttribute('x2', tailPosition.x);
     lineElement.setAttribute('y1', headPosition.y);
     lineElement.setAttribute('y2', tailPosition.y);
-    amoeBotsDOM.appendChild(lineElement);
+    this.parentVisual.appendChild(lineElement);
     return lineElement;
   }
 
-  createCircle(name) {
+  createCircle(name, segment) {
     var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
-    const position = tri2Euclid(this.point)
+    var position = tri2Euclid(this.location[segment]);
     vizElement.setAttribute( 'cx', position.x );
     vizElement.setAttribute( 'cy', position.y );
     vizElement.setAttribute( 'fill', 'white' );
     vizElement.setAttribute( 'r', `${ radius }px` );
     vizElement.setAttribute( 'stroke', 'black' );
     vizElement.setAttribute( 'stroke-width', `${ radius / 3 }px` );
-    amoebotsDOM.appendChild(vizElement)
+    this.parentVisual.appendChild(vizElement)
     return vizElement;
   }
 
-  updateVisuals() {
-    const headPosition = tri2Euclid(this.segment.head)
-    const tailPosition = tri2Euclid(this.segment.tail)
+  updateVisuals(where) {
+    const headPosition = tri2Euclid(where["head_pos"])
+    const tailPosition = tri2Euclid(where["tail_pos"])
     this.visual.head.setAttribute('cx', headPosition.x);
     this.visual.head.setAttribute('cy', headPosition.y);
     this.visual.body.setAttribute('x1', headPosition.x);
@@ -63,23 +70,23 @@ export class Amoebot {
 
 
 export class Wall {
-  constructor(name, data) {
+  constructor(name, data, parentVisual) {
     this.name = name;
-    this.x = data[0];
-    this.y = data[1];
+    this.parentVisual = parentVisual;
+    this.position = data;
     this.visual = this.createCircle(`H-B${ this.name }`);
   }
 
   createCircle(name) {
     var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
-    const position = tri2Euclid(this.point)
+    const position = tri2Euclid(this.position)
     vizElement.setAttribute( 'cx', position.x );
     vizElement.setAttribute( 'cy', position.y );
     vizElement.setAttribute( 'fill', 'red' );
     vizElement.setAttribute( 'r', `${ radius }px` );
     vizElement.setAttribute( 'stroke', 'black' );
     vizElement.setAttribute( 'stroke-width', `${ radius / 3 }px` );
-    amoebotsDOM.appendChild(vizElement)
+    this.parentVisual.appendChild(vizElement)
     return vizElement;
   }
 }
