@@ -13,6 +13,20 @@ const camera = document.getElementById("camera")
 const amoebotsDOM = camera.getElementById("amoebots");
 
 
+window.addAmoebot = function (x, y) {
+  console.log(`Point added at x:${x}, y:${y}`)
+  var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
+  var position = tri2Euclid([x, y]);
+  vizElement.setAttribute( 'cx', position.x );
+  vizElement.setAttribute( 'cy', position.y );
+  vizElement.setAttribute( 'fill', 'white' );
+  vizElement.setAttribute( 'r', "5px" );
+  vizElement.setAttribute( 'stroke', 'black' );
+  vizElement.setAttribute( 'stroke-width', `${ 5 / 3 }px` );
+  amoebotsDOM.appendChild(vizElement);
+}
+
+
 function transformToSVGPoint( coordinate ) {
     /*
     take a point and convert to svg coordinates, by applying each parent viewbox
