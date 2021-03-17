@@ -9,7 +9,6 @@ import { sendRequest } from './apis.request-handler.js';
     } from './amoebot.viz-objects.js';*/
 import {tri2Euclid, Amoebot, Wall} from './viz-objects.js';
 
-
 const camera = document.getElementById("camera")
 const amoebotsDOM = camera.getElementById("amoebots");
 
@@ -75,8 +74,8 @@ function onClickPlay() {
     function timedPlayback () {
         // updateDisplay();
         if ( !paused && step < window.nSteps ) {
-            step += window.vtracker.vizOneStep( step );
-            updateViz();
+            step += 1;
+            controller.objectDirector.updateVisuals(step);
             setTimeout( timedPlayback, playbackSpeed );
         } else {
             alert(' Finished! ');
@@ -92,12 +91,9 @@ function onClickPlay() {
 var step = 0;
 
 function onClickStep() {
-    /*
-    */
-
     if ( step < window.nSteps ) {
-        step += window.vtracker.vizOneStep( step );
-        updateViz();
+        step += 1;
+        controller.objectDirector.updateVisuals(step);
         return 1;
    }
    return 0;
@@ -124,11 +120,12 @@ function onClickBack() {
 
 class directorController {
   constructor(sVG) {
+    this.sVG = sVG;
     this.sVGDirector = new sVGDirector(sVG);
     this.objectDirector = null;
   }
   createObjectDirector(config0, tracks) {
-    this.objectDirector = new objectDirector(config0, tracks);
+    this.objectDirector = new objectDirector(config0, tracks, this.sVG);
   }
 }
 
@@ -229,37 +226,39 @@ class sVGDirector {
 
 
 class objectDirector {
-  constructor(config0, tracks) {
+  constructor(config0, tracks, sVG) {
     // starting configuration of the system
     this.init_b = config0[ 'bots' ];
     this.init_w = config0[ 'walls' ];
 
     // motion history tracker
     this.tracks = tracks;
+    console.log(this.tracks);
 
+    this.amoebotVisuals = sVG.getElementById("amoebots");
+    this.wallVisuals = sVG.getElementById("walls");
     this.amoebots = this.createAmoebots();
     this.walls = this.createWalls();
   }
   createAmoebots() {
     if(this.init_b.length == 0) return;
-    allAmoebots = [];
-    for(let amoebot in this.init_b) {
-      allAmoebots.push(new Amoebot(amoebot, this.init_b[amoebot]));
+    var allAmoebots = [];
+    for(let i = 0; i < this.init_b.length; i++) {
+      allAmoebots.push(new Amoebot(i, this.tracks[0][i], this.amoebotVisuals));
     }
+    return allAmoebots;
   }
   createWalls() {
     if(this.init_w.length == 0) return;
-    allWalls = [];
-    for(let wall in this.init_w) {
-      allWalls.push(new Wall(wall, this.init_w[wall]));
+    var allWalls = [];
+    for(let i = 0; i < this.init_w.length; i++) {
+      allWalls.push(new Wall(i, this.init_w[i], this.amoebotVisuals));
     }
+    return allWalls;
   }
-  updateVisuals() {
-    for(amoebot of this.amoebots) {
-      amoebot.updateVisuals();
-    }
-    for(wall of this.walls) {
-      wall.updateVisuals();
+  updateVisuals(step) {
+    for(let i = 0; i < this.amoebots.length; i++) {
+      this.amoebots[i].updateVisuals(this.tracks[step][i]);
     }
   }
 }
@@ -278,6 +277,7 @@ runs.oninput = function() {
         ( requestStatus ) => {
             if ( requestStatus == 200 ) {
                 controller.createObjectDirector(response.config0, response.tracks);
+                window.nSteps = controller.objectDirector.tracks.length
                 launchEventListener();
             } else {
                 console.log( 'ERROR: No bot data was receieved.' );
