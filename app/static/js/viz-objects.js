@@ -2,7 +2,17 @@ import { nameSpaceURI, unit, radius } from './config.js';
 
 
 export function tri2Euclid(point) {
-  return { x: point[0] * unit * Math.sqrt(3) / 2, y: unit * (point[1] - point[0] / 2)};
+  const x = point[0] * unit * Math.sqrt(3) / 2;
+  var y = unit * (point[1] - point[0] / 2)
+  /*The y-coordinate of the point vertically translated onto line zero,
+   *line zero is the line through the coordinate (0, 0)
+   */
+  const lineZeroPointY = x / Math.sqrt(3);
+  /*Half the distance between the point and lineZeroPointY
+   * moves it closer to line zero, causing 1/2 compression.
+   */
+  y += (lineZeroPointY - y) / 2;
+  return {x, y};
 }
 
 export function shearPoint( point ) {
