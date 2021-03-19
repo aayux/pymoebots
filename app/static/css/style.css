@@ -29,6 +29,10 @@
     float: left;
   }
 
+#btn-back {
+  transform: scaleX(-1);
+}
+
 /* background color on hover */
 .btn-grp-create button:hover {
     border-radius: 25%;

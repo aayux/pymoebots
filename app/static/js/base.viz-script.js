@@ -119,8 +119,7 @@ function onClickBack() {
 
     if ( step > 0 ) {
         step -= 1
-        window.vtracker.vizOneStep( step );
-        updateViz();
+        controller.objectDirector.updateVisuals( step );
         return 1;
 
    }
@@ -338,6 +337,9 @@ function initializeTracker() {
 */
 
 function launchEventListener() {
+    document.getElementById( 'btn-back' ).addEventListener( 'click',
+                                                            onClickBack
+                                                        );
     document.getElementById( 'btn-step' ).addEventListener( 'click',
                                                             onClickStep
                                                         );
