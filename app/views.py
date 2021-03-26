@@ -43,9 +43,13 @@ def history(request: object, run: str) -> object:
         return JsonResponse(response)
     return JsonResponse(dict())
 
+def _get_available_runs():
+    return [e.name for e in Path(STORE).iterdir() if e.is_dir() and e.name != "logs"]
 
 def algorithms(request: object) -> object:
     if request.method == 'GET':
+        print(_get_available_runs())
         return JsonResponse(
-            dict(Algorithms=['random_move', 'compress', 'mzsolve', ])
+            dict(Algorithms=_get_available_runs())
         )
+
