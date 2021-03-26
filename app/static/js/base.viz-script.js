@@ -1,41 +1,16 @@
-//import { nameSpaceURI, cameraDim, unit, originLoc } from './config.js';
 import { nameSpaceURI, cameraDim, unit} from './config.js';
-//import { getRequest } from './apis.request-handler.js';
 import { sendRequest } from './apis.request-handler.js';
-/*import {
-        shearPoint,
-        addAmoebot,
-        AmoebotVizTracker
-    } from './amoebot.viz-objects.js';*/
 import {tri2Euclid, Amoebot, Wall} from './viz-objects.js';
 
 const camera = document.getElementById("camera")
 const amoebotsDOM = camera.getElementById("amoebots");
 
-
-window.addAmoebot = function (x, y) {
-  console.log(`Point added at x:${x}, y:${y}`)
-  var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
-  var position = tri2Euclid([x, y]);
-  vizElement.setAttribute( 'cx', position.x );
-  vizElement.setAttribute( 'cy', position.y );
-  vizElement.setAttribute( 'fill', 'white' );
-  vizElement.setAttribute( 'r', "5px" );
-  vizElement.setAttribute( 'stroke', 'black' );
-  vizElement.setAttribute( 'stroke-width', `${ 5 / 3 }px` );
-  amoebotsDOM.appendChild(vizElement);
-}
-
-
-function transformToSVGPoint( coordinate ) {
-    /*
-    take a point and convert to svg coordinates, by applying each parent viewbox
-    */
-    var camera = document.getElementById( 'camera' );
-    var svgPoint = camera.createSVGPoint();
-    svgPoint.x = coordinate.clientX;
-    svgPoint.y = coordinate.clientY;
-    return svgPoint.matrixTransform( camera.getScreenCTM().inverse() );;
+//Multiply point by svg matrix inverse to get point in svg coordinates
+function transformToSVGPoint(sVG, point) {
+    var sVGPoint = sVG.createSVGPoint();
+    sVGPoint.x = point.hasOwnProperty('x') ? point.x : point.clientX;
+    sVGPoint.y = point.hasOwnProperty('y') ? point.y : point.clientY;
+    return sVGPoint.matrixTransform( camera.getScreenCTM().inverse() );;
 }
 
 function  nearestGridPoint(point) {
@@ -63,82 +38,61 @@ function updateDisplay() {
     nBots.textContent = `# Amoebots : ${ window.nBots }`;
 }
 
-function onClickPlay() {
-    /*
-    */
-
-    // unset the pause condition to false
-    var paused = false;
-
-    // get the slider value before starting
-    var slider = document.getElementById( 'playback' )
-    var playbackSpeed = 100 - slider.value;
-    slider.addEventListener( 'change',
-                             function () {
-                                playbackSpeed = 100 - slider.value;
-                            });
-
-    // listen for pause events
-    document.getElementById( 'btn-pause' ).addEventListener(
-                                            'click',
-                                            function() {
-                                                paused = !paused;
-                                            });
-
-    function timedPlayback () {
-        // updateDisplay();
-        if ( !paused && step < window.nSteps ) {
-            step += 1;
-            controller.objectDirector.updateVisuals(step);
-            setTimeout( timedPlayback, playbackSpeed );
-        } else {
-            alert(' Finished! ');
-        }
-    }
-
-    var playback = setTimeout( timedPlayback, playbackSpeed );
-}
-
-/* global variables */
-
-// step counter
-var step = 0;
-
-function onClickStep() {
-    if ( step < window.nSteps ) {
-        step += 1;
-        controller.objectDirector.updateVisuals(step);
-        return 1;
-   }
-   return 0;
-}
-
-function onClickBack() {
-    /*
-    */
-
-    if ( step > 0 ) {
-        step -= 1
-        controller.objectDirector.updateVisuals( step );
-        return 1;
-
-   }
-   return 0;
-}
-
-
-
-
-
 
 class directorController {
   constructor(sVG) {
     this.sVG = sVG;
+    this.step = 0;
+    this.totalSteps = 0;
+    this.paused = false;
+    this.playBackSpeed = 50;
     this.sVGDirector = new sVGDirector(sVG);
     this.objectDirector = null;
   }
+
   createObjectDirector(config0, tracks) {
+    this.totalSteps = tracks.length;
     this.objectDirector = new objectDirector(config0, tracks, this.sVG);
+    this._addEventListeners();
+  }
+
+  _addEventListeners() {
+    var self = this;
+    var slider = document.getElementById("playback");
+    document.getElementById( 'buttonBack' ).addEventListener( 'click', onClickBack);
+    document.getElementById( 'buttonStep' ).addEventListener( 'click', onClickStep);
+    document.getElementById( 'buttonPlay' ).addEventListener( 'click', onClickPlay);
+    slider.addEventListener( 'change', function () {
+      self.playbackSpeed = 100 - slider.value;
+    });
+    document.getElementById("buttonPause").addEventListener('click', function() {
+      self.paused = !self.paused;
+    });
+
+    function onClickPlay() {
+      self.paused = false;
+      function timedPlayback () {
+        if(!self.paused && onClickStep()) {
+          setTimeout(timedPlayback, self.playbackSpeed);
+        } else {
+          alert(' Finished! ');
+        }
+      }
+      var playback = setTimeout(timedPlayback, self.playbackSpeed);
+    }
+
+    function onClickStep() {
+      self.objectDirector.updateVisuals(self.step);
+      self.step += 1;
+      return (self.step < self.totalSteps) ? true : false;
+    }
+
+    function onClickBack() {
+      if(self.step > 0) {
+        self.step -= 1;
+        self.objectDirector.updateVisuals(self.step);
+      }
+    }
   }
 }
 
@@ -153,6 +107,7 @@ class sVGDirector {
     this._zoomDisplacement = {x:0, y:0};//In case ya want zoom.
     this.allowDragMotion();
   }
+
   moveBy(vectorX, vectorY) {
     this._moveDisplacement.x += vectorX;
     this._moveDisplacement.y += vectorY;
@@ -160,6 +115,7 @@ class sVGDirector {
     this._viewBox.y = this._moveDisplacement.y + this._zoomDisplacement.y;
     this.updateVisuals();
   }
+
   allowDragMotion() {
     var self = this;
     var dragLoc = { x : 0, y : 0 };
@@ -167,13 +123,11 @@ class sVGDirector {
       self.sVG.onmousemove = gridDrag;
       self.sVG.onmouseup = endDrag;
       self.sVG.onmouseleave = endDrag;
-      dragLoc.x = event.clientX;
-      dragLoc.y = event.clientY;
+      dragLoc = transformToSVGPoint(self.sVG, event)
     }
     function gridDrag( event ) {
-      self.moveBy(dragLoc.x - event.clientX, dragLoc.y - event.clientY);
-      dragLoc.x = event.clientX;
-      dragLoc.y = event.clientY;
+      const vectorSVG = transformToSVGPoint(self.sVG, event)
+      self.moveBy(dragLoc.x - vectorSVG.x, dragLoc.y - vectorSVG.y);
     }
     function endDrag() {
       self.sVG.onmousemove = null;
@@ -181,10 +135,9 @@ class sVGDirector {
       self.sVG.onmouseleave = null;
     }
   }
+
   createGrid() {
     var camera = document.getElementById( 'camera' );
-    camera.setAttribute( 'width', cameraDim.w );
-    camera.setAttribute( 'height', cameraDim.h );
     var gridLines = [];
     // horizontal distance between grid lines
     var hGridDist = unit * Math.sqrt(3);
@@ -228,6 +181,7 @@ class sVGDirector {
     }
     return gridGroup;
   }
+
   updateVisuals() {
     var wholeX = Math.floor(this._viewBox.x / (unit * Math.sqrt(3)));
     var wholeY = Math.floor(this._viewBox.y / unit);
@@ -246,13 +200,13 @@ class objectDirector {
 
     // motion history tracker
     this.tracks = tracks;
-    console.log(this.tracks);
 
     this.amoebotVisuals = sVG.getElementById("amoebots");
     this.wallVisuals = sVG.getElementById("walls");
     this.amoebots = this.createAmoebots();
     this.walls = this.createWalls();
   }
+
   createAmoebots() {
     if(this.init_b.length == 0) return;
     var allAmoebots = [];
@@ -261,6 +215,7 @@ class objectDirector {
     }
     return allAmoebots;
   }
+
   createWalls() {
     if(this.init_w.length == 0) return;
     var allWalls = [];
@@ -269,6 +224,7 @@ class objectDirector {
     }
     return allWalls;
   }
+
   updateVisuals(step) {
     for(let i = 0; i < this.amoebots.length; i++) {
       this.amoebots[i].updateVisuals(this.tracks[step][i]);
@@ -277,8 +233,6 @@ class objectDirector {
 }
 
 
-// json response variable
-var response;
 var controller = new directorController(camera);
 
 /*
@@ -287,11 +241,9 @@ var controller = new directorController(camera);
 var runs = document.getElementById( 'config-files' )
 runs.oninput = function() {
     requestHistory( this.files[0].name ).then(
-        ( requestStatus ) => {
-            if ( requestStatus == 200 ) {
-                controller.createObjectDirector(response.config0, response.tracks);
-                window.nSteps = controller.objectDirector.tracks.length
-                launchEventListener();
+        (response) => {
+            if(response.status == 200) {
+                controller.createObjectDirector(response.values.config0, response.values.tracks);
             } else {
                 console.log( 'ERROR: No bot data was receieved.' );
             }
@@ -307,43 +259,9 @@ async function requestHistory( runId ) {
     */
     // GET request to fetch configuration and tracker data
     //const requestStatus = await getRequest( 'history/' + runId )
-    const requestStatus = await sendRequest( 'history/' + runId )
-                        .then( requestStatus => requestStatus )
-                        .then( reqResponse => response = reqResponse )
-                        .then( () => { return 200; } )
-                        .catch( () => { return 400; } );
-    return requestStatus;
-}
-
-/*
-function initializeTracker() {
-
-    instantiate the amoebot tracker and place particles on the grid
-    returns :: -1 on failure, 0 on success
-
-    if ( JSON.stringify( response.config0 ) == '{}' ) {
-      console.log( "ERROR: Response string is empty" );
-      return -1;
-    }
-    window.vtracker = new AmoebotVizTracker(
-                                response.config0, response.tracks
-                        );
-    //FIX THIS PLEASE SELF
-    window.vtracker = new directorController(sVG, response.config0, response.tracks);
-    [ window.nBots, window.nSteps ] = window.vtracker.getConfigInfo();
-    updateViz();
-    return 0;
-}
-*/
-
-function launchEventListener() {
-    document.getElementById( 'btn-back' ).addEventListener( 'click',
-                                                            onClickBack
-                                                        );
-    document.getElementById( 'btn-step' ).addEventListener( 'click',
-                                                            onClickStep
-                                                        );
-    document.getElementById( 'btn-play' ).addEventListener( 'click',
-                                                            onClickPlay
-                                                        );
+    var response = {status:200, values:{}};
+    await sendRequest('history/' + runId)
+      .then(reqResponse => {response.values = reqResponse;})
+      .catch(() => {response.status = 400;});
+    return response;
 }

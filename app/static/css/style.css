@@ -1,50 +1,65 @@
-/* the grid window viewer */
-.grid-win {
-    padding: 10px 50px 5px 75px;
-  }
-
-/* style buttons */
-.btn-create {
-    background-color: #ffffff;
-    border: none;
-    cursor: pointer;
-    display: block;
-  }
-
-.btn-contrl {
-    background-color: #ffffff;
-    border: none;
-    cursor: pointer;
-  }
-
-.btn-grp-create {
-    background-color: #ffffff;
-    float: left;
-  }
-
-.btn-grp-contrl {
-    background-color: #ffffff;
-    padding-left: 75px;
-    padding-bottom: 10px;
-    float: left;
-  }
-
-#btn-back {
-  transform: scaleX(-1);
+/* SVG styling */
+#camera {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
 }
 
-/* background color on hover */
-.btn-grp-create button:hover {
-    border-radius: 25%;
-    background-color: #e7e2e2d8;
-  }
+#origin {
+  fill: white;
+  stroke: black;
+  stroke-width: 0.5;
+}
 
-.btn-grp-contrl button:hover {
-    border-radius: 25%;
-    background-color: #e7e2e2d8;
-  }
 
-/* slider */
+/* menu styling */
+#header {
+  position: fixed;
+  width: 100%;
+  background-color: white;
+  top: 0px;
+  left: 0px;
+}
+
+#menuLeft {
+  position: fixed;
+  background-color: white;
+  top: 175px;
+  left: 0px;
+}
+
+#menuBottom {
+  position: fixed;
+  background-color: white;
+  left: 75px;
+  bottom: 0px;
+}
+
+
+/* button styling */
+.buttonMenu {
+  background-color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.buttonMenu:hover {
+  border-radius: 25%;
+  background-color: #e7e2e2d8;
+}
+
+.buttonConfig {
+  display: block;
+}
+
+.buttonAnimation {
+  display: inline;
+}
+
+
+/* slider styling */
 .slider {
   -webkit-appearance: none;  /* override default CSS styles */
   appearance: none;
