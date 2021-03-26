@@ -2,15 +2,12 @@ import { nameSpaceURI, cameraDim, unit} from './config.js';
 import { sendRequest } from './apis.request-handler.js';
 import {tri2Euclid, Amoebot, Wall} from './viz-objects.js';
 
-const camera = document.getElementById("camera")
-const amoebotsDOM = camera.getElementById("amoebots");
-
 //Multiply point by svg matrix inverse to get point in svg coordinates
 function transformToSVGPoint(sVG, point) {
     var sVGPoint = sVG.createSVGPoint();
     sVGPoint.x = point.hasOwnProperty('x') ? point.x : point.clientX;
     sVGPoint.y = point.hasOwnProperty('y') ? point.y : point.clientY;
-    return sVGPoint.matrixTransform( camera.getScreenCTM().inverse() );;
+    return sVGPoint.matrixTransform(sVG.getScreenCTM().inverse());;
 }
 
 function  nearestGridPoint(point) {
@@ -42,17 +39,24 @@ function updateDisplay() {
 class directorController {
   constructor(sVG) {
     this.sVG = sVG;
-    this.step = 0;
+    this.tracks = null;
     this.totalSteps = 0;
+    this.step = 0;
     this.paused = false;
     this.playBackSpeed = 50;
     this.sVGDirector = new sVGDirector(sVG);
-    this.objectDirector = null;
+    this.objectDirector = new objectDirector(sVG);
   }
 
-  createObjectDirector(config0, tracks) {
+  loadAlgorithm(config0, tracks) {
+    this.tracks = tracks;
     this.totalSteps = tracks.length;
-    this.objectDirector = new objectDirector(config0, tracks, this.sVG);
+    for(let i = 0; i < tracks[0].length; i++) {
+      this.objectDirector.addAmoebot(i, tracks[0][i]);
+    }
+    for(let i = 0; i < config0["walls"].length; i++) {
+      this.objectDirector.addWall(i, config0["walls"][i]);
+    }
     this._addEventListeners();
   }
 
@@ -82,15 +86,18 @@ class directorController {
     }
 
     function onClickStep() {
-      self.objectDirector.updateVisuals(self.step);
-      self.step += 1;
-      return (self.step < self.totalSteps) ? true : false;
+      if(self.step < self.totalSteps) {
+        self.objectDirector.updateVisuals(self.tracks[self.step]);
+        self.step += 1;
+         return true;
+      }
+      return false;
     }
 
     function onClickBack() {
       if(self.step > 0) {
         self.step -= 1;
-        self.objectDirector.updateVisuals(self.step);
+        self.objectDirector.updateVisuals(self.tracks[self.step]);
       }
     }
   }
@@ -193,41 +200,24 @@ class sVGDirector {
 
 
 class objectDirector {
-  constructor(config0, tracks, sVG) {
-    // starting configuration of the system
-    this.init_b = config0[ 'bots' ];
-    this.init_w = config0[ 'walls' ];
-
-    // motion history tracker
-    this.tracks = tracks;
-
+  constructor(sVG) {
     this.amoebotVisuals = sVG.getElementById("amoebots");
     this.wallVisuals = sVG.getElementById("walls");
-    this.amoebots = this.createAmoebots();
-    this.walls = this.createWalls();
+    this.amoebots = [];
+    this.walls = [];
   }
 
-  createAmoebots() {
-    if(this.init_b.length == 0) return;
-    var allAmoebots = [];
-    for(let i = 0; i < this.init_b.length; i++) {
-      allAmoebots.push(new Amoebot(i, this.tracks[0][i], this.amoebotVisuals));
-    }
-    return allAmoebots;
+  addAmoebot(name, location) {
+    this.amoebots.push(new Amoebot(name, location, this.amoebotVisuals));
   }
 
-  createWalls() {
-    if(this.init_w.length == 0) return;
-    var allWalls = [];
-    for(let i = 0; i < this.init_w.length; i++) {
-      allWalls.push(new Wall(i, this.init_w[i], this.amoebotVisuals));
-    }
-    return allWalls;
+  addWall(name, location, parentVisual) {
+    this.walls.push(new Wall(name, location, this.wallVisuals));
   }
 
-  updateVisuals(step) {
+  updateVisuals(data) {
     for(let i = 0; i < this.amoebots.length; i++) {
-      this.amoebots[i].updateVisuals(this.tracks[step][i]);
+      this.amoebots[i].updateVisuals(data[i]);
     }
   }
 }
@@ -252,8 +242,20 @@ async function requestHistory( runId ) {
       .then(reqResponse => {response.values = reqResponse;})
       .catch(() => {response.status = 400;});
     if(response.status == 200) {
-        controller.createObjectDirector(response.values.config0, response.values.tracks);
+      controller.loadAlgorithm(response.values.config0, response.values.tracks);
     } else {
-        console.log( 'ERROR: No bot data was receieved.' );
+      console.log('ERROR: No bot data was receieved.');
     }
 }
+
+(async function requestRunNames() {
+  await sendRequest("algorithms/").then((response) => {
+    var algorithmList = document.getElementById("algorithmList");
+    var algorithms = response.Algorithms;
+    for(let i = 0; i < algorithms.length; i++) {
+      var algorithm = document.createElement("option");
+      algorithm.value = algorithms[i];
+      algorithmList.appendChild(algorithm);
+    }
+  })
+})();

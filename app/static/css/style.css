@@ -30,7 +30,7 @@
   left: 0px;
 }
 
-#menuButtonLoad {
+#menuLoad {
   position: fixed;
   background-color: white;
   left: 75px;
@@ -88,3 +88,9 @@
 .slider::-moz-range-thumb {
     cursor: pointer; /* cursor on hover */
   }
+
+
+/* generic styling */
+.hide {
+  display: none;
+}

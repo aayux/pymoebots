@@ -26,10 +26,10 @@ export function shearPoint( point ) {
 
 
 export class Amoebot {
-  constructor(name, data, parentVisual) {
+  constructor(name, location, parentVisual) {
     this.name = name;
     this.parentVisual = parentVisual;
-    this.location = data;
+    this.location = location;
     this.visual = {
       head : this.createCircle(`H-B${ this.name }`, "head_pos"),
       tail : this.createCircle(`T-B${ this.name }`, "tail_pos"),
@@ -82,10 +82,10 @@ export class Amoebot {
 
 
 export class Wall {
-  constructor(name, data, parentVisual) {
+  constructor(name, location, parentVisual) {
     this.name = name;
     this.parentVisual = parentVisual;
-    this.position = data;
+    this.position = location;
     this.visual = this.createCircle(`H-B${ this.name }`);
   }
 

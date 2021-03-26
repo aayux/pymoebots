@@ -29,23 +29,19 @@
     </div>
 
     <div id="toolBarLeft">
-      <div id="menuButtonLoad">
+      <div id="menuLoad">
         <h3>Load Algorithm</h3>
         <input name="algorithmSearch" id="algorithmName" list="algorithmList">
-        <datalist id="algorithmList">
-          <option value="run-0001">
-          <option value="run-0002">
-          <option value="run-0003">
-        </datalist>
+        <datalist id="algorithmList"></datalist>
         <button title="Get Algorithm" id="loadAlgorithm">Load</button>
       </div>
-      <button title="Load algorithm" id="buttonLoad" class="buttonMenu buttonConfig" type="button">
+      <button title="Load algorithm" id="openLoadMenu" class="buttonMenu buttonConfig" type="button">
         <img src="{% static "icons/add-file50px.png" %}" alt="Load Algorithm"></button>
 
-      <button title="Add Object" id="buttonAdd" class="buttonMenu buttonConfig" onclick="" type="button">
+      <button title="Add Object" id="startEditMode" class="buttonMenu buttonConfig" onclick="" type="button">
         <img src="{% static "icons/pin-pad50px.png" %}" alt="Add Object"></button>
 
-      <button title="Save algorithm" id="buttonSave" class="buttonMenu buttonConfig" onclick="" type="button">
+      <button title="Save algorithm" id="save" class="buttonMenu buttonConfig" onclick="" type="button">
         <img src="{% static "icons/save50px.png" %}" alt="Save Algorithm"></button>
     </div>
 
