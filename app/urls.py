@@ -21,5 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     path(r'history/<slug:run>', views.history, name='history'),
-    path('algorithms/', views.algorithms, name='algorithms')
+    path('algorithms/', views.algorithms, name='algorithms'),
+    path('algorithms/<slug:run>', views.algorithms, name='algorithms_runs')
 ]

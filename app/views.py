@@ -44,11 +44,19 @@ def history(request: object, run: str) -> object:
     return JsonResponse(dict())
 
 def _get_available_runs():
-    return [e.name for e in Path(STORE).iterdir() if e.is_dir() and e.name != "logs"]
+    return [
+        e.name for e in Path(STORE).iterdir() if e.is_dir() and e.name != "logs"
+    ]
 
-def algorithms(request: object) -> object:
+def algorithms(request: object, run: str = None) -> object:
     if request.method == 'GET':
-        print(_get_available_runs())
+        if run:
+            config0, tracks = _fetch_run(dir_name=run)
+            response = dict(
+                config0=config0,
+                tracks=tracks
+            )
+            return JsonResponse(response)
         return JsonResponse(
             dict(Algorithms=_get_available_runs())
         )
