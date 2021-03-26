@@ -56,8 +56,10 @@ export class Amoebot {
     var position = tri2Euclid(this.location[segment]);
     vizElement.setAttribute( 'cx', position.x );
     vizElement.setAttribute( 'cy', position.y );
-    vizElement.setAttribute( 'fill', 'white' );
-    vizElement.setAttribute( 'r', `${ radius }px` );
+    var circleColor = segment == "head_pos" ? "white" : "black";
+    vizElement.setAttribute( 'fill', circleColor );
+    var circleRadius = segment == "head_pos" ? radius : 3/ 4 * radius;
+    vizElement.setAttribute( 'r', circleRadius );
     vizElement.setAttribute( 'stroke', 'black' );
     vizElement.setAttribute( 'stroke-width', `${ radius / 3 }px` );
     this.parentVisual.appendChild(vizElement)
