@@ -36,6 +36,13 @@
   left: 75px;
 }
 
+#menuSave {
+  position: fixed;
+  background-color: white;
+  left: 75px;
+  top: 285px;
+}
+
 #toolBarBottom {
   position: fixed;
   background-color: white;

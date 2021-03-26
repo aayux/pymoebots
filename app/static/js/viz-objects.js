@@ -39,8 +39,8 @@ export class Amoebot {
 
   createLine() {
     var lineElement = document.createElementNS(nameSpaceURI, 'line');
-    const headPosition = tri2Euclid(this.location.head_pos)
-    const tailPosition = tri2Euclid(this.location.tail_pos)
+    const headPosition = tri2Euclid(this.location)
+    const tailPosition = tri2Euclid(this.location)
     lineElement.setAttribute('stroke', 'black' );
     lineElement.setAttribute('stroke-width', `${ radius / 2 }px`);
     lineElement.setAttribute('x1', headPosition.x);
@@ -53,7 +53,7 @@ export class Amoebot {
 
   createCircle(name, segment) {
     var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
-    var position = tri2Euclid(this.location[segment]);
+    var position = tri2Euclid(this.location);
     vizElement.setAttribute( 'cx', position.x );
     vizElement.setAttribute( 'cy', position.y );
     var circleColor = segment == "head_pos" ? "white" : "black";

@@ -1,10 +1,8 @@
 async function request( url, params, method = 'GET' ) {
 
     const options = {
-        method:method,
-        headers: {
-            'Content-Type' : 'application/json'
-        }
+        method: method,
+        headers: {'Content-Type' : 'application/json'}
     };
 
     // if params exists and method is GET, add query string to url
