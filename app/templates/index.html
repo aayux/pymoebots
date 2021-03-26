@@ -31,16 +31,25 @@
     <div id="toolBarLeft">
       <div id="menuLoad">
         <h3>Load Algorithm</h3>
-        <input name="algorithmSearch" id="algorithmName" list="algorithmList">
-        <datalist id="algorithmList"></datalist>
-        <button title="Get Algorithm" id="loadAlgorithm">Load</button>
+        <input name="runSearch" id="runName" list="runList">
+        <datalist id="runList"></datalist>
+        <button title="Get Run" id="loadRun">Load</button>
       </div>
-      <button title="Load algorithm" id="openLoadMenu" class="buttonMenu buttonConfig" type="button">
-        <img src="{% static "icons/add-file50px.png" %}" alt="Load Algorithm"></button>
+      <button title="Load run" id="openLoadMenu" class="buttonMenu buttonConfig" type="button">
+        <img src="{% static "icons/add-file50px.png" %}" alt="Load Run"></button>
 
       <button title="Add Object" id="startEditMode" class="buttonMenu buttonConfig" onclick="" type="button">
         <img src="{% static "icons/pin-pad50px.png" %}" alt="Add Object"></button>
 
+      <div id="menuSave" class="hide">
+        <h3>Save Algorithm</h3>
+        <input name="algorithmSearch" id="algorithmName" list="algorithmList">
+        <datalist id="algorithmList">
+          <option value="random_move">
+          <option value="mzsolve">
+        </datalist>
+        <button title="Save run" id="loadAlgorithm">Save</button>
+      </div>
       <button title="Save algorithm" id="save" class="buttonMenu buttonConfig" onclick="" type="button">
         <img src="{% static "icons/save50px.png" %}" alt="Save Algorithm"></button>
     </div>

@@ -40,24 +40,26 @@ class directorController {
   constructor(sVG) {
     this.sVG = sVG;
     this.tracks = null;
+    this.loaded = false;
     this.totalSteps = 0;
     this.step = 0;
     this.paused = false;
     this.playBackSpeed = 50;
     this.sVGDirector = new sVGDirector(sVG);
     this.objectDirector = new objectDirector(sVG);
+    this._addEventListeners();
   }
 
   loadAlgorithm(config0, tracks) {
     this.tracks = tracks;
+    this.loaded = true;
     this.totalSteps = tracks.length;
     for(let i = 0; i < tracks[0].length; i++) {
-      this.objectDirector.addAmoebot(i, tracks[0][i]);
+      this.objectDirector.addAmoebot(i, config0["bots"][i]);
     }
     for(let i = 0; i < config0["walls"].length; i++) {
       this.objectDirector.addWall(i, config0["walls"][i]);
     }
-    this._addEventListeners();
   }
 
   _addEventListeners() {
@@ -74,6 +76,7 @@ class directorController {
     });
 
     function onClickPlay() {
+      if(!self.loaded) return false
       self.paused = false;
       function timedPlayback () {
         if(!self.paused && onClickStep()) {
@@ -86,6 +89,7 @@ class directorController {
     }
 
     function onClickStep() {
+      if(!self.loaded) return false;
       if(self.step < self.totalSteps) {
         self.objectDirector.updateVisuals(self.tracks[self.step]);
         self.step += 1;
@@ -95,6 +99,7 @@ class directorController {
     }
 
     function onClickBack() {
+      if(!self.loaded) return false;
       if(self.step > 0) {
         self.step -= 1;
         self.objectDirector.updateVisuals(self.tracks[self.step]);
@@ -228,7 +233,7 @@ var controller = new directorController(camera);
 /*
   driver code; load history, draw the grid and set up visualiser
 */
-document.getElementById("loadAlgorithm").addEventListener("click", requestHistory);
+document.getElementById("loadRun").addEventListener("click", requestHistory);
 
 async function requestHistory( runId ) {
     /*
@@ -236,9 +241,9 @@ async function requestHistory( runId ) {
     returns :: 200 on success, 400 on failure
     */
     // GET request to fetch configuration and tracker data
-    var algorithmName = document.getElementById("algorithmName").value;
+    var runName = document.getElementById("runName").value;
     var response = {status:200, values:{}};
-    await sendRequest('history/' + algorithmName)
+    await sendRequest('history/' + runName)
       .then(reqResponse => {response.values = reqResponse;})
       .catch(() => {response.status = 400;});
     if(response.status == 200) {
@@ -250,12 +255,12 @@ async function requestHistory( runId ) {
 
 (async function requestRunNames() {
   await sendRequest("algorithms/").then((response) => {
-    var algorithmList = document.getElementById("algorithmList");
-    var algorithms = response.Algorithms;
-    for(let i = 0; i < algorithms.length; i++) {
-      var algorithm = document.createElement("option");
-      algorithm.value = algorithms[i];
-      algorithmList.appendChild(algorithm);
+    var runList = document.getElementById("runList");
+    var runs = response.Algorithms;
+    for(let i = 0; i < runs.length; i++) {
+      var run = document.createElement("option");
+      run.value = runs[i];
+      runList.appendChild(run);
     }
   })
 })();
