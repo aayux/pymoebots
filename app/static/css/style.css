@@ -23,14 +23,20 @@
   left: 0px;
 }
 
-#menuLeft {
+#toolBarLeft {
   position: fixed;
   background-color: white;
   top: 175px;
   left: 0px;
 }
 
-#menuBottom {
+#menuButtonLoad {
+  position: fixed;
+  background-color: white;
+  left: 75px;
+}
+
+#toolBarBottom {
   position: fixed;
   background-color: white;
   left: 75px;
@@ -81,9 +87,4 @@
 
 .slider::-moz-range-thumb {
     cursor: pointer; /* cursor on hover */
-  }
-
-/* ... */
-#config-files {
-    display :none;
   }

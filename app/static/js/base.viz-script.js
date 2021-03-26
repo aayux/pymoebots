@@ -238,19 +238,7 @@ var controller = new directorController(camera);
 /*
   driver code; load history, draw the grid and set up visualiser
 */
-var runs = document.getElementById( 'config-files' )
-runs.oninput = function() {
-    requestHistory( this.files[0].name ).then(
-        (response) => {
-            if(response.status == 200) {
-                controller.createObjectDirector(response.values.config0, response.values.tracks);
-            } else {
-                console.log( 'ERROR: No bot data was receieved.' );
-            }
-        }
-    );
-}
-
+document.getElementById("loadAlgorithm").addEventListener("click", requestHistory);
 
 async function requestHistory( runId ) {
     /*
@@ -258,10 +246,14 @@ async function requestHistory( runId ) {
     returns :: 200 on success, 400 on failure
     */
     // GET request to fetch configuration and tracker data
-    //const requestStatus = await getRequest( 'history/' + runId )
+    var algorithmName = document.getElementById("algorithmName").value;
     var response = {status:200, values:{}};
-    await sendRequest('history/' + runId)
+    await sendRequest('history/' + algorithmName)
       .then(reqResponse => {response.values = reqResponse;})
       .catch(() => {response.status = 400;});
-    return response;
+    if(response.status == 200) {
+        controller.createObjectDirector(response.values.config0, response.values.tracks);
+    } else {
+        console.log( 'ERROR: No bot data was receieved.' );
+    }
 }

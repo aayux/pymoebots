@@ -28,40 +28,46 @@
       </br>
     </div>
 
-    <div id="menuLeft">
-      <input type="file" id="config-files" />
-      <button title="Load algorithm" id="buttonLoad" class="buttonMenu buttonConfig" onclick="document.getElementById('config-files').click()" type="button">
+    <div id="toolBarLeft">
+      <div id="menuButtonLoad">
+        <h3>Load Algorithm</h3>
+        <input name="algorithmSearch" id="algorithmName" list="algorithmList">
+        <datalist id="algorithmList">
+          <option value="run-0001">
+          <option value="run-0002">
+          <option value="run-0003">
+        </datalist>
+        <button title="Get Algorithm" id="loadAlgorithm">Load</button>
+      </div>
+      <button title="Load algorithm" id="buttonLoad" class="buttonMenu buttonConfig" type="button">
         <img src="{% static "icons/add-file50px.png" %}" alt="Load Algorithm"></button>
+
       <button title="Add Object" id="buttonAdd" class="buttonMenu buttonConfig" onclick="" type="button">
         <img src="{% static "icons/pin-pad50px.png" %}" alt="Add Object"></button>
+
       <button title="Save algorithm" id="buttonSave" class="buttonMenu buttonConfig" onclick="" type="button">
         <img src="{% static "icons/save50px.png" %}" alt="Save Algorithm"></button>
     </div>
 
     </br>
 
-    <div id="menuBottom">
+    <div id="toolBarBottom">
       <button title="Back" id="buttonBack" class="buttonMenu" type="button">
         <img src="{% static "icons/backward-button50px.png" %}" alt="Back"></button>
+
       <button title="Play" id="buttonPlay" class="buttonMenu" type="button">
         <img src="{% static "icons/play-button-circled50px.png" %}" alt="Play"></button>
+
       <button title="Pause" id="buttonPause" class="buttonMenu" type="button">
         <img src="{% static "icons/pause-button50px.png" %}" alt="Pause"></button>
+
       <button title="Forward" id="buttonStep" class="buttonMenu" type="button">
         <img src="{% static "icons/forward-button50px.png" %}" alt="forward"></button>
+
       <div class="slider">
         slower <input id="playback" type="range" min="0" max="99" value="50" step="1"> faster
       </div>
     </div>
-    <!--
-        <div id="loadMenu" height="20%">
-          <input id="algorithmSearch" type="search" name='q'>
-          <ul>
-            <li>item1</li>
-            <li>item2</li>
-          </ul>
-        </div>
-    -->
 
     <!-- use django static tag ton load js file and css file. -->
     <script type="module" src="{% static 'js/base.viz-script.js' %}"></script>
