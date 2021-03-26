@@ -31,24 +31,18 @@ def contract_particle(
 
     Return (defaultdict): `__nmap` dictionary.
     """
-
-    head, tail = agent.head, agent.tail
+    nm = NodeManagerBitArray(bot_id=agent._getid().item(), nodes=__nmap)
 
     # contract an expanded particle to its head
     if not backward:
-        _tail, tail[:] = tail.copy(), head
-
-        __nmap[head[0]][head[1]].mark_node(movement='c to')
-        __nmap[_tail[0]][_tail[1]].mark_node(movement='c fr')
+        nm.contract_forward()
 
     # contract an expanded particle to its tail
     else:
-        _head, head[:] = head.copy(), tail
+        nm.contract_backward()
 
-        __nmap[_head[0]][_head[1]].mark_node(movement='c fr')
-        __nmap[tail[0]][tail[1]].mark_node(movement='c to')
-
-    return __nmap
+    agent.head, agent.tail = nm.current_position()
+    return nm.nodes
 
 
 def expand_particle(
@@ -69,27 +63,23 @@ def expand_particle(
 
     Return (defaultdict): the updated `__nmap` dictionary.
     """
+    nm = NodeManagerBitArray(bot_id=agent._getid().item(), nodes=__nmap)
 
-    open_ports = agent._open_port_head
-    head = agent.head
+    open_ports = [0,1,2,3,4,5]
 
     # select a random direction when none provided
     if port is None and len(open_ports) > 0:
         port = np.random.randint(6, dtype=np.uint8)
 
     elif len(open_ports) == 0:
-        return __nmap
+        return nm.nodes
 
     # move to indicated direction if available
     if port in open_ports:
-        head_node = __nmap[head[0]][head[1]]
-        neigbor_node = head_node.neighbors[agent.labels[port]]
+        test = nm.move_to(port=port)
+        agent.head, agent.tail = nm.current_position()
 
-        if neigbor_node is not None:
-            head[:] = neigbor_node
-            __nmap[head[0]][head[1]].mark_node(movement='e to')
-
-    return __nmap
+    return nm.nodes
 
 
 def maze_solve_sequential(

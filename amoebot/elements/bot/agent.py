@@ -193,3 +193,6 @@ class Agent(Amoebot):
         else: raise NotImplementedError
 
         return __nmap
+
+    def _getid(self):
+        return self.__id
