@@ -7,7 +7,8 @@ from pathlib import Path
 # the hidden file dump
 STORE = './.dumps'
 
-def _fetch_run(dir_name:str) -> tuple:
+
+def _fetch_run(dir_name: str) -> tuple:
     r"""
     """
 
@@ -23,19 +24,28 @@ def _fetch_run(dir_name:str) -> tuple:
 
     return (config0, tracks)
 
-def index(request:object):
+
+def index(request: object):
     r""" render index page from template
     """
     return render(request=request, template_name='index.html', context=None)
 
-def history(request:object, run:str) -> object:
+
+def history(request: object, run: str) -> object:
     r"""
     """
     if request.method == 'GET':
         config0, tracks = _fetch_run(dir_name=run)
         response = dict(
-                        config0=config0,
-                        tracks=tracks
-                    )
+            config0=config0,
+            tracks=tracks
+        )
         return JsonResponse(response)
     return JsonResponse(dict())
+
+
+def algorithms(request: object) -> object:
+    if request.method == 'GET':
+        return JsonResponse(
+            dict(Algorithms=['random_move', 'compress', 'mzsolve', ])
+        )
