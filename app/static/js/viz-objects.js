@@ -52,16 +52,16 @@ export class Amoebot {
   }
 
   createCircle(name, segment) {
-    var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
+    var vizElement = document.createElementNS(nameSpaceURI, 'circle');
     var position = tri2Euclid(this.location);
-    vizElement.setAttribute( 'cx', position.x );
-    vizElement.setAttribute( 'cy', position.y );
+    vizElement.setAttribute('cx', position.x);
+    vizElement.setAttribute('cy', position.y);
     var circleColor = segment == "head_pos" ? "white" : "black";
-    vizElement.setAttribute( 'fill', circleColor );
-    var circleRadius = segment == "head_pos" ? radius : 3/ 4 * radius;
-    vizElement.setAttribute( 'r', circleRadius );
-    vizElement.setAttribute( 'stroke', 'black' );
-    vizElement.setAttribute( 'stroke-width', `${ radius / 3 }px` );
+    vizElement.setAttribute('fill', circleColor);
+    var circleRadius = segment == "head_pos" ? radius : 3 / 4 * radius;
+    vizElement.setAttribute('r', circleRadius);
+    vizElement.setAttribute('stroke', 'black');
+    vizElement.setAttribute('stroke-width', `${ radius / 3 }px`);
     this.parentVisual.appendChild(vizElement)
     return vizElement;
   }

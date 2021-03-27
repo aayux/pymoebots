@@ -10,18 +10,18 @@ function transformToSVGPoint(sVG, point) {
     return sVGPoint.matrixTransform(sVG.getScreenCTM().inverse());;
 }
 
-function  nearestGridPoint(point) {
+function nearestGridPoint(point) {
     /*
-    take an svg point and convert to grid coordinates
+      take an svg point and convert to nearest grid coordinates
+      to keep illegal coordinates from occuring, have to find the number
+      of y units from line zero and double the total number of units
+      from line zero.
+      The equations are after reduction.
     */
-    var x = Math.round( coordinate.x / ( unit * Math.sqrt( 3 ) / 2 ) );
-    return {x : x, y : Math.round( coordinate.y / unit - x / 2 )};
-}
-
-function onClickPlace() {
-    // get click position and save as format of `TriGrid` class
-    var x; var y;
-    addAmoebot( x, y )
+    var xUnit = unit * Math.sqrt(3) / 2;
+    var xTri = Math.round(point.x / xUnit);
+    var yTri = Math.round(point.y / unit - xTri / 2);
+    return {x:xTri, y:2 * yTri + xTri};
 }
 
 function updateDisplay() {
@@ -40,19 +40,20 @@ class directorController {
   constructor(sVG) {
     this.sVG = sVG;
     this.tracks = null;
-    this.loaded = false;
+    this.isPlayable = false;
     this.totalSteps = 0;
     this.step = 0;
     this.paused = false;
     this.playBackSpeed = 50;
     this.sVGDirector = new sVGDirector(sVG);
     this.objectDirector = new objectDirector(sVG);
-    this._addEventListeners();
+    this._addLeftMenuEventListeners();
+    this._addBottomMenuEventListeners();
   }
 
   loadAlgorithm(config0, tracks) {
     this.tracks = tracks;
-    this.loaded = true;
+    this.isPlayable = true;
     this.totalSteps = tracks.length;
     for(let i = 0; i < tracks[0].length; i++) {
       this.objectDirector.addAmoebot(i, config0["bots"][i]);
@@ -62,12 +63,23 @@ class directorController {
     }
   }
 
-  _addEventListeners() {
+  _addLeftMenuEventListeners() {
+    var self = this;
+    document.getElementById("buttonStartEditMode").addEventListener('click', startEditMode);
+
+    function startEditMode() {
+      self.isPlayable = false;
+      self.sVGDirector.isDraggable = false;
+      self.objectDirector.isEditable = true;
+    }
+  }
+
+  _addBottomMenuEventListeners() {
     var self = this;
     var slider = document.getElementById("playback");
-    document.getElementById( 'buttonBack' ).addEventListener( 'click', onClickBack);
-    document.getElementById( 'buttonStep' ).addEventListener( 'click', onClickStep);
-    document.getElementById( 'buttonPlay' ).addEventListener( 'click', onClickPlay);
+    document.getElementById( 'buttonBack' ).addEventListener('click', onClickBack);
+    document.getElementById( 'buttonStep' ).addEventListener('click', onClickStep);
+    document.getElementById( 'buttonPlay' ).addEventListener('click', onClickPlay);
     slider.addEventListener( 'change', function () {
       self.playbackSpeed = 100 - slider.value;
     });
@@ -76,7 +88,7 @@ class directorController {
     });
 
     function onClickPlay() {
-      if(!self.loaded) return false
+      if(!self.isPlayable) return false;
       self.paused = false;
       function timedPlayback () {
         if(!self.paused && onClickStep()) {
@@ -89,7 +101,7 @@ class directorController {
     }
 
     function onClickStep() {
-      if(!self.loaded) return false;
+      if(!self.isPlayable) return false;
       if(self.step < self.totalSteps) {
         self.objectDirector.updateVisuals(self.tracks[self.step]);
         self.step += 1;
@@ -99,7 +111,7 @@ class directorController {
     }
 
     function onClickBack() {
-      if(!self.loaded) return false;
+      if(!self.isPlayable) return false;
       if(self.step > 0) {
         self.step -= 1;
         self.objectDirector.updateVisuals(self.tracks[self.step]);
@@ -111,13 +123,14 @@ class directorController {
 
 class sVGDirector {
   constructor(sVG) {
+    this.isDraggable = true;
     this.sVG = sVG;
     this.sVG.setAttribute("viewBox", `0 0 ${cameraDim.w} ${cameraDim.h}`);
     this.gridGroup = this.createGrid();
     this._viewBox = this.sVG.viewBox.baseVal;
     this._moveDisplacement = {x:0, y:0};
     this._zoomDisplacement = {x:0, y:0};//In case ya want zoom.
-    this.allowDragMotion();
+    this.allowDragging();
   }
 
   moveBy(vectorX, vectorY) {
@@ -128,23 +141,27 @@ class sVGDirector {
     this.updateVisuals();
   }
 
-  allowDragMotion() {
+  allowDragging() {
     var self = this;
-    var dragLoc = { x : 0, y : 0 };
-    self.sVG.onmousedown = function( event ) {
-      self.sVG.onmousemove = gridDrag;
-      self.sVG.onmouseup = endDrag;
-      self.sVG.onmouseleave = endDrag;
+    var isDragging = false;
+    var dragLoc = {x:0, y:0};
+    self.sVG.addEventListener("mousedown", dragStart);
+    self.sVG.addEventListener("mousemove", dragMid);
+    self.sVG.addEventListener("mouseup", dragEnd);
+    self.sVG.addEventListener("mouseleave", dragEnd);
+    function dragStart( event ) {
+      if(!self.isDraggable) return false;
+      isDragging = true;
       dragLoc = transformToSVGPoint(self.sVG, event)
     }
-    function gridDrag( event ) {
+    function dragMid( event ) {
+      if(!isDragging) return false;
       const vectorSVG = transformToSVGPoint(self.sVG, event)
       self.moveBy(dragLoc.x - vectorSVG.x, dragLoc.y - vectorSVG.y);
     }
-    function endDrag() {
-      self.sVG.onmousemove = null;
-      self.sVG.onmouseup = null;
-      self.sVG.onmouseleave = null;
+    function dragEnd() {
+      if(!isDragging) return false;
+      isDragging = false;
     }
   }
 
@@ -206,10 +223,27 @@ class sVGDirector {
 
 class objectDirector {
   constructor(sVG) {
+    this.sVG = sVG;
+    this.isEditable = false;
     this.amoebotVisuals = sVG.getElementById("amoebots");
     this.wallVisuals = sVG.getElementById("walls");
     this.amoebots = [];
     this.walls = [];
+    this.allowEditing();
+  }
+
+  allowEditing() {
+    var self = this;
+    self.sVG.addEventListener("mousedown", addAmoebot);
+
+    function addAmoebot(event) {
+      if(!self.isEditable) return false;
+      var coordinate = transformToSVGPoint(self.sVG, event);
+      console.log(coordinate);
+      var triCoordinate = nearestGridPoint(coordinate);
+      console.log(triCoordinate);
+      self.addAmoebot(self.amoebots.length, [triCoordinate.x,  triCoordinate.y]);
+    }
   }
 
   addAmoebot(name, location) {
