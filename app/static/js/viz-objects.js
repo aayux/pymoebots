@@ -29,7 +29,7 @@ export class Amoebot {
   constructor(name, location, parentVisual) {
     this.name = name;
     this.parentVisual = parentVisual;
-    this.location = location;
+    this.location = {head_pos:[...location], tail_pos:[...location]};
     this.visual = {
       head : this.createCircle(`H-B${ this.name }`, "head_pos"),
       tail : this.createCircle(`T-B${ this.name }`, "tail_pos"),
@@ -39,8 +39,8 @@ export class Amoebot {
 
   createLine() {
     var lineElement = document.createElementNS(nameSpaceURI, 'line');
-    const headPosition = tri2Euclid(this.location)
-    const tailPosition = tri2Euclid(this.location)
+    const headPosition = tri2Euclid(this.location.head_pos)
+    const tailPosition = tri2Euclid(this.location.tail_pos)
     lineElement.setAttribute('stroke', 'black' );
     lineElement.setAttribute('stroke-width', `${ radius / 2 }px`);
     lineElement.setAttribute('x1', headPosition.x);
@@ -53,7 +53,7 @@ export class Amoebot {
 
   createCircle(name, segment) {
     var vizElement = document.createElementNS(nameSpaceURI, 'circle');
-    var position = tri2Euclid(this.location);
+    var position = tri2Euclid(this.location.head_pos);
     vizElement.setAttribute('cx', position.x);
     vizElement.setAttribute('cy', position.y);
     var circleColor = segment == "head_pos" ? "white" : "black";
@@ -67,6 +67,7 @@ export class Amoebot {
   }
 
   updateVisuals(where) {
+    this.location = where;
     const headPosition = tri2Euclid(where["head_pos"])
     const tailPosition = tri2Euclid(where["tail_pos"])
     this.visual.head.setAttribute('cx', headPosition.x);
@@ -85,13 +86,13 @@ export class Wall {
   constructor(name, location, parentVisual) {
     this.name = name;
     this.parentVisual = parentVisual;
-    this.position = location;
+    this.location = location;
     this.visual = this.createCircle(`H-B${ this.name }`);
   }
 
   createCircle(name) {
     var vizElement = document.createElementNS( nameSpaceURI, 'circle' );
-    const position = tri2Euclid(this.position)
+    const position = tri2Euclid(this.location)
     vizElement.setAttribute( 'cx', position.x );
     vizElement.setAttribute( 'cy', position.y );
     vizElement.setAttribute( 'fill', 'red' );

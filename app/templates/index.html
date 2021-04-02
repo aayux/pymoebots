@@ -14,7 +14,7 @@
   </head>
 
   <body>
-    <svg id="camera">
+    <svg id="camera" preserveAspectRatio="xMinYMin slice">
       <g id="grid"></g>
       <g id="amoebots"></g>
       <g id="walls"></g>
@@ -29,28 +29,35 @@
     </div>
 
     <div id="toolBarLeft">
-      <div id="menuLoad">
-        <h3>Load Algorithm</h3>
-        <input name="runSearch" id="runName" list="runList">
+      <!--Load Button-->
+      <div id="menuLoad" class="hide">
+        <h3>Load Run</h3>
+        <input name="runSearch" id="runName" list="runList" placeholder="Search...">
         <datalist id="runList"></datalist>
         <button title="Get Run" id="loadRun">Load</button>
       </div>
       <button title="Load run" id="buttonOpenLoadMenu" class="buttonMenu buttonConfig" type="button">
         <img src="{% static "icons/add-file50px.png" %}" alt="Load Run"></button>
 
+      <!--Edit Button-->
       <button title="Add Object" id="buttonStartEditMode" class="buttonMenu buttonConfig" onclick="" type="button">
         <img src="{% static "icons/pin-pad50px.png" %}" alt="Add Object"></button>
 
+      <!--Save Button-->
       <div id="menuSave" class="hide">
-        <h3>Save Algorithm</h3>
-        <input name="algorithmSearch" id="algorithmName" list="algorithmList">
+        <h3>Save Run</h3>
+        Name:<input name="runName" id="runName" type="text" placeholder="Example: run-1000">
+        </br>
+        Algorithm:<input name="algorithmSearch" id="algorithmName" list="algorithmList"placeholder="Search..." >
         <datalist id="algorithmList">
           <option value="random_move">
           <option value="mzsolve">
         </datalist>
-        <button title="Save run" id="loadAlgorithm">Save</button>
+        </br>
+        Rounds:<input name="rounds" id="rounds" min=1 value=500 type="number">
+        <button id="saveRun">Save</button>
       </div>
-      <button title="Save algorithm" id="save" class="buttonMenu buttonConfig" onclick="" type="button">
+      <button title="Save run" id="buttonOpenSaveMenu" class="buttonMenu buttonConfig" onclick="" type="button">
         <img src="{% static "icons/save50px.png" %}" alt="Save Algorithm"></button>
     </div>
 
