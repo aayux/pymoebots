@@ -35,6 +35,7 @@ export class Amoebot {
       tail : this.createCircle(`T-B${ this.name }`, "tail_pos"),
       body : this.createLine()
     }
+    this.occupied = {};
   }
 
   createLine() {
