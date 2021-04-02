@@ -187,7 +187,7 @@ class amoebotWebPageInterface {
     }
   }
   async requestSaveRunData() {
-    var runName = document.getElementById("runName").value;
+    var runNameSave = document.getElementById("runNameSave").value;
     var algorithmName = document.getElementById("algorithmName").value;
     var rounds = document.getElementById("rounds").value;
     var bots = [];
@@ -202,7 +202,7 @@ class amoebotWebPageInterface {
     }
     await sendRequest("algorithms/", {
       algorithm:algorithmName,
-      name:runName,
+      name:runNameSave,
       rounds:+rounds,
       bots:bots,
       "bot tails":bot_tails,
@@ -258,8 +258,8 @@ document.getElementById("buttonOpenLoadMenu").addEventListener("click", async ()
   document.getElementById("menuSave").classList.add("hide");
 });
 document.getElementById("loadRun").addEventListener("click", () => {
-  var runName = document.getElementById("runName").value;
-  webPage.requestRunData(runName);
+  var runNameLoad = document.getElementById("runNameLoad").value;
+  webPage.requestRunData(runNameLoad);
   document.getElementById("menuLoad").classList.add("hide");
   webPage.mode = "ANIM";
 });
@@ -274,6 +274,7 @@ document.getElementById("buttonOpenSaveMenu").addEventListener("click", () => {
 });
 document.getElementById("saveRun").addEventListener("click", () => {
   webPage.requestSaveRunData();
+  document.getElementById("menuSave").classList.add("hide");
   webPage.mode = "ANIM";
 });
 
