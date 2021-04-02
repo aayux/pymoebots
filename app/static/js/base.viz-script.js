@@ -109,6 +109,15 @@ class objectDirector {
     this.wallVisuals = sVG.getElementById("walls");
     this.amoebots = [];
     this.walls = [];
+    this.occupied = new Set();
+  }
+
+  determineOccupied() {
+    this.occupied = new Set();
+    for(let amoebot of this.amoebots) {
+      this.occupied.add(`${amoebot.location.head_pos[0]},${amoebot.location.head_pos[1]}`);
+      this.occupied.add(`${amoebot.location.tail_pos[0]},${amoebot.location.tail_pos[1]}`);
+    }
   }
 
   resetObjects() {
@@ -119,7 +128,9 @@ class objectDirector {
   }
 
   addAmoebot(name, location) {
+    if(this.occupied.has(`${location[0]},${location[1]}`)) return;
     this.amoebots.push(new Amoebot(name, location, this.amoebotVisuals));
+    this.occupied.add(`${location[0]},${location[1]}`)
   }
 
   addWall(name, location, parentVisual) {
@@ -266,6 +277,7 @@ document.getElementById("loadRun").addEventListener("click", () => {
 document.getElementById("buttonStartEditMode").addEventListener("click", () => {
   document.getElementById("menuLoad").classList.add("hide");
   document.getElementById("menuSave").classList.add("hide");
+  webPage.objectDirector.determineOccupied();
   webPage.mode = "EDIT";
 });
 document.getElementById("buttonOpenSaveMenu").addEventListener("click", () => {
