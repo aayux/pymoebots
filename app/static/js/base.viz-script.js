@@ -118,6 +118,9 @@ class objectDirector {
       this.occupied.add(`${amoebot.location.head_pos[0]},${amoebot.location.head_pos[1]}`);
       this.occupied.add(`${amoebot.location.tail_pos[0]},${amoebot.location.tail_pos[1]}`);
     }
+    for(let wall of this.walls) {
+      this.occupied.add(`${wall.location[0]},${wall.location[1]}`);
+    }
   }
 
   resetObjects() {
@@ -130,11 +133,13 @@ class objectDirector {
   addAmoebot(name, location) {
     if(this.occupied.has(`${location[0]},${location[1]}`)) return;
     this.amoebots.push(new Amoebot(name, location, this.amoebotVisuals));
-    this.occupied.add(`${location[0]},${location[1]}`)
+    this.occupied.add(`${location[0]},${location[1]}`);
   }
 
   addWall(name, location, parentVisual) {
+    if(this.occupied.has(`${location[0]},${location[1]}`)) return;
     this.walls.push(new Wall(name, location, this.wallVisuals));
+    this.occupied.add(`${location[0]},${location[1]}`);
   }
 
   updateVisuals(data) {
@@ -255,12 +260,18 @@ var webPage = new amoebotWebPageInterface(document.getElementById("camera"));
 /*Listeners*/
 /*SVG*/
 document.getElementById("camera").addEventListener("click", (event) => {
-  if(webPage.mode != "EDIT") return false;
+  if(!webPage.mode.includes("EDIT")) return false;
   var coordinate = transformToSVGPoint(document.getElementById("camera"), event);
   var triCoordinate = nearestGridPoint(coordinate);
-  webPage.objectDirector.addAmoebot(webPage.objectDirector.amoebots.length,
-    [triCoordinate.x,  triCoordinate.y]
-  );
+  if(webPage.mode.includes("AMOEBOT")) {
+    webPage.objectDirector.addAmoebot(webPage.objectDirector.amoebots.length,
+      [triCoordinate.x,  triCoordinate.y]
+    );
+  } else {
+    webPage.objectDirector.addWall(webPage.objectDirector.walls.length,
+      [triCoordinate.x,  triCoordinate.y]
+    );
+  }
 });
 
 /*Left Menu Buttons*/
@@ -278,7 +289,7 @@ document.getElementById("buttonStartEditMode").addEventListener("click", () => {
   document.getElementById("menuLoad").classList.add("hide");
   document.getElementById("menuSave").classList.add("hide");
   webPage.objectDirector.determineOccupied();
-  webPage.mode = "EDIT";
+  webPage.mode = webPage.mode.includes("AMOEBOT") ? "EDIT WALL" : "EDIT AMOEBOT";
 });
 document.getElementById("buttonOpenSaveMenu").addEventListener("click", () => {
   document.getElementById("menuSave").classList.toggle("hide");
