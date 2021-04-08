@@ -124,8 +124,10 @@ class objectDirector {
   }
 
   resetObjects() {
-    this.amoebotVisuals.innerHTML= '';
-    this.wallVisuals.innerHTML= '';
+    //TODO FIX DELETE ERRORS
+    this.occupied = new Set();
+    this.amoebotVisuals.innerHTML = '';
+    this.wallVisuals.innerHTML = '';
     this.amoebots = [];
     this.walls = [];
   }
@@ -177,7 +179,7 @@ function nearestGridPoint(point) {
  */
 class amoebotWebPageInterface {
   constructor(sVG) {
-    this.mode = "MENU";//MENU:default, EDIT:addAmoebots, ANIM:animation,
+    this.mode = "MENU";//MENU:default, EDIT <AMOEBOT WALL>:addAmoebots, ANIM:animation,
     this.algorithm = {config0:[], tracks:[]};
     this.step = 0;
     this.totalSteps = 0;
