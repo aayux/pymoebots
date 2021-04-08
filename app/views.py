@@ -52,19 +52,30 @@ def _get_available_runs():
         e.name for e in Path(STORE).iterdir() if e.is_dir() and e.name != "logs"
     ]
 
+
 def _check_run_existence(run):
     for e in Path(STORE).iterdir():
         if e.is_dir() and e.name != "logs" and e.name == run:
             return True
     return False
 
+
 def _empty_run_data(run):
-    for e in (Path(STORE)/Path(run)).iterdir():
+    for e in (Path(STORE) / Path(run)).iterdir():
         if e.name != "init0.json":
             os.remove(e)
-        print(e.name)
 
-@csrf_exempt # REMOVE EXEMPTION IF MOVING TO PRODUCTION.
+
+def _run_algorithm(algorithm, config_number, rounds=None):
+    sim = AmoebotSimulator(
+        max_rnds=rounds,
+        config_num=config_number,
+        algorithm=algorithm
+    )
+    sim.exec_sequential(time_it=True)
+
+
+@csrf_exempt  # REMOVE EXEMPTION IF MOVING TO PRODUCTION.
 def algorithms(request: object, run: str = None) -> object:
     if request.method == 'GET':
         if run:
@@ -83,7 +94,7 @@ def algorithms(request: object, run: str = None) -> object:
         algorithm_name = data.pop("algorithm")
         config_number = data.pop("name")
         rounds = 5000
-        if "rounds"in data:
+        if "rounds" in data:
             rounds = data.pop("rounds")
         run_name = "run-" + config_number
         dir_path = Path(STORE) / Path(run_name)
@@ -105,12 +116,3 @@ def algorithms(request: object, run: str = None) -> object:
             tracks=tracks
         )
         return JsonResponse(response)
-
-
-def _run_algorithm(algorithm, config_number, rounds=None):
-    sim = AmoebotSimulator(
-        max_rnds=rounds,
-        config_num=config_number,
-        algorithm=algorithm
-    )
-    sim.exec_sequential(time_it=True)
