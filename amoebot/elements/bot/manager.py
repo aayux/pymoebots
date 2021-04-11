@@ -235,7 +235,7 @@ class AmoebotManager(Manager):
 
         return amoebot.pickled
 
-    def update_tracker(self, iter_:int=10):
+    def update_tracker(self, iter_:int):
         """
         Update the tracker file with most current state.
 
@@ -248,7 +248,7 @@ class AmoebotManager(Manager):
         config = list()
 
         # update the tracker file every few iterations
-        if iter_ % 10 == 0:
+        if iter_ % 1000 == 0:
             # collect configurations of all particles
             # TODO: optimize block
             for __id in self.amoebots.keys():

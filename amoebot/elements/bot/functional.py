@@ -86,7 +86,7 @@ def maze_solve_sequential(
         agent: Core, 
         __nmap: defaultdict, 
         _id: int = None, 
-        depth: int = 10):
+        depth: int = 15):
     r"""
     """
 
