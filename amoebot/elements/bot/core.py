@@ -67,7 +67,7 @@ class Amoebot(Core):
         # internal temperature parameter
         self.tau:np.float16 = np.float16(-.5)
 
-        self.gamma:np.float16 = np.float16(0.9)
+        self.gamma:np.float16 = np.float16(0.99)
         self.tau0:np.float16 = np.float16(1.)
 
         # status flag for compression algorithm
