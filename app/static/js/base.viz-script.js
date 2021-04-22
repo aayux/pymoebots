@@ -3,15 +3,20 @@ import { sendRequest } from './apis.request-handler.js';
 import {tri2Euclid, Amoebot, Wall} from './viz-objects.js';
 
 class sVGDirector {
-  constructor(sVG) {
+  constructor(sVG, width, height) {
     this.isDraggable = true;
     this.sVG = sVG;
     this.sVG.setAttribute("viewBox", `0 0 ${cameraDim.w} ${cameraDim.h}`);
     this.gridGroup = this.createGrid();
+    this.currentZoom = 0;
+    this.minZoom = 0.05;
+    this.maxZoom = {width:2 * cameraDim.w, height:2 * cameraDim.h,
+      hypotenuse:Math.hypot(2 * cameraDim.w, 2 * cameraDim.h)};
     this._viewBox = this.sVG.viewBox.baseVal;
     this._moveDisplacement = {x:0, y:0};
     this._zoomDisplacement = {x:0, y:0};//In case ya want zoom.
     this.allowDragging();
+    this.allowZooming();
   }
 
   moveBy(vectorX, vectorY) {
@@ -20,6 +25,29 @@ class sVGDirector {
     this._viewBox.x = this._moveDisplacement.x + this._zoomDisplacement.x;
     this._viewBox.y = this._moveDisplacement.y + this._zoomDisplacement.y;
     this.updateVisuals();
+  }
+
+  zoomBy(percent) {
+    const newZoom = this.currentZoom + percent;
+    if(newZoom > 1) {
+      this.zoom(1);
+    } else if(newZoom < this.minZoom){
+      this.zoom(this.minZoom)
+    } else {
+      this.zoom(newZoom)
+    }
+    this.updateVisuals();
+  }
+
+  zoom(percent) {
+    console.log(percent);
+    this.currentZoom = percent;
+    this._zoomDisplacement.x = (1 - this.currentZoom) * this.maxZoom.width / 2;
+    this._zoomDisplacement.y = (1 - this.currentZoom) * this.maxZoom.height / 2;
+    this._viewBox.x = this._moveDisplacement.x + this._zoomDisplacement.x;
+    this._viewBox.y = this._moveDisplacement.y + this._zoomDisplacement.y;
+    this._viewBox.width = this.currentZoom * this.maxZoom.width;
+    this._viewBox.height = this.currentZoom * this.maxZoom.height;
   }
 
   allowDragging() {
@@ -46,34 +74,44 @@ class sVGDirector {
     }
   }
 
+  allowZooming() {
+    var self = this;
+    self.sVG.addEventListener("wheel", scrolling, false);
+    function scrolling(event) {
+      self.zoomBy(event.deltaY / 100);
+    }
+  }
+
   createGrid() {
     var camera = document.getElementById( 'camera' );
     var gridLines = [];
     // horizontal distance between grid lines
     var hGridDist = unit * Math.sqrt(3);
     // get points for longitudanal lines
-    for( let i = - hGridDist; i <= cameraDim.w + hGridDist; i += hGridDist / 2 ) {
+    const doubleHeight = 2 * cameraDim.h;
+    const doubleWidth = 2 * cameraDim.w;
+    for( let i = - hGridDist; i <= (doubleWidth + hGridDist); i += hGridDist / 2 ) {
       gridLines.push({
         p1: {x: i, y: - 2 *  unit },
-        p2: {x: i, y: cameraDim.h + ( 2 * unit ) }
+        p2: {x: i, y: doubleHeight + ( 2 * unit ) }
       });
     }
     // vertical offsets on the grid
-    var vGridOffset = ( Math.floor( cameraDim.h / ( 2 * unit ) ) + 1 ) * unit * 3;
-    for( let i = -vGridOffset; i <= cameraDim.h + vGridOffset; i += unit ) {
+    var vGridOffset = ( Math.floor( doubleHeight / ( 2 * unit ) ) + 1 ) * unit * 3;
+    for( let i = -vGridOffset; i <= (doubleHeight + vGridOffset); i += unit ) {
         // right sheared diagonal
       gridLines.push({
         p1: {x : -2 * hGridDist, y : i },
-        p2: {x : cameraDim.w + ( 2 * hGridDist ),
-           y : i - ( cameraDim.w + 4 * hGridDist ) / Math.sqrt( 3 )
+        p2: {x : doubleWidth + ( 2 * hGridDist ),
+           y : i - ( doubleWidth + 4 * hGridDist ) / Math.sqrt( 3 )
         }
       });
         // left sheared diagonal
         // TIP :: swap x and y for p2 to see cool folds in the grid!
       gridLines.push({
         p1: {x : -2 * unit * Math.sqrt(3), y : i },
-        p2: {x : cameraDim.w + ( 2 * hGridDist ),
-           y : i + (cameraDim.w + 4 * hGridDist) / Math.sqrt(3)
+        p2: {x : doubleWidth + ( 2 * hGridDist ),
+           y : i + (doubleWidth + 4 * hGridDist) / Math.sqrt(3)
         }
       });
     }
@@ -184,7 +222,7 @@ class amoebotWebPageInterface {
     this.step = 0;
     this.totalSteps = 0;
     this.paused = false;
-    this.playBackSpeed = 50;
+    this.playBackSpeed = 100 - document.getElementById("playback").value;
     this.sVGDirector = new sVGDirector(sVG);
     this.objectDirector = new objectDirector(sVG);
   }
