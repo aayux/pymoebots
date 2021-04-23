@@ -70,7 +70,6 @@ export class Amoebot {
 
   updateVisuals(where) {
     this.location = where;
-    console.log(where);
     const headPosition = tri2Euclid(where["head_pos"])
     const tailPosition = tri2Euclid(where["tail_pos"])
     this.visual.head.setAttribute('cx', headPosition.x);
