@@ -16,7 +16,6 @@ class sVGDirector {
     this._moveDisplacement = {x:0, y:0};
     this._zoomDisplacement = {x:cameraDim.w / 2, y:cameraDim.h / 2};
     this.allowDragging();
-    //this.allowZooming();
     this.updateVisuals();
   }
 
@@ -53,13 +52,15 @@ class sVGDirector {
   allowDragging() {
     var self = this;
     var isDragging = false;
+    var isZooming = false;
     var dragLoc = {x:0, y:0};
     self.sVG.addEventListener("mousedown", dragStart);
     self.sVG.addEventListener("mousemove", dragMid);
     self.sVG.addEventListener("mouseup", dragEnd);
     self.sVG.addEventListener("mouseleave", dragEnd);
+    self.sVG.addEventListener("wheel", scrolling, false);
     function dragStart( event ) {
-      if(!self.isDraggable) return false;
+      if(!self.isDraggable && !self.isZooming) return false;
       isDragging = true;
       dragLoc = transformToSVGPoint(self.sVG, event)
     }
@@ -72,13 +73,11 @@ class sVGDirector {
       if(!isDragging) return false;
       isDragging = false;
     }
-  }
-
-  allowZooming() {
-    var self = this;
-    self.sVG.addEventListener("wheel", scrolling, false);
     function scrolling(event) {
+      if(isDragging) return false;
+      isZooming = true;
       self.zoomBy(event.deltaY / 1000);
+      isZooming = false;
     }
   }
 
