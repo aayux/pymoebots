@@ -16,7 +16,7 @@ class sVGDirector {
     this._moveDisplacement = {x:0, y:0};
     this._zoomDisplacement = {x:cameraDim.w / 2, y:cameraDim.h / 2};
     this.allowDragging();
-    this.allowZooming();
+    //this.allowZooming();
     this.updateVisuals();
   }
 
@@ -272,6 +272,7 @@ class amoebotWebPageInterface {
       this.totalSteps = response.values.tracks.length;
       this.algorithm.config0 = response.values.config0;
       this.algorithm.tracks = response.values.tracks;
+      console.log("tracks", this.algorithm.tracks);
       this.objectDirector.resetObjects();
       this.loadAlgorithm();
     } else {
@@ -292,6 +293,7 @@ class amoebotWebPageInterface {
     for(let wall of this.objectDirector.walls) {
       walls.push(wall.location);
     }
+    console.log(bots, bot_tails, walls);
     await sendRequest("algorithms/", {
       algorithm:algorithmName,
       name:runNameSave,
@@ -304,6 +306,7 @@ class amoebotWebPageInterface {
       this.totalSteps = response.tracks.length;
       this.algorithm.config0 = response.config0;
       this.algorithm.tracks = response.tracks;
+      console.log("tracks", this.algorithm.tracks);
       this.objectDirector.resetObjects();
       this.loadAlgorithm();
     });
@@ -363,13 +366,15 @@ document.getElementById("loadRun").addEventListener("click", () => {
   webPage.requestRunData(runNameLoad);
   document.getElementById("menuLoad").classList.add("hide");
   webPage.mode = "ANIM";
+  webPage.sVGDirector.isDraggable = true;
 });
 
 document.getElementById("buttonStartEditMode").addEventListener("click", () => {
   document.getElementById("menuLoad").classList.add("hide");
   document.getElementById("menuSave").classList.add("hide");
   webPage.objectDirector.determineOccupied();
-  webPage.mode = webPage.mode.includes("AMOEBOT") ? "EDIT WALL" : "EDIT AMOEBOT";
+  webPage.mode = "EDIT"
+  webPage.sVGDirector.isDraggable = false;
 });
 
 document.getElementById("buttonOpenSaveMenu").addEventListener("click", () => {
@@ -381,6 +386,7 @@ document.getElementById("saveRun").addEventListener("click", () => {
   webPage.requestSaveRunData();
   document.getElementById("menuSave").classList.add("hide");
   webPage.mode = "ANIM";
+  webPage.sVGDirector.isDraggable = true;
 });
 
 /*Bottom Menu Buttons*/
