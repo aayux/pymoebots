@@ -27,6 +27,7 @@ export function shearPoint( point ) {
 
 export class Amoebot {
   constructor(name, location, parentVisual) {
+    this.type = "amoebot";
     this.name = name;
     this.parentVisual = parentVisual;
     this.location = {head_pos:[...location], tail_pos:[...location]};
@@ -85,6 +86,7 @@ export class Amoebot {
 
 export class Wall {
   constructor(name, location, parentVisual) {
+    this.type = "wall";
     this.name = name;
     this.parentVisual = parentVisual;
     this.location = location;

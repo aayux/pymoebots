@@ -8,15 +8,16 @@ class sVGDirector {
     this.sVG = sVG;
     this.sVG.setAttribute("viewBox", `0 0 ${cameraDim.w} ${cameraDim.h}`);
     this.gridGroup = this.createGrid();
-    this.currentZoom = 0;
+    this.currentZoom = 0.5;
     this.minZoom = 0.05;
     this.maxZoom = {width:2 * cameraDim.w, height:2 * cameraDim.h,
-      hypotenuse:Math.hypot(2 * cameraDim.w, 2 * cameraDim.h)};
+      hypotenuse:2 * Math.hypot(cameraDim.w, cameraDim.h)};
     this._viewBox = this.sVG.viewBox.baseVal;
     this._moveDisplacement = {x:0, y:0};
-    this._zoomDisplacement = {x:0, y:0};//In case ya want zoom.
+    this._zoomDisplacement = {x:cameraDim.w / 2, y:cameraDim.h / 2};
     this.allowDragging();
     this.allowZooming();
+    this.updateVisuals();
   }
 
   moveBy(vectorX, vectorY) {
@@ -40,10 +41,9 @@ class sVGDirector {
   }
 
   zoom(percent) {
-    console.log(percent);
     this.currentZoom = percent;
-    this._zoomDisplacement.x = (1 - this.currentZoom) * this.maxZoom.width / 2;
-    this._zoomDisplacement.y = (1 - this.currentZoom) * this.maxZoom.height / 2;
+    this._zoomDisplacement.x = (0.5 - this.currentZoom) * this.maxZoom.width / 2;
+    this._zoomDisplacement.y = (0.5 - this.currentZoom) * this.maxZoom.height / 2;
     this._viewBox.x = this._moveDisplacement.x + this._zoomDisplacement.x;
     this._viewBox.y = this._moveDisplacement.y + this._zoomDisplacement.y;
     this._viewBox.width = this.currentZoom * this.maxZoom.width;
@@ -78,7 +78,7 @@ class sVGDirector {
     var self = this;
     self.sVG.addEventListener("wheel", scrolling, false);
     function scrolling(event) {
-      self.zoomBy(event.deltaY / 100);
+      self.zoomBy(event.deltaY / 1000);
     }
   }
 
@@ -147,22 +147,10 @@ class objectDirector {
     this.wallVisuals = sVG.getElementById("walls");
     this.amoebots = [];
     this.walls = [];
-    this.occupied = new Set();
-  }
-
-  determineOccupied() {
-    this.occupied = new Set();
-    for(let amoebot of this.amoebots) {
-      this.occupied.add(`${amoebot.location.head_pos[0]},${amoebot.location.head_pos[1]}`);
-      this.occupied.add(`${amoebot.location.tail_pos[0]},${amoebot.location.tail_pos[1]}`);
-    }
-    for(let wall of this.walls) {
-      this.occupied.add(`${wall.location[0]},${wall.location[1]}`);
-    }
+    this.occupied = {};
   }
 
   resetObjects() {
-    //TODO FIX DELETE ERRORS
     this.occupied = new Set();
     this.amoebotVisuals.innerHTML = '';
     this.wallVisuals.innerHTML = '';
@@ -170,16 +158,64 @@ class objectDirector {
     this.walls = [];
   }
 
-  addAmoebot(name, location) {
-    if(this.occupied.has(`${location[0]},${location[1]}`)) return;
-    this.amoebots.push(new Amoebot(name, location, this.amoebotVisuals));
-    this.occupied.add(`${location[0]},${location[1]}`);
+  determineOccupied() {
+    this.occupied = new Set();
+    for(let amoebot of this.amoebots) {
+      this.occupied[`${amoebot.location.head_pos[0]},${amoebot.location.head_pos[1]}`] = amoebot;
+      this.occupied[`${amoebot.location.tail_pos[0]},${amoebot.location.tail_pos[1]}`] = amoebot;
+    }
+    for(let wall of this.walls) {
+      this.occupied[`${wall.location[0]},${wall.location[1]}`] = wall;
+    }
   }
 
-  addWall(name, location, parentVisual) {
-    if(this.occupied.has(`${location[0]},${location[1]}`)) return;
-    this.walls.push(new Wall(name, location, this.wallVisuals));
-    this.occupied.add(`${location[0]},${location[1]}`);
+  addAmoebot(name, location) {
+    if(this.occupied.hasOwnProperty(`${location[0]},${location[1]}`)) return;
+    var newAmoebot = new Amoebot(name, location, this.amoebotVisuals)
+    this.amoebots.push(newAmoebot);
+    this.occupied[`${location[0]},${location[1]}`] = newAmoebot;
+  }
+
+  alterLocation(location) {
+    if(this.occupied.hasOwnProperty(`${location[0]},${location[1]}`)) {
+      var object = this.occupied[`${location[0]},${location[1]}`];
+      if(object.type == "amoebot") {
+        object.visual.head.remove()
+        object.visual.body.remove()
+        object.visual.tail.remove()
+        for(let i = 0; i < this.amoebots.length; i++) {
+          if(this.amoebots[i] == object) {
+            var temp = this.amoebots[this.amoebots.length - 1];
+            this.amoebots[this.amoebots.length - 1] = this.amoebots[i];
+            this.amoebots[i] = this.amoebots[this.amoebots.length - 1];
+            this.amoebots.pop();
+          }
+        }
+        delete this.occupied[`${object.location.head_pos[0]},${object.location.head_pos[1]}`];
+        delete this.occupied[`${object.location.tail_pos[0]},${object.location.tail_pos[1]}`];
+        this.addWall(this.walls.length, location);
+      } else {
+        object.visual.remove()
+        for(let i = 0; i < this.walls.length; i++) {
+          if(this.walls[i] == object) {
+            var temp = this.walls[this.walls.length - 1];
+            this.walls[this.walls.length - 1] = this.walls[i];
+            this.walls[i] = this.walls[this.walls.length - 1];
+            this.walls.pop();
+          }
+        }
+        delete this.occupied[`${location[0]},${location[1]}`];
+      }
+    } else {
+      this.addAmoebot(this.amoebots.length, location);
+    }
+  }
+
+  addWall(name, location) {
+    if(this.occupied.hasOwnProperty(`${location[0]},${location[1]}`)) return;
+    var newWall = new Wall(name, location, this.wallVisuals);
+    this.walls.push(newWall);
+    this.occupied[`${location[0]},${location[1]}`] = newWall;
   }
 
   updateVisuals(data) {
@@ -273,6 +309,7 @@ class amoebotWebPageInterface {
     });
   }
   loadAlgorithm() {
+    this.objectDirector.occupied = {};
     for(let i = 0; i < this.algorithm.tracks[0].length; i++) {
       this.objectDirector.addAmoebot(i, this.algorithm.config0["bots"][i]);
     }
@@ -303,7 +340,8 @@ document.getElementById("camera").addEventListener("click", (event) => {
   if(!webPage.mode.includes("EDIT")) return false;
   var coordinate = transformToSVGPoint(document.getElementById("camera"), event);
   var triCoordinate = nearestGridPoint(coordinate);
-  if(webPage.mode.includes("AMOEBOT")) {
+  webPage.objectDirector.alterLocation([triCoordinate.x,  triCoordinate.y]);
+  /*if(webPage.mode.includes("AMOEBOT")) {
     webPage.objectDirector.addAmoebot(webPage.objectDirector.amoebots.length,
       [triCoordinate.x,  triCoordinate.y]
     );
@@ -311,7 +349,7 @@ document.getElementById("camera").addEventListener("click", (event) => {
     webPage.objectDirector.addWall(webPage.objectDirector.walls.length,
       [triCoordinate.x,  triCoordinate.y]
     );
-  }
+  }*/
 });
 
 /*Left Menu Buttons*/
@@ -319,22 +357,26 @@ document.getElementById("buttonOpenLoadMenu").addEventListener("click", async ()
   document.getElementById("menuLoad").classList.toggle("hide");
   document.getElementById("menuSave").classList.add("hide");
 });
+
 document.getElementById("loadRun").addEventListener("click", () => {
   var runNameLoad = document.getElementById("runNameLoad").value;
   webPage.requestRunData(runNameLoad);
   document.getElementById("menuLoad").classList.add("hide");
   webPage.mode = "ANIM";
 });
+
 document.getElementById("buttonStartEditMode").addEventListener("click", () => {
   document.getElementById("menuLoad").classList.add("hide");
   document.getElementById("menuSave").classList.add("hide");
   webPage.objectDirector.determineOccupied();
   webPage.mode = webPage.mode.includes("AMOEBOT") ? "EDIT WALL" : "EDIT AMOEBOT";
 });
+
 document.getElementById("buttonOpenSaveMenu").addEventListener("click", () => {
   document.getElementById("menuSave").classList.toggle("hide");
   document.getElementById("menuLoad").classList.add("hide");
 });
+
 document.getElementById("saveRun").addEventListener("click", () => {
   webPage.requestSaveRunData();
   document.getElementById("menuSave").classList.add("hide");
@@ -349,6 +391,7 @@ document.getElementById("buttonStep").addEventListener('click', () => {
     webPage.step += 1;
   }
 });
+
 document.getElementById( 'buttonBack' ).addEventListener('click', () => {
   if(webPage.mode != "ANIM") return false;
   if(webPage.step > 0) {
@@ -356,6 +399,7 @@ document.getElementById( 'buttonBack' ).addEventListener('click', () => {
     webPage.objectDirector.updateVisuals(webPage.algorithm.tracks[webPage.step]);
   }
 });
+
 document.getElementById( 'buttonPlay' ).addEventListener('click', () => {
   if(webPage.mode != "ANIM") return false;
   webPage.paused = false;
@@ -372,9 +416,11 @@ document.getElementById( 'buttonPlay' ).addEventListener('click', () => {
   }
   var playback = setTimeout(timedPlayback, webPage.playbackSpeed);
 });
+
 document.getElementById("playback").addEventListener("change", () => {
   webPage.playbackSpeed = 100 - document.getElementById("playback").value;
 });
+
 document.getElementById("buttonPause").addEventListener("click", () => {
   webPage.paused = !webPage.paused;
 });
