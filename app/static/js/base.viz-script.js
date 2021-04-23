@@ -178,30 +178,35 @@ class objectDirector {
 
   alterLocation(location) {
     if(this.occupied.hasOwnProperty(`${location[0]},${location[1]}`)) {
+      //error when adding walls, amoebots still exists?
       var object = this.occupied[`${location[0]},${location[1]}`];
       if(object.type == "amoebot") {
         object.visual.head.remove()
         object.visual.body.remove()
         object.visual.tail.remove()
         for(let i = 0; i < this.amoebots.length; i++) {
-          if(this.amoebots[i] == object) {
+          if(this.amoebots[i].location.head_pos[0] == object.location.head_pos[0]
+            && this.amoebots[i].location.head_pos[1] == object.location.head_pos[1]) {
             var temp = this.amoebots[this.amoebots.length - 1];
             this.amoebots[this.amoebots.length - 1] = this.amoebots[i];
-            this.amoebots[i] = this.amoebots[this.amoebots.length - 1];
+            this.amoebots[i] = temp;
             this.amoebots.pop();
+            break;
           }
         }
         delete this.occupied[`${object.location.head_pos[0]},${object.location.head_pos[1]}`];
         delete this.occupied[`${object.location.tail_pos[0]},${object.location.tail_pos[1]}`];
         this.addWall(this.walls.length, location);
       } else {
+        //error when turning wall to nothing then amoebot
         object.visual.remove()
         for(let i = 0; i < this.walls.length; i++) {
-          if(this.walls[i] == object) {
+          if(this.walls[i].location[0] == object.location[0] && this.walls[i].location[1] == object.location[1]) {
             var temp = this.walls[this.walls.length - 1];
             this.walls[this.walls.length - 1] = this.walls[i];
-            this.walls[i] = this.walls[this.walls.length - 1];
+            this.walls[i] = temp;
             this.walls.pop();
+            break;
           }
         }
         delete this.occupied[`${location[0]},${location[1]}`];
@@ -272,7 +277,6 @@ class amoebotWebPageInterface {
       this.totalSteps = response.values.tracks.length;
       this.algorithm.config0 = response.values.config0;
       this.algorithm.tracks = response.values.tracks;
-      console.log("tracks", this.algorithm.tracks);
       this.objectDirector.resetObjects();
       this.loadAlgorithm();
     } else {
@@ -293,7 +297,6 @@ class amoebotWebPageInterface {
     for(let wall of this.objectDirector.walls) {
       walls.push(wall.location);
     }
-    console.log(bots, bot_tails, walls);
     await sendRequest("algorithms/", {
       algorithm:algorithmName,
       name:runNameSave,
@@ -306,7 +309,6 @@ class amoebotWebPageInterface {
       this.totalSteps = response.tracks.length;
       this.algorithm.config0 = response.config0;
       this.algorithm.tracks = response.tracks;
-      console.log("tracks", this.algorithm.tracks);
       this.objectDirector.resetObjects();
       this.loadAlgorithm();
     });
