@@ -13,14 +13,15 @@ class sVGDirector {
     this.maxZoom = {width:2 * cameraDim.w, height:2 * cameraDim.h,
       hypotenuse:2 * Math.hypot(cameraDim.w, cameraDim.h)};
     this._viewBox = this.sVG.viewBox.baseVal;
-    this._moveDisplacement = {x:-cameraDim.w / 2, y:-cameraDim.h / 2};
+    this._moveDisplacement = {x:-cameraDim.w / 4, y:-cameraDim.h / 4};
     this._zoomDisplacement = {x:cameraDim.w / 4, y:cameraDim.h / 4};
+    console.log(this._moveDisplacement, this._zoomDisplacement);
     this.allowDragging();
     this.updateVisuals();
   }
 
   moveBy(vectorX, vectorY) {
-    console.log(this.currentZoom, this._viewBox);
+    console.log(this._moveDisplacement, this._zoomDisplacement);
     this._moveDisplacement.x += vectorX;
     this._moveDisplacement.y += vectorY;
     this._viewBox.x = this._moveDisplacement.x + this._zoomDisplacement.x;
