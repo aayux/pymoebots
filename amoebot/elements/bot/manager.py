@@ -11,6 +11,7 @@ from ...utils.shared_objects import SharedObjects
 import os
 import time
 import numpy as np
+from tqdm import trange
 from pathlib import Path
 from functools import partial
 from concurrent import futures
@@ -146,7 +147,7 @@ class AmoebotManager(Manager):
         self.shared = SharedObjects(self.config_num, data=self.amoebots)
 
         # iteratively execute the algorithm over each amoebot for fixed rounds
-        for iter_ in range(max_rnds):
+        for iter_ in trange(max_rnds):
             exec_seq = list(self.amoebots.keys())
             np.random.shuffle(exec_seq)
             for __id in exec_seq:
@@ -248,7 +249,7 @@ class AmoebotManager(Manager):
         config = list()
 
         # update the tracker file every few iterations
-        if iter_ % 1000 == 0:
+        if iter_ % 10 == 0:
             # collect configurations of all particles
             # TODO: optimize block
             for __id in self.amoebots.keys():

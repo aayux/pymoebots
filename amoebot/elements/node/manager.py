@@ -426,11 +426,13 @@ class NodeManagerBitArray:
             # Checks if current node is a wall.
             if head.is_wall():
                 # Marks that we found a wall and breaks search.
-                found_something = wall
-                break
+                return k + 1
+
+            if head.occupied: 
+               return -1
 
         # ...
-        return k + 1
+        return -1
 
     def __get_node_data(
             self, index: UNSIGNED_INT) -> ndarray:
