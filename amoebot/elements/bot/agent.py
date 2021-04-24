@@ -8,13 +8,13 @@ from .functional import compress_agent_sequential
 from .functional import compress_agent_async_contracted
 from .functional import compress_agent_async_expanded
 from .functional import contract_particle, expand_particle
-from .functional import maze_solve_sequential
+from .functional import maze_solve_sequential, phototax_sequential
 from ...utils.graphs import GraphAlgorithms
 
 import numpy as np
 from collections import defaultdict
 
-ALGORITHMS = ['random_move', 'compress', 'mzsolve']
+ALGORITHMS = ['random_move', 'compress', 'phototax', 'mzsolve']
 
 
 class Agent(Amoebot):
@@ -80,6 +80,9 @@ class Agent(Amoebot):
 
         elif algorithm == 'compress':
             __nmap = self._compress(__nmap, async_mode=async_mode)
+
+        elif algorithm == 'phototax':
+            __nmap = self._phototax(__nmap, async_mode=async_mode)
 
         elif algorithm == 'mzsolve':
             __nmap = self._maze_solver(__nmap, async_mode=async_mode)
@@ -189,6 +192,22 @@ class Agent(Amoebot):
         # execute the sequential Markov Chain algorithm M
         if not async_mode:
             __nmap = maze_solve_sequential(self, __nmap, _id=self.__id)
+
+        else: raise NotImplementedError
+
+        return __nmap
+
+    def _phototax(
+            self,
+            __nmap: defaultdict,
+            async_mode: bool = True,
+    ) -> defaultdict:
+        r"""
+        """
+
+        # execute the sequential Markov Chain algorithm M
+        if not async_mode:
+            __nmap = phototax_sequential(self, __nmap, _id=self.__id)
 
         else: raise NotImplementedError
 

@@ -12,6 +12,8 @@ from amoebot.elements.node.manager import NodeManagerBitArray
 import numpy as np
 from collections import defaultdict
 
+import sys
+MAX_DEPTH = sys.maxsize
 
 def contract_particle(
         agent: Core,
@@ -81,12 +83,64 @@ def expand_particle(
 
     return nm.nodes
 
+def phototax_sequential(
+        agent: Core, 
+        __nmap: defaultdict, 
+        _id: int = None, 
+        depth: int = 200):
+    r"""
+    """
+
+    nm = NodeManagerBitArray(bot_id=_id.item(), nodes=__nmap)
+    open_ports_head, _ = nm.open_ports()
+
+    port = 1
+    contracted = True
+    
+    # ping to get distance k to wall
+    k = nm.ping_for_wall(port, depth=depth)
+    _lambda = 9.
+    if k != -1:
+
+        # choose a neigbouring location uniformly at random
+        port = np.random.randint(6)
+
+        if port in open_ports_head:
+            contracted = not nm.move_to(port=port)
+            agent.head, agent.tail = nm.current_position()
+
+        if contracted: return nm.nodes
+
+
+        if _verify_compression_conditions(agent, nm, async_mode=False, _lambda=_lambda):
+            nm.contract_forward()
+        # else contract back to the tail
+        else:
+            nm.contract_backward()
+
+    elif np.random.uniform() < .25:
+
+        if port in open_ports_head:
+            contracted = not nm.move_to(port=port)
+            agent.head, agent.tail = nm.current_position()
+
+        if contracted: return nm.nodes
+
+        if _verify_compression_conditions(agent, nm, async_mode=False, _lambda=_lambda):
+            nm.contract_forward()
+        # else contract back to the tail
+        else:
+            nm.contract_backward()
+
+    agent.head, agent.tail = nm.current_position()
+    return nm.nodes
+
 
 def maze_solve_sequential(
         agent: Core, 
         __nmap: defaultdict, 
         _id: int = None, 
-        depth: int = 15):
+        depth: int = 100):
     r"""
     """
 
@@ -103,12 +157,15 @@ def maze_solve_sequential(
 
     if contracted: return nm.nodes
 
+    if np.random.uniform() < 1/3: depth //= 5
+
     # ping to get distance k to wall
     k = nm.ping_for_wall(port, depth=depth)
-    if k <= depth:
+    if k != -1:
         T_k = agent.tau + agent.tau0 * agent.gamma ** (-k)
         _lambda = np.exp(1 / T_k)
-    else: _lambda = 1.
+    else: 
+        _lambda = 1.
 
     # if compression conditions are satisfied contract to head
     if _verify_compression_conditions(agent, nm, async_mode=False, _lambda=_lambda):
