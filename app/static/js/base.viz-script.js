@@ -13,14 +13,15 @@ class sVGDirector {
     this.maxZoom = {width:2 * cameraDim.w, height:2 * cameraDim.h,
       hypotenuse:2 * Math.hypot(cameraDim.w, cameraDim.h)};
     this._viewBox = this.sVG.viewBox.baseVal;
-    this._moveDisplacement = {x:0, y:0};
+    this._moveDisplacement = {x:-cameraDim.w / 2, y:-cameraDim.h / 2};
     this._zoomDisplacement = {x:cameraDim.w / 2, y:cameraDim.h / 2};
+    console.log(this._moveDisplacement, this._zoomDisplacement);
     this.allowDragging();
-    this.allowZooming();
     this.updateVisuals();
   }
 
   moveBy(vectorX, vectorY) {
+    console.log(this._moveDisplacement, this._zoomDisplacement);
     this._moveDisplacement.x += vectorX;
     this._moveDisplacement.y += vectorY;
     this._viewBox.x = this._moveDisplacement.x + this._zoomDisplacement.x;
@@ -41,9 +42,10 @@ class sVGDirector {
   }
 
   zoom(percent) {
+    console.log(this._moveDisplacement, this._zoomDisplacement);
     this.currentZoom = percent;
-    this._zoomDisplacement.x = (0.5 - this.currentZoom) * this.maxZoom.width / 2;
-    this._zoomDisplacement.y = (0.5 - this.currentZoom) * this.maxZoom.height / 2;
+    this._zoomDisplacement.x = (1 - this.currentZoom) * this.maxZoom.width / 2;
+    this._zoomDisplacement.y = (1 - this.currentZoom) * this.maxZoom.height / 2;
     this._viewBox.x = this._moveDisplacement.x + this._zoomDisplacement.x;
     this._viewBox.y = this._moveDisplacement.y + this._zoomDisplacement.y;
     this._viewBox.width = this.currentZoom * this.maxZoom.width;
@@ -53,13 +55,15 @@ class sVGDirector {
   allowDragging() {
     var self = this;
     var isDragging = false;
+    var isZooming = false;
     var dragLoc = {x:0, y:0};
     self.sVG.addEventListener("mousedown", dragStart);
     self.sVG.addEventListener("mousemove", dragMid);
     self.sVG.addEventListener("mouseup", dragEnd);
     self.sVG.addEventListener("mouseleave", dragEnd);
+    self.sVG.addEventListener("wheel", scrolling, false);
     function dragStart( event ) {
-      if(!self.isDraggable) return false;
+      if(!self.isDraggable && !self.isZooming) return false;
       isDragging = true;
       dragLoc = transformToSVGPoint(self.sVG, event)
     }
@@ -72,13 +76,11 @@ class sVGDirector {
       if(!isDragging) return false;
       isDragging = false;
     }
-  }
-
-  allowZooming() {
-    var self = this;
-    self.sVG.addEventListener("wheel", scrolling, false);
     function scrolling(event) {
+      if(isDragging) return false;
+      isZooming = true;
       self.zoomBy(event.deltaY / 1000);
+      isZooming = false;
     }
   }
 
@@ -178,30 +180,35 @@ class objectDirector {
 
   alterLocation(location) {
     if(this.occupied.hasOwnProperty(`${location[0]},${location[1]}`)) {
+      //error when adding walls, amoebots still exists?
       var object = this.occupied[`${location[0]},${location[1]}`];
       if(object.type == "amoebot") {
         object.visual.head.remove()
         object.visual.body.remove()
         object.visual.tail.remove()
         for(let i = 0; i < this.amoebots.length; i++) {
-          if(this.amoebots[i] == object) {
+          if(this.amoebots[i].location.head_pos[0] == object.location.head_pos[0]
+            && this.amoebots[i].location.head_pos[1] == object.location.head_pos[1]) {
             var temp = this.amoebots[this.amoebots.length - 1];
             this.amoebots[this.amoebots.length - 1] = this.amoebots[i];
-            this.amoebots[i] = this.amoebots[this.amoebots.length - 1];
+            this.amoebots[i] = temp;
             this.amoebots.pop();
+            break;
           }
         }
         delete this.occupied[`${object.location.head_pos[0]},${object.location.head_pos[1]}`];
         delete this.occupied[`${object.location.tail_pos[0]},${object.location.tail_pos[1]}`];
         this.addWall(this.walls.length, location);
       } else {
+        //error when turning wall to nothing then amoebot
         object.visual.remove()
         for(let i = 0; i < this.walls.length; i++) {
-          if(this.walls[i] == object) {
+          if(this.walls[i].location[0] == object.location[0] && this.walls[i].location[1] == object.location[1]) {
             var temp = this.walls[this.walls.length - 1];
             this.walls[this.walls.length - 1] = this.walls[i];
-            this.walls[i] = this.walls[this.walls.length - 1];
+            this.walls[i] = temp;
             this.walls.pop();
+            break;
           }
         }
         delete this.occupied[`${location[0]},${location[1]}`];
@@ -363,13 +370,15 @@ document.getElementById("loadRun").addEventListener("click", () => {
   webPage.requestRunData(runNameLoad);
   document.getElementById("menuLoad").classList.add("hide");
   webPage.mode = "ANIM";
+  webPage.sVGDirector.isDraggable = true;
 });
 
 document.getElementById("buttonStartEditMode").addEventListener("click", () => {
   document.getElementById("menuLoad").classList.add("hide");
   document.getElementById("menuSave").classList.add("hide");
   webPage.objectDirector.determineOccupied();
-  webPage.mode = webPage.mode.includes("AMOEBOT") ? "EDIT WALL" : "EDIT AMOEBOT";
+  webPage.mode = "EDIT"
+  webPage.sVGDirector.isDraggable = false;
 });
 
 document.getElementById("buttonOpenSaveMenu").addEventListener("click", () => {
@@ -381,6 +390,7 @@ document.getElementById("saveRun").addEventListener("click", () => {
   webPage.requestSaveRunData();
   document.getElementById("menuSave").classList.add("hide");
   webPage.mode = "ANIM";
+  webPage.sVGDirector.isDraggable = true;
 });
 
 /*Bottom Menu Buttons*/
