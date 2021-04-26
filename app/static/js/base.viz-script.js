@@ -343,21 +343,20 @@ var webPage = new amoebotWebPageInterface(document.getElementById("camera"));
 })();
 /*Listeners*/
 /*SVG*/
-document.getElementById("camera").addEventListener("click", (event) => {
-  if(!webPage.mode.includes("EDIT")) return false;
-  var coordinate = transformToSVGPoint(document.getElementById("camera"), event);
-  var triCoordinate = nearestGridPoint(coordinate);
-  webPage.objectDirector.alterLocation([triCoordinate.x,  triCoordinate.y]);
-  /*if(webPage.mode.includes("AMOEBOT")) {
-    webPage.objectDirector.addAmoebot(webPage.objectDirector.amoebots.length,
-      [triCoordinate.x,  triCoordinate.y]
-    );
-  } else {
-    webPage.objectDirector.addWall(webPage.objectDirector.walls.length,
-      [triCoordinate.x,  triCoordinate.y]
-    );
-  }*/
-});
+(function prepareAddAmoebot(){
+  var start = null;
+  document.getElementById("camera").addEventListener("mousedown", (event) => {
+    start = event;
+  });
+  document.getElementById("camera").addEventListener("mouseup", (event) => {
+    if(!webPage.mode.includes("EDIT")) return false;
+    if(start.clientX == event.clientX && start.clientY == event.clientY) {
+      var coordinate = transformToSVGPoint(document.getElementById("camera"), event);
+      var triCoordinate = nearestGridPoint(coordinate);
+      webPage.objectDirector.alterLocation([triCoordinate.x,  triCoordinate.y]);
+    }
+  });
+})();
 
 /*Left Menu Buttons*/
 document.getElementById("buttonOpenLoadMenu").addEventListener("click", async () => {
@@ -370,7 +369,6 @@ document.getElementById("loadRun").addEventListener("click", () => {
   webPage.requestRunData(runNameLoad);
   document.getElementById("menuLoad").classList.add("hide");
   webPage.mode = "ANIM";
-  webPage.sVGDirector.isDraggable = true;
 });
 
 document.getElementById("buttonStartEditMode").addEventListener("click", () => {
@@ -378,7 +376,6 @@ document.getElementById("buttonStartEditMode").addEventListener("click", () => {
   document.getElementById("menuSave").classList.add("hide");
   webPage.objectDirector.determineOccupied();
   webPage.mode = "EDIT"
-  webPage.sVGDirector.isDraggable = false;
 });
 
 document.getElementById("buttonOpenSaveMenu").addEventListener("click", () => {
@@ -390,7 +387,6 @@ document.getElementById("saveRun").addEventListener("click", () => {
   webPage.requestSaveRunData();
   document.getElementById("menuSave").classList.add("hide");
   webPage.mode = "ANIM";
-  webPage.sVGDirector.isDraggable = true;
 });
 
 /*Bottom Menu Buttons*/
