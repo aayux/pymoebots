@@ -64,17 +64,21 @@
     </br>
 
     <div id="toolBarBottom">
-      <button title="Back" id="buttonBack" class="buttonMenu" type="button">
-        <img src="{% static "icons/backward-button50px.png" %}" alt="Back"></button>
+    </br>
+      <text id="animationStep">Step: -</text>
+      <div>
+        <button title="Back" id="buttonBack" class="buttonMenu" type="button">
+          <img src="{% static "icons/backward-button50px.png" %}" alt="Back"></button>
 
-      <button title="Play" id="buttonPlay" class="buttonMenu" type="button">
-        <img src="{% static "icons/play-button-circled50px.png" %}" alt="Play"></button>
+        <button title="Play" id="buttonPlay" class="buttonMenu" type="button">
+          <img src="{% static "icons/play-button-circled50px.png" %}" alt="Play"></button>
 
-      <button title="Pause" id="buttonPause" class="buttonMenu" type="button">
-        <img src="{% static "icons/pause-button50px.png" %}" alt="Pause"></button>
+        <button title="Pause" id="buttonPause" class="buttonMenu" type="button">
+          <img src="{% static "icons/pause-button50px.png" %}" alt="Pause"></button>
 
-      <button title="Forward" id="buttonStep" class="buttonMenu" type="button">
-        <img src="{% static "icons/forward-button50px.png" %}" alt="forward"></button>
+        <button title="Forward" id="buttonStep" class="buttonMenu" type="button">
+          <img src="{% static "icons/forward-button50px.png" %}" alt="forward"></button>
+      </div>
 
       <div class="slider">
         slower <input id="playback" type="range" min="0" max="99" value="50" step="1"> faster
