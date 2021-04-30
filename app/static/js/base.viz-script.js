@@ -418,7 +418,7 @@ document.getElementById( 'buttonPlay' ).addEventListener('click', () => {
         setTimeout(timedPlayback, webPage.playBackSpeed);
       }
     } else {
-      alert("Finished!");
+      alert("Playback paused.");
     }
   }
   var playback = setTimeout(timedPlayback, webPage.playBackSpeed);
