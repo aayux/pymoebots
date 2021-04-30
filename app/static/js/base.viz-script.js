@@ -15,13 +15,11 @@ class sVGDirector {
     this._viewBox = this.sVG.viewBox.baseVal;
     this._moveDisplacement = {x:-cameraDim.w / 2, y:-cameraDim.h / 2};
     this._zoomDisplacement = {x:cameraDim.w / 2, y:cameraDim.h / 2};
-    console.log(this._moveDisplacement, this._zoomDisplacement);
     this.allowDragging();
     this.updateVisuals();
   }
 
   moveBy(vectorX, vectorY) {
-    console.log(this._moveDisplacement, this._zoomDisplacement);
     this._moveDisplacement.x += vectorX;
     this._moveDisplacement.y += vectorY;
     this._viewBox.x = this._moveDisplacement.x + this._zoomDisplacement.x;
@@ -42,7 +40,6 @@ class sVGDirector {
   }
 
   zoom(percent) {
-    console.log(this._moveDisplacement, this._zoomDisplacement);
     this.currentZoom = percent;
     this._zoomDisplacement.x = (1 - this.currentZoom) * this.maxZoom.width / 2;
     this._zoomDisplacement.y = (1 - this.currentZoom) * this.maxZoom.height / 2;
@@ -147,6 +144,7 @@ class objectDirector {
     this.sVG = sVG;
     this.amoebotVisuals = sVG.getElementById("amoebots");
     this.wallVisuals = sVG.getElementById("walls");
+    this.animationStep = document.getElementById("animationStep");
     this.amoebots = [];
     this.walls = [];
     this.occupied = {};
@@ -225,7 +223,8 @@ class objectDirector {
     this.occupied[`${location[0]},${location[1]}`] = newWall;
   }
 
-  updateVisuals(data) {
+  updateVisuals(step, data) {
+    this.animationStep.childNodes[0].nodeValue = `Step: ${step}`;
     for(let i = 0; i < this.amoebots.length; i++) {
       this.amoebots[i].updateVisuals(data[i]);
     }
@@ -276,6 +275,7 @@ class amoebotWebPageInterface {
       .catch(() => {response.status = 400;});
     if(response.status == 200) {
       this.step = 0;
+      this.objectDirector.animationStep.childNodes[0].nodeValue = `Step: -`;
       this.totalSteps = response.values.tracks.length;
       this.algorithm.config0 = response.values.config0;
       this.algorithm.tracks = response.values.tracks;
@@ -308,6 +308,7 @@ class amoebotWebPageInterface {
       walls:walls
     }, "POST").then(response => {
       this.step = 0;
+      this.objectDirector.animationStep.childNodes[0].nodeValue = `Step: -`;
       this.totalSteps = response.tracks.length;
       this.algorithm.config0 = response.config0;
       this.algorithm.tracks = response.tracks;
@@ -343,21 +344,20 @@ var webPage = new amoebotWebPageInterface(document.getElementById("camera"));
 })();
 /*Listeners*/
 /*SVG*/
-document.getElementById("camera").addEventListener("click", (event) => {
-  if(!webPage.mode.includes("EDIT")) return false;
-  var coordinate = transformToSVGPoint(document.getElementById("camera"), event);
-  var triCoordinate = nearestGridPoint(coordinate);
-  webPage.objectDirector.alterLocation([triCoordinate.x,  triCoordinate.y]);
-  /*if(webPage.mode.includes("AMOEBOT")) {
-    webPage.objectDirector.addAmoebot(webPage.objectDirector.amoebots.length,
-      [triCoordinate.x,  triCoordinate.y]
-    );
-  } else {
-    webPage.objectDirector.addWall(webPage.objectDirector.walls.length,
-      [triCoordinate.x,  triCoordinate.y]
-    );
-  }*/
-});
+(function prepareAddAmoebot(){
+  var start = null;
+  document.getElementById("camera").addEventListener("mousedown", (event) => {
+    start = event;
+  });
+  document.getElementById("camera").addEventListener("mouseup", (event) => {
+    if(!webPage.mode.includes("EDIT")) return false;
+    if(start.clientX == event.clientX && start.clientY == event.clientY) {
+      var coordinate = transformToSVGPoint(document.getElementById("camera"), event);
+      var triCoordinate = nearestGridPoint(coordinate);
+      webPage.objectDirector.alterLocation([triCoordinate.x,  triCoordinate.y]);
+    }
+  });
+})();
 
 /*Left Menu Buttons*/
 document.getElementById("buttonOpenLoadMenu").addEventListener("click", async () => {
@@ -370,7 +370,6 @@ document.getElementById("loadRun").addEventListener("click", () => {
   webPage.requestRunData(runNameLoad);
   document.getElementById("menuLoad").classList.add("hide");
   webPage.mode = "ANIM";
-  webPage.sVGDirector.isDraggable = true;
 });
 
 document.getElementById("buttonStartEditMode").addEventListener("click", () => {
@@ -378,7 +377,6 @@ document.getElementById("buttonStartEditMode").addEventListener("click", () => {
   document.getElementById("menuSave").classList.add("hide");
   webPage.objectDirector.determineOccupied();
   webPage.mode = "EDIT"
-  webPage.sVGDirector.isDraggable = false;
 });
 
 document.getElementById("buttonOpenSaveMenu").addEventListener("click", () => {
@@ -390,14 +388,13 @@ document.getElementById("saveRun").addEventListener("click", () => {
   webPage.requestSaveRunData();
   document.getElementById("menuSave").classList.add("hide");
   webPage.mode = "ANIM";
-  webPage.sVGDirector.isDraggable = true;
 });
 
 /*Bottom Menu Buttons*/
 document.getElementById("buttonStep").addEventListener('click', () => {
   if(webPage.mode != "ANIM") return false;
   if(webPage.step < webPage.totalSteps) {
-    webPage.objectDirector.updateVisuals(webPage.algorithm.tracks[webPage.step]);
+    webPage.objectDirector.updateVisuals(webPage.step, webPage.algorithm.tracks[webPage.step]);
     webPage.step += 1;
   }
 });
@@ -406,7 +403,7 @@ document.getElementById( 'buttonBack' ).addEventListener('click', () => {
   if(webPage.mode != "ANIM") return false;
   if(webPage.step > 0) {
     webPage.step -= 1;
-    webPage.objectDirector.updateVisuals(webPage.algorithm.tracks[webPage.step]);
+    webPage.objectDirector.updateVisuals(webPage.step, webPage.algorithm.tracks[webPage.step]);
   }
 });
 
@@ -416,7 +413,7 @@ document.getElementById( 'buttonPlay' ).addEventListener('click', () => {
   function timedPlayback () {
     if(!webPage.paused) {
       if(webPage.step < webPage.totalSteps) {
-        webPage.objectDirector.updateVisuals(webPage.algorithm.tracks[webPage.step]);
+        webPage.objectDirector.updateVisuals(webPage.step, webPage.algorithm.tracks[webPage.step]);
         webPage.step += 1;
         setTimeout(timedPlayback, webPage.playbackSpeed);
       }
