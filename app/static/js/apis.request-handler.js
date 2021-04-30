@@ -1,12 +1,10 @@
 async function request( url, params, method = 'GET' ) {
 
     const options = {
-        method, 
-        headers: {
-            'Content-Type' : 'application/json'
-        }
+        method: method,
+        headers: {'Content-Type' : 'application/json'}
     };
-  
+
     // if params exists and method is GET, add query string to url
     // otherwise, just add params as a "body" property to the options object
     if ( params ) {
@@ -23,23 +21,18 @@ async function request( url, params, method = 'GET' ) {
 
     return result;
 }
-  
+
 function objectToQueryString( obj ) {
     return Object.keys( obj ).map( key => key + '=' + obj[ key ] ).join( '&' );
 }
 
-export function getRequest( url, params ) {
-    return request( url, params );
-}
 
-export function postRequest( url, params ) {
-    return request( url, params, 'POST' );
-}
+//methods that are currently legal?
+const legalMethods = new Set(["GET", "POST", "PUT", "DELETE"])
 
-export function putRequest( url, params ) {
-    return request( url, params, 'PUT' );
-}
-
-export function deleteRequest(url, params) {
-    return request( url, params, 'DELETE' );
+//Request url with parameter and legal method
+export function sendRequest(url, params, method="GET") {
+  if(legalMethods.has(method)) {
+    return request(url, params, method);
+  }
 }

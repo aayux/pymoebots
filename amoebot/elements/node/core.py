@@ -196,7 +196,7 @@ class Node:
         """
         :returns: Y attribute.
         """
-        return self.__node_data[1, 0]
+        return self.__node_data[2, 0]
 
     def get_neighbor_index(self, port: uint8):
         """

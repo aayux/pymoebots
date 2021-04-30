@@ -12,6 +12,8 @@ from amoebot.elements.node.manager import NodeManagerBitArray
 import numpy as np
 from collections import defaultdict
 
+import sys
+MAX_DEPTH = sys.maxsize
 
 def contract_particle(
         agent: Core,
@@ -31,24 +33,18 @@ def contract_particle(
 
     Return (defaultdict): `__nmap` dictionary.
     """
-
-    head, tail = agent.head, agent.tail
+    nm = NodeManagerBitArray(bot_id=agent._getid().item(), nodes=__nmap)
 
     # contract an expanded particle to its head
     if not backward:
-        _tail, tail[:] = tail.copy(), head
-
-        __nmap[head[0]][head[1]].mark_node(movement='c to')
-        __nmap[_tail[0]][_tail[1]].mark_node(movement='c fr')
+        nm.contract_forward()
 
     # contract an expanded particle to its tail
     else:
-        _head, head[:] = head.copy(), tail
+        nm.contract_backward()
 
-        __nmap[_head[0]][_head[1]].mark_node(movement='c fr')
-        __nmap[tail[0]][tail[1]].mark_node(movement='c to')
-
-    return __nmap
+    agent.head, agent.tail = nm.current_position()
+    return nm.nodes
 
 
 def expand_particle(
@@ -69,34 +65,82 @@ def expand_particle(
 
     Return (defaultdict): the updated `__nmap` dictionary.
     """
+    nm = NodeManagerBitArray(bot_id=agent._getid().item(), nodes=__nmap)
 
-    open_ports = agent._open_port_head
-    head = agent.head
+    open_ports = [0,1,2,3,4,5]
 
     # select a random direction when none provided
     if port is None and len(open_ports) > 0:
         port = np.random.randint(6, dtype=np.uint8)
 
     elif len(open_ports) == 0:
-        return __nmap
+        return nm.nodes
 
     # move to indicated direction if available
     if port in open_ports:
-        head_node = __nmap[head[0]][head[1]]
-        neigbor_node = head_node.neighbors[agent.labels[port]]
+        test = nm.move_to(port=port)
+        agent.head, agent.tail = nm.current_position()
 
-        if neigbor_node is not None:
-            head[:] = neigbor_node
-            __nmap[head[0]][head[1]].mark_node(movement='e to')
+    return nm.nodes
 
-    return __nmap
+def phototax_sequential(
+        agent: Core, 
+        __nmap: defaultdict, 
+        _id: int = None, 
+        depth: int = 200):
+    r"""
+    """
+
+    nm = NodeManagerBitArray(bot_id=_id.item(), nodes=__nmap)
+    open_ports_head, _ = nm.open_ports()
+
+    port = 1
+    contracted = True
+    
+    # ping to get distance k to wall
+    k = nm.ping_for_wall(port, depth=depth)
+    _lambda = 9.
+    if k != -1:
+
+        # choose a neigbouring location uniformly at random
+        port = np.random.randint(6)
+
+        if port in open_ports_head:
+            contracted = not nm.move_to(port=port)
+            agent.head, agent.tail = nm.current_position()
+
+        if contracted: return nm.nodes
+
+
+        if _verify_compression_conditions(agent, nm, async_mode=False, _lambda=_lambda):
+            nm.contract_forward()
+        # else contract back to the tail
+        else:
+            nm.contract_backward()
+
+    elif np.random.uniform() < .25:
+
+        if port in open_ports_head:
+            contracted = not nm.move_to(port=port)
+            agent.head, agent.tail = nm.current_position()
+
+        if contracted: return nm.nodes
+
+        if _verify_compression_conditions(agent, nm, async_mode=False, _lambda=_lambda):
+            nm.contract_forward()
+        # else contract back to the tail
+        else:
+            nm.contract_backward()
+
+    agent.head, agent.tail = nm.current_position()
+    return nm.nodes
 
 
 def maze_solve_sequential(
         agent: Core, 
         __nmap: defaultdict, 
         _id: int = None, 
-        depth: int = 10):
+        depth: int = 100):
     r"""
     """
 
@@ -113,12 +157,15 @@ def maze_solve_sequential(
 
     if contracted: return nm.nodes
 
+    if np.random.uniform() < 1/3: depth //= 5
+
     # ping to get distance k to wall
     k = nm.ping_for_wall(port, depth=depth)
-    if k <= depth:
+    if k != -1:
         T_k = agent.tau + agent.tau0 * agent.gamma ** (-k)
         _lambda = np.exp(1 / T_k)
-    else: _lambda = 1.
+    else: 
+        _lambda = 1.
 
     # if compression conditions are satisfied contract to head
     if _verify_compression_conditions(agent, nm, async_mode=False, _lambda=_lambda):

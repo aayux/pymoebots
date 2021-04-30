@@ -65,9 +65,12 @@ class Amoebot(Core):
         self.mu:np.uint8 = np.uint8(1)
 
         # internal temperature parameter
+        # unset for maze solving
         self.tau:np.float16 = np.float16(-.5)
+        # unset for compression
+        # self.tau:np.float16 = np.float16(.25)
 
-        self.gamma:np.float16 = np.float16(0.9)
+        self.gamma:np.float16 = np.float16(0.95)
         self.tau0:np.float16 = np.float16(1.)
 
         # status flag for compression algorithm

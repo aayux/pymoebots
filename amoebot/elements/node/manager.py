@@ -390,6 +390,7 @@ class NodeManagerBitArray:
 
         # Walks through the specified number of nodes (depth) from origin in the
         # direction specified (port).
+        k = 0
         for k in range(depth):
             # Add current position to stack.
             node_stack.append(head)
@@ -420,14 +421,18 @@ class NodeManagerBitArray:
                 # neighbor's node data and create a Node object.
                 head = Node(node_data=get_node_data(index=neighbor_index))
 
+            # print(f"{head.x}, {head.y}, {head.is_wall()}")
+
             # Checks if current node is a wall.
             if head.is_wall():
                 # Marks that we found a wall and breaks search.
-                found_something = wall
-                break
+                return k + 1
+
+            if head.occupied: 
+               return -1
 
         # ...
-        return k
+        return -1
 
     def __get_node_data(
             self, index: UNSIGNED_INT) -> ndarray:
