@@ -415,17 +415,17 @@ document.getElementById( 'buttonPlay' ).addEventListener('click', () => {
       if(webPage.step < webPage.totalSteps) {
         webPage.objectDirector.updateVisuals(webPage.step, webPage.algorithm.tracks[webPage.step]);
         webPage.step += 1;
-        setTimeout(timedPlayback, webPage.playbackSpeed);
+        setTimeout(timedPlayback, webPage.playBackSpeed);
       }
     } else {
       alert("Finished!");
     }
   }
-  var playback = setTimeout(timedPlayback, webPage.playbackSpeed);
+  var playback = setTimeout(timedPlayback, webPage.playBackSpeed);
 });
 
 document.getElementById("playback").addEventListener("change", () => {
-  webPage.playbackSpeed = 100 - document.getElementById("playback").value;
+  webPage.playBackSpeed = 100 - document.getElementById("playback").value;
 });
 
 document.getElementById("buttonPause").addEventListener("click", () => {
