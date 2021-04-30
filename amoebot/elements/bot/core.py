@@ -70,7 +70,7 @@ class Amoebot(Core):
         # unset for compression
         # self.tau:np.float16 = np.float16(.25)
 
-        self.gamma:np.float16 = np.float16(0.99)
+        self.gamma:np.float16 = np.float16(0.95)
         self.tau0:np.float16 = np.float16(1.)
 
         # status flag for compression algorithm
