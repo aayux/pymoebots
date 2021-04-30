@@ -249,7 +249,7 @@ class AmoebotManager(Manager):
         config = list()
 
         # update the tracker file every few iterations
-        if iter_ % 10 == 0:
+        if iter_ % 100 == 0:
             # collect configurations of all particles
             # TODO: optimize block
             for __id in self.amoebots.keys():
