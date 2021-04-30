@@ -50,6 +50,11 @@
   bottom: 0px;
 }
 
+#animationStep {
+  font-size: 25px;
+  padding: 10px;
+}
+
 
 /* button styling */
 .buttonMenu {
